@@ -9,6 +9,6 @@ Keep this page open as the tasks will be uploaded as we complete them.
 
 [LOGISTIC](https://jkbkco-daniel-garza.shinyapps.io/logisticModel/)
 
-[GLV]()
+[GLV](https://jkbkco-daniel-garza.shinyapps.io/generalizedLotkaVolterra/)
 
 [CRM]()
