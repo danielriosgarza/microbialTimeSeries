@@ -1,18 +1,3 @@
-################Load all package functions#################
-library(ggplot2)
-library(deSolve)
-library(reshape2)
-library(Matrix)
-library(mvtnorm)
-library(pracma)
-library(gtools)
-library(maotai)
-
-setwd(dir = "C:/Users/u0139894/Documents/microsimPy")
-
-Rfiles = gsub(" ", "", paste("./R/", list.files("./R")))
-sapply(Rfiles, source)
-
 
 ##############Simulation conditions###################################
 
