@@ -1,11 +1,15 @@
-library(ggplot2)
-library(deSolve)
-library(reshape2)
-library(Matrix)
-library(mvtnorm)
-library(pracma)
-library(gtools)
-library(maotai)
+installIfNeeded<-function(...) {
+  libs<-unlist(list(...))
+  req<-unlist(lapply(libs,require,character.only=TRUE))
+  need<-libs[req==FALSE]
+  if(length(need)>0){ 
+    install.packages(need)
+    lapply(need,require,character.only=TRUE)
+  }
+}
+
+installIfNeeded("ggplot2", "deSolve", "reshape2", "Matrix", 
+                "mvtnorm", "pracma", "gtools", "maotai")
 
 
 getMoments <- function(simulaionMatrix, is.perCapita = FALSE){
