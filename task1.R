@@ -34,3 +34,6 @@ hub <- parse(text = "do.call(simulateHubbell, hub_params)")
 hub_model <- eval(hub)
 
 makePlot(hub_model$matrix)
+
+
+hub_moments <- generateMoments(hub, n.instances = 50, t.store = 500, is.perCapita = TRUE)
