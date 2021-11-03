@@ -38,8 +38,12 @@ makePlot(hub_model$matrix)
 
 hub_moments <- generateMoments(hub, n.instances = 50, t.store = 500, is.perCapita = TRUE)
 
+
+########
 evenness_gradient <- seq(1,20, 1)
 shannon_diversity <- rep(0, length(evenness_gradient))
+
+
 
 
 basisM <- matrix(0, ncol=n.species, nrow = length(evenness_gradient))
@@ -60,3 +64,4 @@ for (i in seq_along(evenness_gradient)){
   
   
 }
+makeUMAP(basisM, gradient = evenness_gradient)
