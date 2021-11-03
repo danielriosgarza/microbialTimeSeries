@@ -165,3 +165,6 @@ makeUMAP <- function(matrix, n_neighbors=10, min_dist=0.1, gradient=NULL){
     scale_color_gradient(low="blue", high="red")
   
 }
+
+
+#Your function?
