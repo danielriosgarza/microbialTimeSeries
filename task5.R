@@ -66,14 +66,14 @@ A2 = eval(parse(text = "do.call(randomA, rA_params)"))
 
 
 A <- A1
-A[1,] = A2[1,]
-A[,1] = A2[,1]
+#A[1,] = A2[1,]
+#A[,1] = A2[,1]
 
-#A[1:5,] = A2[1:5,]
-#A[,1:5] = A2[,1:5]
+A[1:5,] = A2[1:5,]
+A[,1:5] = A2[,1:5]
 
 
-growth.rates[1:5] = 3*max(growth.rates)
+#growth.rates[1] = 3*max(growth.rates)
 
 
 #############################
@@ -101,10 +101,10 @@ for (i in 1:50){
   
   
 }
-gr <- as.numeric(metaCom[,1]==0) #+ 
-#   as.numeric(metaCom[,2]==0) + 
-#   as.numeric(metaCom[,3]==0) + 
-#   as.numeric(metaCom[,4]==0) +
-#   as.numeric(metaCom[,5]==0)
+gr <- as.numeric(metaCom[,1]==0) + 
+   as.numeric(metaCom[,2]==0) + 
+   as.numeric(metaCom[,3]==0) + 
+   as.numeric(metaCom[,4]==0) +
+   as.numeric(metaCom[,5]==0)
 
 makeUMAP(metaCom, gradient = gr)
