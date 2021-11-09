@@ -2,7 +2,7 @@
 #' @param n.species integer number of species
 #' @param diagonal values defining the strength of self-interactions. Input can be a number 
 #' (will be applied to all species) or a vector of length n.species. 
-#' For stability, self-interaction should be negative.
+#' Positive self-interaction values lead to exponential growth.
 #' (default: \code{diagonal = -0.5})
 #' @param connectance numeric frequency of inter-species interactions. i.e. proportion of non-zero 
 #' off-diagonal terms.
@@ -75,34 +75,32 @@ randomA <- function(n.species,
                     parasitism = 1,
                     amensalism = 1,
                     competition = 1,
-                    interactions=NULL, 
+                    interactions = NULL, 
                     symmetric = FALSE){
   if(connectance > 1 || connectance < 0) {
     stop("'connectance' should be in range [0,1]")
   }
-  interaction.weights = c(mutualism, commensalism, parasitism, amensalism, competition)
-        A <- interactions
-      
-        if (is.null(interactions)){
+  
+  if (is.null(interactions)){
             A <- runif(n.species^2, min=0, max=abs(diagonal))
         }
-      
-        A <- matrix(A,
+  
+  interaction.weights = c(mutualism, commensalism, parasitism, amensalism, competition)
+  
+  A <- matrix(A,
                         nrow = n.species,
                         ncol = n.species
             )
-        
-        if(symmetric){
+  
+  if(symmetric){
           A[lower.tri(A)] <- t(A)[lower.tri(A)]
         }
-        
-        I <- getInteractions(n.species, interaction.weights, connectance)
-        
-        A <- I*abs(A)*(scale*min(abs(diagonal)))
-        
-        diag(A) <- diagonal
-        
-        
-            
-        return(A)
+  
+  I <- getInteractions(n.species, interaction.weights, connectance)
+  
+  A <- I*abs(A)*(scale*min(abs(diagonal)))
+  
+  diag(A) <- diagonal
+  
+  return(A)
 }
