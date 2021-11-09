@@ -10,15 +10,17 @@
 #' (default: \code{connectance = 0.2})
 #' @param scale numeric: scale of the off-diagonal elements compared to the diagonal. 
 #'  (default: \code{scale = 0.1})
-#' @param interaction.w numeric 5-dimensional vector that attributes weights to finding a type
-#' of biological interaction (mutualism(1,1), commensalism (1,0), parasitism (1,-1), 
-#' amensalism (0,-1), or competition (-1,-1)). Neutralism (0,0) is defined by the connectance. 
-#' Any numerical value are accepted but will be converted to positive and divided by their sum.
-#' (default: \code{interaction.W = c(1,1,1,1,1)})
+#' @param interaction.weights numeric length 5 vector with the relative proportion of random 
+#' interaction pairs consistent with mutualism(1,1), commensalism (1,0), parasitism (1,-1), 
+#' amensalism (0,-1), or competition (-1,-1), where 1 stands for positive, -1 for negative, 
+#' and 0 for neutral relationships).
+#' Neutralism (0,0) is defined by the connectance parameter. 
+#' Any numerical values are accepted but will be converted to positive and divided by their sum.
+#' (default: \code{interaction.weights = c(1,1,1,1,1)})
 #' @param distribution numeric a n.species*n.species dimensional vector that contains a draw of
 #' interaction strengths. If NULL, interactions are drawn from runif(n.species^2, min=0, max=abs(diagonal)).
 #' Negative values are converted to positive. The biological interactions that are drawn from the
-#' "interaction.W" parameter define the signs. 
+#' "interaction.weights" parameter define the signs. 
 #' (default: \code{distribution = NULL})
 #' @param symmetric logical return a symmetric interaction matrix
 #' (default: \code{symmetric=FALSE})
@@ -37,7 +39,7 @@
 #' @export
 
 
-randomA <- function(n.species, diagonal = -0.5, connectance = 0.2, interaction.w = c(1,1,1,1,1), 
+randomA <- function(n.species, diagonal = -0.5, connectance = 0.2, interaction.weights = c(1,1,1,1,1), 
              scale=0.1, distribution=NULL, symmetric = FALSE){
   if(connectance > 1 || connectance < 0) {
     stop("'connectance' should be in range [0,1]")
@@ -57,7 +59,7 @@ randomA <- function(n.species, diagonal = -0.5, connectance = 0.2, interaction.w
           A[lower.tri(A)] <- t(A)[lower.tri(A)]
         }
         
-        I <- getInteractions(n.species, interaction.w, connectance)
+        I <- getInteractions(n.species, interaction.weights, connectance)
         
         A <- I*abs(A)*(scale*min(abs(diagonal)))
         
