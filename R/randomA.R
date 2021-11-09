@@ -39,6 +39,9 @@
 
 randomA <- function(n.species, diagonal = -0.5, connectance = 0.2, interaction.w = c(1,1,1,1,1), 
              scale=0.1, distribution=NULL, symmetric = FALSE){
+  if(connectance > 1 || connectance < 0) {
+    stop("'connectance' should be in range [0,1]")
+  }
         A <- distribution
       
         if (is.null(distribution)){
