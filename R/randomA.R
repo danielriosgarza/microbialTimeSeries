@@ -1,4 +1,4 @@
-#' Generate random interaction matrix
+#' Generate random interaction matrix for the Generalized Lotka Volterra model
 #'
 #' @param n.species integer number of species
 #' @param diagonal numeric diagonal values
