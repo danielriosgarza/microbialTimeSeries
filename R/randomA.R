@@ -44,6 +44,9 @@ randomA <- function(n.species, diagonal = -0.5, connectance = 0.2, interaction.w
   if(connectance > 1 || connectance < 0) {
     stop("'connectance' should be in range [0,1]")
   }
+  if(length(interaction.weights) != 5) {
+    stop("length of 'interaction.weights' should equal to 5")
+  }
         A <- distribution
       
         if (is.null(distribution)){
