@@ -10,26 +10,53 @@
 #' (default: \code{connectance = 0.2})
 #' @param scale numeric: scale of the off-diagonal elements compared to the diagonal. 
 #'  (default: \code{scale = 0.1})
-#' @param interaction.weights numeric length 5 vector with the relative proportion of random 
-#' interaction pairs consistent with mutualism(1,1), commensalism (1,0), parasitism (1,-1), 
-#' amensalism (0,-1), or competition (-1,-1), where 1 stands for positive, -1 for negative, 
-#' and 0 for neutral relationships).
-#' Neutralism (0,0) is defined by the connectance parameter. 
-#' Any numerical values are accepted but will be converted to positive and divided by their sum.
-#' (default: \code{interaction.weights = c(1,1,1,1,1)})
-#' @param distribution numeric a n.species*n.species dimensional vector that contains a draw of
-#' interaction strengths. If NULL, interactions are drawn from runif(n.species^2, min=0, max=abs(diagonal)).
-#' Negative values are converted to positive. The biological interactions that are drawn from the
-#' "interaction.weights" parameter define the signs. 
-#' (default: \code{distribution = NULL})
-#' @param symmetric logical return a symmetric interaction matrix
+#' @param mutualism numeric: relative proportion of interactions terms consistent with mutualism
+#' positive <-> positive
+#' (default: \code{mutualism = 1})
+#' @param commensalism numeric: relative proportion of interactions terms consistent with commensalism
+#' positive <-> neutral
+#' (default: \code{commensalism = 1})
+#' @param parasitism numeric: relative proportion of interactions terms consistent with parasitism
+#' positive <-> negative
+#' (default: \code{parasitism = 1})
+#' @param amensalism numeric: relative proportion of interactions terms consistent with amensalism
+#' neutral <-> negative
+#' (default: \code{amensalism = 1})
+#' @param competition numeric: relative proportion of interactions terms consistent with competition
+#' negative <-> negative
+#' (default: \code{competition = 1})
+#' @param interactions numeric: values of the n.species^2 pairwise interaction strengths.  
+#' Diagonal terms will be replaced by the 'diagonal' parameter
+#' If NULL, interactions are drawn from runif(n.species^2, min=0, max=abs(diagonal)).
+#' Negative values are first converted to positive then the signs are defined by the
+#' the relative weights of the biological interactions (i.e. mutualism, commensalism, 
+#' parasitism, amensalism, competion) 
+#' (default: \code{interactions = NULL})
+#' @param symmetric logical whether the strength of mutualistic and competitive interactions are 
+#' symmetric
 #' (default: \code{symmetric=FALSE})
 #' @examples
-#' high_inter_A <- randomA(n.species = 10, diagonal = -0.4, min.strength = -0.8,
-#'                                     max.strength = 0.8, connectance = 0.5)
+#' 
+#' n.species = 10
+#' dense_A <- randomA(n.species = n.species, scale=1, diagonal = -1.0, connectance = 0.9)
+#' makeHeatmap(dense_A, lowColor = 'blue', highColor='red')
 #'
-#' low_inter_A <- randomA(n.species = 10, connectance = 0.01)
+#' sparse_A <- randomA(n.species = n.species, diagonal = -1.0, connectance = 0.09)
+#' makeHeatmap(sparse_A, lowColor = 'blue', highColor='red')
 #'
+#' user_interactions <- rbeta(n = n.species^2, .5,.5)
+#' user_A <- randomA(n.species, interactions = user_interactions)
+#' makeHeatmap(user_A, lowColor = 'blue', highColor='red')
+#' 
+#' competitive_A <- randomA(n.species=n.species, mutualism=0, 
+#' commensalism = 0, parasitism =0, amensalism =0, competition=1, connectance =1, scale=1 )
+#' makeHeatmap(competitive_A, lowColor = 'blue', highColor='red')
+#' 
+#' parasitism_A <- randomA(n.species=n.species, mutualism=0, 
+#' commensalism = 0, parasitism =1, amensalism =0, competition=0, connectance =1, scale=1, symmetric=TRUE )
+#' makeHeatmap(parasitism_A, lowColor = 'blue', highColor='red')
+
+
 #' @return
 #' \code{randomA} returns a matrix A with dimensions (n.species x n.species)
 #'
@@ -39,17 +66,24 @@
 #' @export
 
 
-randomA <- function(n.species, diagonal = -0.5, connectance = 0.2, interaction.weights = c(1,1,1,1,1), 
-             scale=0.1, distribution=NULL, symmetric = FALSE){
+randomA <- function(n.species, 
+                    diagonal = -0.5, 
+                    connectance = 0.2, 
+                    scale = 0.1,
+                    mutualism = 1,
+                    commensalism = 1,
+                    parasitism = 1,
+                    amensalism = 1,
+                    competition = 1,
+                    interactions=NULL, 
+                    symmetric = FALSE){
   if(connectance > 1 || connectance < 0) {
     stop("'connectance' should be in range [0,1]")
   }
-  if(length(interaction.weights) != 5) {
-    stop("length of 'interaction.weights' should equal to 5")
-  }
-        A <- distribution
+  interaction.weights = c(mutualism, commensalism, parasitism, amensalism, competition)
+        A <- interactions
       
-        if (is.null(distribution)){
+        if (is.null(interactions)){
             A <- runif(n.species^2, min=0, max=abs(diagonal))
         }
       
