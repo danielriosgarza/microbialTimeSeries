@@ -1,4 +1,4 @@
-#' Generate random interaction matrix for the Generalized Lotka-Volterra model
+#' Generate random interaction matrix for the Generalized Lotka-Volterra model(GLV)
 #' @param n.species integer number of species
 #' @param diagonal values defining the strength of self-interactions. Input can be a number 
 #' (will be applied to all species) or a vector of length n.species. 
