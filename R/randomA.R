@@ -1,11 +1,14 @@
-#' Generate random interaction matrix for the Generalized Lotka Volterra model
-#'
+#' Generate random interaction matrix for the Generalized Lotka-Volterra model
 #' @param n.species integer number of species
-#' @param diagonal numeric diagonal values
+#' @param diagonal values defining the strength of self-interactions. Input can be a number 
+#' (will be applied to all species) or a vector of length n.species. 
+#' For stability, self-interaction should be negative.
 #' (default: \code{diagonal = -0.5})
-#' @param connectance numeric (interaction probability)
+#' @param connectance numeric frequency of inter-species interactions. i.e. proportion of non-zero 
+#' off-diagonal terms
 #' (default: \code{connectance = 0.2})
-#' @param scale numeric: scaling parameter for the off-diagonal elements of A
+#' @param scale numeric: scale of the off-diagonal elements compared to the diagonal. 
+#' Should be in the [0,1] interval.
 #'  (default: \code{scale = 0.1})
 #' @param interaction.w numeric 5-dimensional vector that attributes weights to finding a type
 #' of biological interaction (mutualism(1,1), commensalism (1,0), parasitism (1,-1), 
