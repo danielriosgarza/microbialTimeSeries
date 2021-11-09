@@ -36,13 +36,8 @@
 #' @aliases randomA,numeric-method
 #' @export
 
-setGeneric("randomA", signature = "n.species",
-    function(n.species, diagonal = -0.5, connectance = 0.2, interaction.w = c(1,1,1,1,1), 
-             scale=0.1, distribution=NULL, symmetric = FALSE)
-    standardGeneric("randomA"))
 
-setMethod("randomA", signature = c(n.species="numeric"),
-    function(n.species, diagonal = -0.5, connectance = 0.2, interaction.w = c(1,1,1,1,1), 
+randomA <- function(n.species, diagonal = -0.5, connectance = 0.2, interaction.w = c(1,1,1,1,1), 
              scale=0.1, distribution=NULL, symmetric = FALSE){
         A <- distribution
       
@@ -68,4 +63,4 @@ setMethod("randomA", signature = c(n.species="numeric"),
         
             
         return(A)
-})
+}
