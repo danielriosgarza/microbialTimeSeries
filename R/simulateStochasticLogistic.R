@@ -1,6 +1,11 @@
 #' Stochastic Logistic simulation
+#' 
 #' Simulates time series with the (stochastic) logistic model
+#' 
 #' @param n.species Integer: number of species
+#' @param names.species Character: names of species. If NULL,
+#' `paste0("sp", seq_len(n.species))` is used.
+#' (default: \code{names.species = NULL})
 #' @param growth.rates Numeric: growth rates of simulated species. If NULL,
 #'  `runif(n = n.species, min = 0.1, max = 0.2)` is used.
 #' (default: \code{growth.rates = NULL})
@@ -68,6 +73,7 @@
 #' 
 #' # example with all the initial parameters defined by the user
 #' ExampleLogistic <- simulateStochasticLogistic(n.species = 2,
+#'     names.species = c("species1", "species2"),
 #'     growth.rates = c(0.2, 0.1), 
 #'     carrying.capacities = c(1000, 2000), 
 #'     death.rates = c(0.001, 0.0015), 
@@ -99,7 +105,8 @@
 #' @importFrom deSolve ode
 #'
 #' @export
-simulateStochasticLogistic <- function(n.species,
+simulateStochasticLogistic <- function(n.species, 
+    names.species = NULL,
     growth.rates = NULL,
     carrying.capacities = NULL,
     death.rates = NULL,
@@ -134,6 +141,9 @@ simulateStochasticLogistic <- function(n.species,
     }
     
     # set the default values
+    if (is.null(names.species)) {
+        names.species <- paste0("sp", seq_len(n.species))
+    }
     if (is.null(growth.rates)) {
         growth.rates <- runif(n = n.species, min = 0.1, max = 0.2)
     }
@@ -206,8 +216,7 @@ simulateStochasticLogistic <- function(n.species,
         out.matrix <- out.matrix/rowSums(out.matrix)
     }
     
-    # TODO: if is.null(names), do this
-    colnames(out.matrix) <- seq_len(n.species)
+    colnames(out.matrix) <- names.species
     
     out.matrix <- cbind(out.matrix, time = t.dyn$t.sys[t.dyn$t.index])
     
