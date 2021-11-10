@@ -109,7 +109,7 @@ makePlot <- function(out.matrix){
   
 }
 
-makeHeatmap <-function(out.matrix, midpoint_color = NULL){
+makeHeatmap <-function(out.matrix, midpoint_color = NULL, lowColor = "white", highColor = "magenta3"){
   
   
   #out.matrix = t(out.matrix[,colnames(out.matrix)!="time"])
@@ -124,7 +124,7 @@ makeHeatmap <-function(out.matrix, midpoint_color = NULL){
   fig <- ggplot(df, aes(x,y,fill=abundance)) + 
     geom_tile(colour="#edfaf9",size=0.005) +
     theme(axis.title = element_blank()) + 
-    scale_fill_gradient2('abundance', low = "white", high = "magenta3", midpoint = midpoint_color) +  
+    scale_fill_gradient2('abundance', low = lowColor, high = highColor, midpoint = midpoint_color) +  
     theme_void() +
     scale_y_discrete(expand=c(0,0))
   
