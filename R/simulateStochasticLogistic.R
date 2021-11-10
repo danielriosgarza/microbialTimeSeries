@@ -1,33 +1,18 @@
 #' Stochastic Logistic simulation
-#'
-#' Simulates time series with the (stochastic) logistic model and forms a list 
-#' as a result.
-#'
-#' Simulates a community time series using the logistic model.
-#' The change rate of the species was defined as
-#' `dx/dt = growth.rates*x0*(1-(x0/carrying.capacities))*rN - death.rates*x0`, 
-#' where `growth.rates` is the growth rates of each species,
-#' `x0` is the initial abundances of each species,
-#' `carrying.capacities` is the vector of maximum carrying capacities,
-#' `rN` is a random number ranged from 0 to 1 which changes in each time step,
-#' `death.rates` is the vector of constant death rates.
-#' Also, the vectors of initial dead species abundances can be set.
-#' The number of species will be set to 0 if the dead species abundances
-#' surpass the alive species abundances.
-#'
+#' Simulates time series with the (stochastic) logistic model
 #' @param n.species Integer: number of species
-#' @param growth.rates Numeric: growth rates of simulated species. If NULL, the 
-#' default, `runif(n = n.species, min = 0.1, max = 0.2)` is used.
+#' @param growth.rates Numeric: growth rates of simulated species. If NULL,
+#'  `runif(n = n.species, min = 0.1, max = 0.2)` is used.
 #' (default: \code{growth.rates = NULL})
 #' @param carrying.capacities Numeric: The max population of species supported 
-#' in the community. If NULL, by default, carrying.capacities is
-#' `runif(n = n.species, min = 1000, max = 2000)`.
+#' in the community. If NULL,
+#' `runif(n = n.species, min = 1000, max = 2000)` is used.
 #' (default: \code{carrying.capacities = NULL})
-#' @param death.rates Numeric: death rates of each species. If NULL, the 
-#' default death.rates is `runif(n = n.species, min = 0.0005, max = 0.0025)`.
+#' @param death.rates Numeric: death rates of each species. If NULL, 
+#' `runif(n = n.species, min = 0.0005, max = 0.0025)` is used.
 #' (default: \code{death.rates = NULL})
-#' @param x0 Numeric: initial abundances of simulated species. If NULL, the 
-#' default, then x0 is set to `runif(n = n.species, min = 0.1, max = 10)`.
+#' @param x0 Numeric: initial abundances of simulated species. If NULL, 
+#' `runif(n = n.species, min = 0.1, max = 10)` is used.
 #' (default: \code{x0 = NULL})
 #' @param sigma.drift Numeric: standard deviation of a normally distributed 
 #' noise applied in each time step (t.step)
@@ -42,24 +27,25 @@
 #' @param sigma.migration Numeric: standard deviation of a normally distributed 
 #' variable that defines the intensity of migration at each time step (t.step)
 #' (default: \code{sigma.migration = 0.01})
-#' @param epoch.p Numeric: the probability/frequency of random periodic (epoch) 
+#' @param epoch.p Numeric: the probability/frequency of random periodic 
 #' changes introduced to the community composition
 #' (default: \code{epoch.p = 0.001})
 #' @param t.external_events Numeric: the starting time points of defined 
 #' external events that introduce random changes to the community composition
 #' (default: \code{t.external_events = c(0, 240, 480)})
-#' @param t.external_durations Numeric: the durations of the defined external 
-#' events.
+#' @param t.external_durations Numeric: respective duration of the external 
+#' events that are defined in the 't.external_events' (times) and sigma.external (std).
 #' (default: \code{t.external_durations = c(0, 1, 1)})
 #' @param migration.p Numeric: the probability/frequency of migration from a 
 #' metacommunity.
 #' (default: \code{migration.p = 0.01})
 #' @param metacommunity.probability Numeric: Normalized probability distribution
 #' of the likelihood that species from the metacommunity can enter the community
-#' during the simulation. If NULL as default, then 
+#' during the simulation. If NULL, 
 #' `rdirichlet(1, alpha = rep(1,n.species))` is used.
 #' (default: \code{metacommunity.probability = NULL})
-#' @param stochastic Logical: whether to introduce noise in the simulation
+#' @param stochastic Logical: whether to introduce noise in the simulation.
+#' If False, sigma.drift, sigma.epoch, and sigma.external are ignored.
 #' (default: \code{stochastic = TRUE})
 #' @param t.end Numeric: the end time of the simulationTimes, defining the 
 #' modeled time length of the community. 
@@ -68,19 +54,19 @@
 #'
 #' @docType methods
 #' @examples
-#' ## ATTENTION: Don't set a large value to t.step, otherwise the computer won't
-#' #give a correct solution to the logistic ODE(ordinary differential equation).
-#' #Keeping t.step under 0.05 or 0.01 is a good practice.
-#'
-#' # Example of logistic model without stochasticity or external disturbances
-#' ExampleLogistic <- simulateStochasticLogistic(n.species = 5, stochastic = FALSE)
+#' # Example of logistic model without stochasticity, death rates, or external disturbances
+#' ExampleLogistic <- simulateStochasticLogistic(n.species = 5, stochastic = FALSE, death.rate=0)
+#' makePlot(ExampleLogistic$matrix)
+#' 
+#' # Adding a death rate
+#' ExampleLogistic <- simulateStochasticLogistic(n.species = 5, stochastic = FALSE, death.rate=0.01)
 #' makePlot(ExampleLogistic$matrix)
 #' 
 #' # Example of stochastic logistic model
 #' ExampleLogistic <- simulateStochasticLogistic(n.species = 5)
 #' makePlot(ExampleLogistic$matrix)
 #' 
-#' # example with given initial parameters
+#' # example with all the initial parameters defined by the user
 #' ExampleLogistic <- simulateStochasticLogistic(n.species = 2,
 #'     growth.rates = c(0.2, 0.1), 
 #'     carrying.capacities = c(1000, 2000), 
