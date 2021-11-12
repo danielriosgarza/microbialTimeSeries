@@ -57,7 +57,6 @@
 #' (default: \code{t.end = 1000})
 #' @param ... additional parameters, see \code{\link{utils}} to know more.
 #'
-#' @docType methods
 #' @examples
 #' # Example of logistic model without stochasticity, death rates, or external disturbances
 #' ExampleLogistic <- simulateStochasticLogistic(n.species = 5, stochastic = FALSE, death.rate=0)
