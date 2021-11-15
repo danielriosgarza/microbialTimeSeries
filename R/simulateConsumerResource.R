@@ -1,9 +1,6 @@
 #' Consumer-resource model simulation
 #'
 #' Simulates time series with the consumer-resource model
-#' 
-#' The resulting abundance matrix model is used to construct
-#' \linkS4class{SummarizedExperiment} object.
 #'
 #' @param n.species Integer: number of species
 #' @param n.resources Interger: number of resources
@@ -14,7 +11,8 @@
 #' `paste0("res", seq_len(n.resources))` is used.
 #' @param E matrix: matrix of efficiency. A matrix defining the efficiency of
 #' resource-to-biomass conversion (positive values) and the relative conversion
-#' of metabolic by-products (negative values)
+#' of metabolic by-products (negative values). If NULL, 
+#' `randomE(n.species, n.resources)` is used.
 #' (default: \code{E = NULL})
 #' @param x0 Numeric: initial abundances of simulated species. If NULL,
 #' `runif(n = n.species, min = 0.1, max = 10)` is used.
@@ -30,38 +28,46 @@
 #' `matrix(rgamma(n = n.species*n.resources, shape = 50*max(resources), rate = 1), nrow = n.species)`
 #' is used.
 #' (default: \code{monod.constant = NULL})
-#' @param return.matrix Logical: whether to export only the stored time points
-#' in a matrix
-#' (default: \code{return.matrix = FALSE})
-#' @param t.end Numeric scalar indicating the final time of the dimulation
+#' @param norm Logical scalar: returns normalized abundances (proportions
+#' in each generation) 
+#' (default: \code{norm = FALSE})
+#' @param t.end Numeric scalar indicating the final time of the simulation
 #' (default: \code{t.end = 1000})
-#' @param ... additional parameters including 't.start', 't.step', and 't.store'
+#' @param ... additional parameters, see \code{\link{utils}} to know more.
 #'
 #' @examples
 #' ExampleConsumerResource <- simulateConsumerResource(n.species = 2, 
 #'     n.resources = 4)
-#' # visualize
 #' makePlot(ExampleConsumerResource$matrix)
 #' makePlot(ExampleConsumerResource$resources)
 #'
-#' @return \code{simulateConsumerResource} returns a
-#' \linkS4class{SummarizedExperiment} class object containing matrix with
-#' species and resources abundance as rows and time points as columns
+#' # example with user-defined values (E, x0, t.end, t.step)
+#' ExampleE <- randomE(n.species = 4, n.resources = 6, mean.con = 3, 
+#'     mean.prod = 1, maintenance = 0.4)
+#' ExampleConsumerResource <- simulateConsumerResource(n.species = 4, 
+#'     n.resources = 6, E = ExampleE, x0 = rep(0.001, 4), t.end = 5000, t.step = 1)
+#' makePlot(ExampleConsumerResource$matrix)
+#' makePlot(ExampleConsumerResource$resources)
+#' 
+#' @docType methods
+#' @aliases simulateConsumerResource-numeric
+#' 
+#' @importFrom deSolve ode
 #'
 #' @export
 simulateConsumerResource <- function(n.species, n.resources,
-    names.species = NULL,
-    names.resources = NULL,
-    E = NULL,
-    x0 = NULL,
-    resources = NULL,
-    growth.rates = NULL,
-    monod.constant = NULL,
-    norm = FALSE,
-    t.end = 1000, ...){
+                                     names.species = NULL,
+                                     names.resources = NULL,
+                                     E = NULL,
+                                     x0 = NULL,
+                                     resources = NULL,
+                                     growth.rates = NULL,
+                                     monod.constant = NULL,
+                                     norm = FALSE,
+                                     t.end = 1000, ...){
     
     t.dyn <- SimulationTimes(t.end = t.end,...)
-
+    
     # define the consumer-resource model
     consumerResourceModel <- function(t, state, params){
         with(as.list(c(state, params)),{
@@ -71,7 +77,7 @@ simulateConsumerResource <- function(n.species, n.resources,
             E <- params[['E']]
             monod.constant <- params[['monod.constant']]
             B <- matrix(rep(resources, length(x0)),
-                ncol = length(resources), byrow = TRUE) + monod.constant
+                        ncol = length(resources), byrow = TRUE) + monod.constant
             growth <- ((E*(E>0)/B) %*% resources)*x0
             
             consumption <- (t(growth) %*% ((E>0)/B))*resources
@@ -104,16 +110,16 @@ simulateConsumerResource <- function(n.species, n.resources,
     }
     if (is.null(monod.constant)) {
         monod.constant <- matrix(rgamma(n = n.species*n.resources,
-            shape = 50*max(resources), rate = 1), nrow = n.species)
+                                        shape = 50*max(resources), rate = 1), nrow = n.species)
     }
     
     state.init <- c(x0, resources)
     names(state.init) <- c(paste0("consumer", seq(length(x0))),
-        paste0("resource", seq(length(resources))))
+                           paste0("resource", seq(length(resources))))
     parameters <- list(growth.rates = growth.rates, E = E, monod.constant = monod.constant)
-
+    
     out <- as.data.frame(ode(y = state.init, times = t.dyn$t.sys,
-        func = consumerResourceModel, parms = parameters))
+                             func = consumerResourceModel, parms = parameters))
     
     species.index <- grepl('consumer', names(out))
     resource.index <- grepl('resource', names(out))
@@ -139,8 +145,5 @@ simulateConsumerResource <- function(n.species, n.resources,
                      resources = out.resource.matrix,
                      E.Mat = E,
                      monod.constant = monod.constant)
-    
     return(out.list)
-    
-    
 }
