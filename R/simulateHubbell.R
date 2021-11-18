@@ -3,6 +3,9 @@
 #' Neutral species abundances simulation according to the Hubbell model.
 #'
 #' @param community.initial Numeric: initial species composition
+#' @param names.species Character: names of species. If NULL,
+#' `paste0("sp", seq_len(n.species))` is used.
+#' (default: \code{names.species = NULL})
 #' @param migration.p Numeric: the probability/frequency of migration from a 
 #' metacommunity
 #' (default: \code{m = 0.02})
@@ -43,23 +46,28 @@
 #
 #' @export
 simulateHubbell <- function(community.initial, 
+    names.species = NULL,
     migration.p = 0.01, 
     metacommunity.probability = NULL,
     k.events = 1,
     norm = FALSE, 
     t.end=1000, ...){
     
-    t.dyn <- SimulationTimes(t.end = t.end,...)
-    n.species <- length(community.initial)
-    birth.p <- 1 - migration.p
-    community <- community.initial
-
+    # set the default values
+    if (is.null(names.species)) {
+        names.species <- paste0("sp", seq_len(n.species))
+    }
     if (is.null(metacommunity.probability)){
         metacommunity.probability <- rdirichlet(1, alpha = rep(1,n.species))
     }
     # normalize metacommunity.probability
     metacommunity.probability <- metacommunity.probability/
         sum(metacommunity.probability)
+    
+    t.dyn <- SimulationTimes(t.end = t.end,...)
+    n.species <- length(community.initial)
+    birth.p <- 1 - migration.p
+    community <- community.initial
     
     out.matrix <- matrix(0, nrow=length(t.dyn$t.index), ncol = n.species)
     
@@ -91,7 +99,7 @@ simulateHubbell <- function(community.initial,
     if(norm){
         out.matrix <- out.matrix/rowSums(out.matrix)
     }
-    colnames(out.matrix) <- seq_len(n.species)
+    colnames(out.matrix) <- names.species
     
     out.matrix <- cbind(out.matrix, time = t.dyn$t.sys[t.dyn$t.index])
     

@@ -7,6 +7,11 @@
 #' 
 #' @param n.species Integer: number of species
 #' @param n.resources Integer: number of resources
+#' @param names.species Character: names of species. If NULL,
+#' `paste0("sp", seq_len(n.species))` is used.
+#' (default: \code{names.species = NULL})
+#' @param names.resources Character: names of resources. If NULL,
+#' `paste0("res", seq_len(n.resources))` is used.
 #' @param mean.consumption Numeric: mean number of resources consumed by each 
 #' species drawn from a poisson distribution
 #' (default: \code{mean.consumption = n.resources/4})
@@ -18,12 +23,18 @@
 #' (default: \code{maintenance = 0.5})
 #' 
 #' @examples
-#' # example with specific parameters
+#' # example with minimum parameters
+#' ExampleEfficiencyMatrix <- randomE(n.species = 5, n.resources = 12)
+#' 
+#' # examples with specific parameters
+#' ExampleEfficiencyMatrix <- randomE(n.species = 3, n.resources = 6,
+#' names.species = letters[1:3], names.resources = paste0("res",LETTERS[1:6]),
+#' mean.consumption = 3, mean.production = 1 )
+#' ExampleEfficiencyMatrix <- randomE(n.species = 3, n.resources = 6,
+#' maintenance = 0.4)
 #' ExampleEfficiencyMatrix <- randomE(n.species = 3, n.resources = 6,
 #' mean.consumption = 3, mean.production = 1, maintenance = 0.4)
-#' # example with minimum parameters
-#' ExampleEfficiencyMatrix2 <- randomE(n.species = 5, n.resources = 12)
-#'
+#' 
 #' @return
 #' \code{randomE} returns a matrix E with dimensions (n.species x n.resources),
 #' and each row represents a species.
@@ -31,11 +42,22 @@
 #' @export
 randomE <- function(n.species,
     n.resources,
+    names.species = NULL,
+    names.resources = NULL,
     mean.consumption = n.resources/4,
     mean.production = n.resources/6,
     maintenance = 0.5){
     
-    efficiency.matrix <- matrix(0, nrow = n.species, ncol = n.resources)
+    # set the default values
+    if (is.null(names.species)) {
+        names.species <- paste0("sp", seq_len(n.species))
+    }
+    if (is.null(names.resources)) {
+        names.resources <- paste0("res", seq_len(n.resources))
+    }
+    
+    efficiency.matrix <- matrix(0, nrow = n.species, ncol = n.resources,
+                                dimnames = list(names.species, names.resources))
     
     for (i in seq(n.species)){
         

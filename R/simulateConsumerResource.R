@@ -40,12 +40,25 @@
 #'     n.resources = 4)
 #' makePlot(ExampleConsumerResource$matrix)
 #' makePlot(ExampleConsumerResource$resources)
+#' 
+#' # example to get relative abundance and relative proportion of resources
+#' ExampleConsumerResource <- simulateConsumerResource(n.species = 2, 
+#'     n.resources = 4, norm = TRUE)
+#' makePlot(ExampleConsumerResource$matrix)
+#' makePlot(ExampleConsumerResource$resources)
 #'
-#' # example with user-defined values (E, x0, t.end, t.step)
-#' ExampleE <- randomE(n.species = 4, n.resources = 6, mean.con = 3, 
+#' # example with user-defined values (names.species, names.resources, E, x0, 
+#' # resources, growth.rates, t.end, t.step)
+#' n.resources <- 6
+#' ExampleE <- randomE(n.species = 4, n.resources = n.resources, mean.con = 3, 
 #'     mean.prod = 1, maintenance = 0.4)
+#' ExampleResources <- rep(100, n.resources)
 #' ExampleConsumerResource <- simulateConsumerResource(n.species = 4, 
-#'     n.resources = 6, E = ExampleE, x0 = rep(0.001, 4), t.end = 5000, t.step = 1)
+#'     n.resources = 6, names.species = letters[1:4], 
+#'     names.resources = paste0("res",LETTERS[1:6]), E = ExampleE, 
+#'     x0 = rep(0.001, 4), resources = ExampleResources, 
+#'     growth.rates <- runif(4),
+#'     t.end = 5000, t.step = 1)
 #' makePlot(ExampleConsumerResource$matrix)
 #' makePlot(ExampleConsumerResource$resources)
 #' 
@@ -132,6 +145,7 @@ simulateConsumerResource <- function(n.species, n.resources,
     
     if(norm){
         out.species.matrix <- out.species.matrix/rowSums(out.species.matrix)
+        # TODO: Discussion: Do we need to apply relative abundance to resources?
         out.resource.matrix <- out.resource.matrix/rowSums(out.resource.matrix)
     }
     

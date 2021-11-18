@@ -3,9 +3,12 @@
 #' Neutral species abundances simulation according to the Hubbell model.
 #'
 #' @param community.initial Numeric: initial species composition
+#' @param names.species Character: names of species. If NULL,
+#' `paste0("sp", seq_len(n.species))` is used.
+#' (default: \code{names.species = NULL})
 #' @param migration.p Numeric: the probability/frequency of migration from a 
 #' metacommunity
-#' (default: \code{m = 0.02})
+#' (default: \code{migration.p = 0.01})
 #' @param metacommunity.probability Numeric: normalized probability distribution
 #' of the likelihood that species from the metacommunity can enter the community
 #' during the simulation. If NULL, `rdirichlet(1, alpha = rep(1,n.species))` is 
@@ -14,7 +17,7 @@
 #' @param k.events Integer: number of events to simulate before updating the 
 #' sampling distributions.
 #' (default: \code{k.events = 1})
-#' @param growth.rates Numeric: vector of maximum growth rates(mu) of species.
+#' @param growth.rates Numeric: maximum growth rates(mu) of species.
 #' If NULL, `rep(1, n.species)` is used.
 #' (default: \code{growth.rates = NULL})
 #' @param norm Logical: whether the time series should be returned with
@@ -32,7 +35,21 @@
 #' @examples
 #' ExampleHubbellRates <- simulateHubbellRates(rep(100, 5))
 #' makePlot(ExampleHubbellRates$matrix)
-#'
+#' 
+#' # no migration, all stochastic birth and death
+#' ExampleHubbellRates <- simulateHubbellRates(rep(100, 5), migration.p = 0)
+#' makePlot(ExampleHubbellRates$matrix)
+#' 
+#' 
+#' ExampleHubbellRates <- simulateHubbellRates(rep(100, 5), migration.p = 1, 
+#'      t.end = 100)
+#' makePlot(ExampleHubbellRates$matrix)
+#' 
+#' ExampleHubbellRates <- simulateHubbellRates(rep(100, 5), migration.p = 0.1,
+#'     metacommunity.probability <- c(1,2,3,4,5), k.events = 5,
+#'     growth.rates <- c(1,2,3,4,5))
+#' makePlot(ExampleHubbellRates$matrix)
+#' 
 #' @return \code{simulateHubbellRates} returns a list of initial states, 
 #' parameters of the model, including a matrix with species abundance as rows 
 #' and time points as columns.
@@ -51,6 +68,7 @@
 #
 #' @export
 simulateHubbellRates <- function(community.initial, 
+    names.species = NULL,
     migration.p = 0.01, 
     metacommunity.probability = NULL,
     k.events = 1, 
@@ -58,11 +76,11 @@ simulateHubbellRates <- function(community.initial,
     norm = FALSE,
     t.end=1000,...){
     
-    t.dyn <- SimulationTimes(t.end = t.end,...)
-    t.store <- length(t.dyn$t.index)
+    # set the default values
     n.species <- length(community.initial)
-    birth.p <- 1 - migration.p
-    community <- community.initial
+    if (is.null(names.species)) {
+        names.species <- paste0("sp", seq_len(n.species))
+    }
     
     if (is.null(metacommunity.probability)){
         metacommunity.probability <- rdirichlet(1, alpha = rep(1,n.species))
@@ -71,9 +89,16 @@ simulateHubbellRates <- function(community.initial,
     metacommunity.probability <- metacommunity.probability/
         sum(metacommunity.probability)
     
+    # TODO: growth.rates is not used in this function ####
     if (is.null(growth.rates)){
         growth.rates <- rep(1,n.species)
     }
+    
+    t.dyn <- SimulationTimes(t.end = t.end,...)
+    t.store <- length(t.dyn$t.index)
+    
+    birth.p <- 1 - migration.p
+    community <- community.initial
     
     propensities <- sum(community)*(c(migration.p, 1-migration.p))
     event.probabilities <- propensities/(sum(propensities))
@@ -110,15 +135,13 @@ simulateHubbellRates <- function(community.initial,
                 ncol = sum(index)))
             last_stored_t <- stored_time[max(seq(t.store)[index])]
         }
-        
-        
     }
     
     if(norm){
         out.matrix <- out.matrix/rowSums(out.matrix)
     }
     
-    colnames(out.matrix) <- seq_len(n.species)
+    colnames(out.matrix) <- names.species
     
     out.matrix <- cbind(out.matrix, time = t.dyn$t.sys[t.dyn$t.index])
     

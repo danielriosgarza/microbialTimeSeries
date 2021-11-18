@@ -33,10 +33,11 @@
 #' (default: \code{epoch.p = 0.001})
 #' @param t.external_events Numeric: the starting time points of defined 
 #' external events that introduce random changes to the community composition
-#' (default: \code{t.external_events = c(0, 240, 480)})
+#' (default: \code{t.external_events = NULL})
 #' @param t.external_durations Numeric: respective duration of the external 
-#' events that are defined in the 't.external_events' (times) and sigma.external (std).
-#' (default: \code{t.external_durations = c(0, 1, 1)})
+#' events that are defined in the 't.external_events' (times) and 
+#' sigma.external (std).
+#' (default: \code{t.external_durations = NULL})
 #' @param stochastic Logical: whether to introduce noise in the simulation.
 #' If False, sigma.drift, sigma.epoch, and sigma.external are ignored.
 #' (default: \code{stochastic = TRUE})
@@ -57,12 +58,20 @@
 #' 
 #' # generate a random interaction matrix
 #' ExampleA <- randomA(n.species = 4, diagonal = -1)
-#' # run the model with default values
-#' ExampleGLV <- simulateGLV(n.species = 4, A = exampleA)
+#' 
+#' # run the model with default values (only stochastic migration considered)
+#' ExampleGLV <- simulateGLV(n.species = 4, A = ExampleA)
 #' # visualize the result
 #' makePlot(ExampleGLV$matrix)
 #' 
-#' # run the model with no pertubations nor migration
+#' # run the model with two external disturbances at time points 240 and 480 
+#' # with durations equal to 1 (10 time steps when t.step by default is 0.1).
+#' ExampleGLV <- simulateGLV(n.species = 4, A = ExampleA,
+#'     t.external_events = c(0, 240, 480), t.external_durations = c(0, 1, 1))
+#' # visualize the result
+#' makePlot(ExampleGLV$matrix)
+#' 
+#' # run the model with no pertubation nor migration
 #' ExampleGLV <- simulateGLV(n.species = 4, A = ExampleA, stochastic = FALSE, 
 #'     sigma.migration = 0)
 #' # visualize the result
@@ -103,6 +112,8 @@ perturb <- function(t, y, parameters){
             migration.rN <- rmultinom(n = 1, size = 1, 
                 prob = parameters$metacommunity.probability)[,]*abs(rnorm(n=1, 
                     mean=0, sd = parameters$sigma.migration))
+            # TODO: is migration also stochastic? if so, add the following:####
+            # migration.rN <- parameters$stochastic*migration.rN
         }
         
         if (t %in% parameters$tEvent){
@@ -129,8 +140,8 @@ simulateGLV <- function(n.species,
     sigma.external = 0.3,
     sigma.migration = 0.01,
     epoch.p = 0.001,
-    t.external_events = c(0, 240, 480),
-    t.external_durations = c(0, 1, 1),
+    t.external_events = NULL,
+    t.external_durations = NULL,
     stochastic = TRUE,
     migration.p = 0.01, 
     metacommunity.probability = NULL,

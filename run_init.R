@@ -11,8 +11,5 @@ installIfNeeded<-function(...) {
 installIfNeeded("ggplot2", "deSolve", "reshape2", "Matrix", 
                 "mvtnorm", "pracma", "gtools", "maotai", "umap")
 
-
-setwd("C:/Users/u0139894/Documents/GitHub/microbialTimeSeries")
-
 Rfiles = gsub(" ", "", paste("./R/", list.files("./R")))
 sapply(Rfiles, source)

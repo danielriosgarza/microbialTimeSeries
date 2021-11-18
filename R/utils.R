@@ -23,41 +23,35 @@
 #' @keywords internal
 #' @export
 
-setGeneric("SimulationTimes", signature = "t.end",
-    function(t.start = 0, t.end = 1000, t.step = 0.1, t.store = 1000)
-    standardGeneric("SimulationTimes"))
+SimulationTimes <- function(t.start = 0, t.end = 1000, 
+    t.step = 0.1, t.store = 1000){
+    t.total <- t.end-t.start
+    t.sys <- seq(t.start, t.end, by = t.step)
+    t.index <- seq(1, length(t.sys)-1, by=round(length(t.sys)/t.store))
+    # TODO: ####
+    # This function stores time points with fixed interval, 
+    # but cannot return a expected length (by t.store). 
+    # recommended change to the following:
+    # t.index <- as.integer(seq(from = t.start, to = length(t.sys)-1, length.out = t.store)) +1
+    return(list("t.sys" = t.sys, "t.index" = t.index))
+}
 
-setMethod("SimulationTimes", signature = c(t.end="numeric"),
-    function(t.start = 0, t.end = 1000, t.step = 0.1, t.store = 1000){
-        t.total <- t.end-t.start
-        t.sys <- seq(t.start, t.end, by = t.step)
-        t.index <- seq(1, length(t.sys)-1, by=round(length(t.sys)/t.store))
-        return(list("t.sys" = t.sys, "t.index" = t.index))
-})
+isPositiveInteger <- function(x, tol = .Machine$double.eps^0.5) {
+    return(abs(x - round(x)) < tol && x > 0)
+}
 
-setGeneric("isPositiveInteger", signature = "x",
-    function(x, tol = .Machine$double.eps^0.5)
-        standardGeneric("isPositiveInteger"))
-setMethod("isPositiveInteger", signature = c(x="numeric"),
-    function(x, tol = .Machine$double.eps^0.5) {
-        return(abs(x - round(x)) < tol && x > 0)
+# ExampleEventTimes <- eventTimes(t.events = c(10,20,30), t.duration = rep(3,3))
+eventTimes <- function(t.events = NULL, t.duration = NULL,
+                       t.end=1000, ...){
+    tdyn <- SimulationTimes(t.end = t.end,...)
+    t.result = c()
+    for (i in seq(length(t.events))){
+        p1 <- tdyn$t.sys[(tdyn$t.sys >= t.events[i]) &
+            (tdyn$t.sys < (t.events[i]+t.duration[i]))]
+        t.result <- c(t.result, p1)
     }
-)
-
-setGeneric("eventTimes", signature = "t.events",
-    function(t.events=c(10,20,30), t.duration=rep(3,3), t.end=1000, ...)
-        standardGeneric("eventTimes"))
-setMethod("eventTimes", signature = c(t.events="numeric"),
-    function(t.events=c(10,20,30), t.duration=rep(3,3), t.end=1000, ...){
-        tdyn <- SimulationTimes(t.end = t.end,...)
-        t.result = c()
-        for (i in seq(length(t.events))){
-            p1 <- tdyn$t.sys[(tdyn$t.sys >= t.events[i]) &
-                        (tdyn$t.sys <= (t.events[i]+t.duration[i]))]
-            t.result <- c(t.result, p1)
-        }
-        return(t.result)
-    })
+    return(t.result)
+}
 
 applyInterctionType <- function(I, pair, interType){
     if (rbinom(1,1,0.5)){
@@ -88,12 +82,12 @@ applyInterctionType <- function(I, pair, interType){
 
 getInteractions <- function(n.species, weights, connectance){
     I <- matrix(0, n.species, n.species)
-    interactions <- c('mutualism', 'commensalism', 'parasitism', 'amensalism', 'competition')
+    interactions <- c('mutualism', 'commensalism', 'parasitism', 
+                      'amensalism', 'competition')
     probs <- abs(weights)/sum(abs(weights))
     combinations <- combn(n.species, 2)
     for (i in sample(seq_along(combinations[1,]),as.integer(ncol(combinations)*connectance), replace=FALSE)){
         I <- applyInterctionType(I, combinations[,i], sample(interactions, 1, prob = probs))
     }
     return (I)
-    
 }

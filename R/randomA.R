@@ -3,6 +3,9 @@
 #' Generate random interaction matrix for Generalized Lotka-Volterra (GLV) model
 #' 
 #' @param n.species Integer number of species
+#' @param names.species Character: names of species. If NULL,
+#' `paste0("sp", seq_len(n.species))` is used.
+#' (default: \code{names.species = NULL})
 #' @param diagonal Values defining the strength of self-interactions. Input can 
 #' be a number (will be applied to all species) or a vector of length n.species.
 #' Positive self-interaction values lead to exponential growth.
@@ -89,6 +92,7 @@
 #' @export
 
 randomA <- function(n.species,
+    names.species = NULL,
     diagonal = -0.5, 
     connectance = 0.2, 
     scale = 0.1,
@@ -102,6 +106,10 @@ randomA <- function(n.species,
 
     if(connectance > 1 || connectance < 0) {
         stop("'connectance' should be in range [0,1]")
+    }
+    # set the default values
+    if (is.null(names.species)) {
+        names.species <- paste0("sp", seq_len(n.species))
     }
     if (is.null(interactions)){
         A <- runif(n.species^2, min=0, max=abs(diagonal))
@@ -123,5 +131,6 @@ randomA <- function(n.species,
     I <- getInteractions(n.species, interaction.weights, connectance)
     A <- I*abs(A)*(scale*min(abs(diagonal)))
     diag(A) <- diagonal
+    colnames(A) <- rownames(A) <- names.species
     return(A)
 }
