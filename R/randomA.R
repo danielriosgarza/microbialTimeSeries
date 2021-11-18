@@ -105,6 +105,8 @@ randomA <- function(n.species,
     }
     if (is.null(interactions)){
         A <- runif(n.species^2, min=0, max=abs(diagonal))
+    } else {
+        A <- interactions
     }
 
     interaction.weights = c(mutualism, 
