@@ -114,8 +114,10 @@ simulateHubbellRates <- function(community.initial,
         tau_events <- min(min(community[community>0]),k.events)
         tau <- rgamma(n = 1, shape = tau_events, scale = 1/(sum(propensities)))
         current_t <- current_t + tau
+        
+        composition.propensities <- community*growth.rates
 
-        composition.probabilities <- community/sum(community)
+        composition.probabilities <- composition.propensities/sum(composition.propensities)
         
         #k deaths
         community <- community -
