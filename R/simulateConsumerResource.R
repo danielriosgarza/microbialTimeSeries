@@ -28,6 +28,10 @@
 #' `matrix(rgamma(n = n.species*n.resources, shape = 50*max(resources), rate = 1), nrow = n.species)`
 #' is used.
 #' (default: \code{monod.constant = NULL})
+#' @param error.variance Numeric: the variance of measurement error.
+#' By default it equals to 0, indicating that the result won't contain any 
+#' measurement error. This value should be non-negative.
+#' (default: \code{error.variance = 0})
 #' @param norm Logical scalar: returns normalized abundances (proportions
 #' in each generation) 
 #' (default: \code{norm = FALSE})
@@ -48,7 +52,7 @@
 #' makePlot(ExampleConsumerResource$resources)
 #'
 #' # example with user-defined values (names.species, names.resources, E, x0, 
-#' # resources, growth.rates, t.end, t.step)
+#' # resources, growth.rates, error.variance, t.end, t.step)
 #' n.resources <- 6
 #' ExampleE <- randomE(n.species = 4, n.resources = n.resources, mean.con = 3, 
 #'     mean.prod = 1, maintenance = 0.4)
@@ -58,6 +62,7 @@
 #'     names.resources = paste0("res",LETTERS[1:6]), E = ExampleE, 
 #'     x0 = rep(0.001, 4), resources = ExampleResources, 
 #'     growth.rates <- runif(4),
+#'     error.variance = 1,
 #'     t.end = 5000, t.step = 1)
 #' makePlot(ExampleConsumerResource$matrix)
 #' makePlot(ExampleConsumerResource$resources)
@@ -69,15 +74,16 @@
 #'
 #' @export
 simulateConsumerResource <- function(n.species, n.resources,
-                                     names.species = NULL,
-                                     names.resources = NULL,
-                                     E = NULL,
-                                     x0 = NULL,
-                                     resources = NULL,
-                                     growth.rates = NULL,
-                                     monod.constant = NULL,
-                                     norm = FALSE,
-                                     t.end = 1000, ...){
+    names.species = NULL,
+    names.resources = NULL,
+    E = NULL,
+    x0 = NULL,
+    resources = NULL,
+    growth.rates = NULL,
+    monod.constant = NULL,
+    error.variance = 0,
+    norm = FALSE,
+    t.end = 1000, ...){
     
     t.dyn <- SimulationTimes(t.end = t.end,...)
     
@@ -143,21 +149,31 @@ simulateConsumerResource <- function(n.species, n.resources,
     out.resource.matrix <- as.matrix(out[,resource.index])
     out.resource.matrix <- out.resource.matrix[t.dyn$t.index,]
     
+    if(error.variance > 0){
+        measurement.error <- rnorm(n = length(t.dyn$t.index)*n.species, 
+            mean = 0, sd = sqrt(error.variance))
+        measurement.error <- matrix(measurement.error, 
+            nrow = length(t.dyn$t.index))
+        out.species.matrix <- out.species.matrix + measurement.error
+    }
+    
     if(norm){
         out.species.matrix <- out.species.matrix/rowSums(out.species.matrix)
-        # TODO: Discussion: Do we need to apply relative abundance to resources?
         out.resource.matrix <- out.resource.matrix/rowSums(out.resource.matrix)
     }
     
     colnames(out.species.matrix) <- names.species
     colnames(out.resource.matrix) <- names.resources
     
-    out.species.matrix <- cbind(out.species.matrix, time = t.dyn$t.sys[t.dyn$t.index])
-    out.resource.matrix <- cbind(out.resource.matrix, time = t.dyn$t.sys[t.dyn$t.index])
+    out.species.matrix <- cbind(out.species.matrix, 
+        time = t.dyn$t.sys[t.dyn$t.index])
+    out.resource.matrix <- cbind(out.resource.matrix, 
+        time = t.dyn$t.sys[t.dyn$t.index])
     
     out.list <- list(matrix = out.species.matrix, 
-                     resources = out.resource.matrix,
-                     E.Mat = E,
-                     monod.constant = monod.constant)
+        resources = out.resource.matrix,
+        E.Mat = E,
+        monod.constant = monod.constant,
+        error.variance = error.variance)
     return(out.list)
 }

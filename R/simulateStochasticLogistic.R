@@ -52,22 +52,42 @@
 #' @param stochastic Logical: whether to introduce noise in the simulation.
 #' If False, sigma.drift, sigma.epoch, and sigma.external are ignored.
 #' (default: \code{stochastic = TRUE})
+#' @param error.variance Numeric: the variance of measurement error.
+#' By default it equals to 0, indicating that the result won't contain any 
+#' measurement error. This value should be non-negative.
+#' (default: \code{error.variance = 0})
+#' @param norm Logical: whether the time series should be returned with
+#' the abundances as proportions (\code{norm = TRUE}) or
+#' the raw counts (default: \code{norm = FALSE})
 #' @param t.end Numeric: the end time of the simulationTimes, defining the 
 #' modeled time length of the community. 
 #' (default: \code{t.end = 1000})
 #' @param ... additional parameters, see \code{\link{utils}} to know more.
 #'
 #' @examples
-#' # Example of logistic model without stochasticity, death rates, or external disturbances
-#' ExampleLogistic <- simulateStochasticLogistic(n.species = 5, stochastic = FALSE, death.rate=0)
+#' 
+#' # Example of logistic model without stochasticity, death rates, or external 
+#' disturbances
+#' set.seed(42)
+#' ExampleLogistic <- simulateStochasticLogistic(n.species = 5, 
+#'     stochastic = FALSE, death.rate=0)
 #' makePlot(ExampleLogistic$matrix)
 #' 
 #' # Adding a death rate
-#' ExampleLogistic <- simulateStochasticLogistic(n.species = 5, stochastic = FALSE, death.rate=0.01)
+#' set.seed(42)
+#' ExampleLogistic <- simulateStochasticLogistic(n.species = 5, 
+#'     stochastic = FALSE, death.rate=0.01)
 #' makePlot(ExampleLogistic$matrix)
 #' 
 #' # Example of stochastic logistic model
+#' set.seed(42)
 #' ExampleLogistic <- simulateStochasticLogistic(n.species = 5)
+#' makePlot(ExampleLogistic$matrix)
+#' 
+#' # Example of stochastic logistic model with measurement error
+#' set.seed(42)
+#' ExampleLogistic <- simulateStochasticLogistic(n.species = 5, 
+#'     error.variance = 1000)
 #' makePlot(ExampleLogistic$matrix)
 #' 
 #' # example with all the initial parameters defined by the user
@@ -87,6 +107,7 @@
 #'     migration.p = 0.01,
 #'     metacommunity.probability = rdirichlet(1, alpha = rep(1, 2)),
 #'     stochastic = TRUE,
+#'     error.variance = 0
 #'     norm = TRUE, 
 #'     t.end = 400, 
 #'     t.start = 0, t.step = 0.01,
@@ -115,11 +136,12 @@ simulateStochasticLogistic <- function(n.species,
     sigma.external = 0.3,
     sigma.migration = 0.01,
     epoch.p = 0.001,
-    t.external_events = c(0, 240, 480), 
-    t.external_durations = c(0, 1, 1),  
+    t.external_events = NULL, 
+    t.external_durations = NULL,  
     migration.p = 0.01,
     metacommunity.probability = NULL,
     stochastic = TRUE,
+    error.variance = 0,
     norm = FALSE,
     t.end = 1000,...){
 
@@ -211,6 +233,14 @@ simulateStochasticLogistic <- function(n.species,
     out.matrix <- as.matrix(out[,names(out)=='current'])
     out.matrix <- out.matrix[t.dyn$t.index,]
     
+    if(error.variance > 0){
+        measurement.error <- rnorm(n = length(t.dyn$t.index)*n.species, 
+                                   mean = 0, sd = sqrt(error.variance))
+        measurement.error <- matrix(measurement.error, 
+                                    nrow = length(t.dyn$t.index))
+        out.matrix <- out.matrix + measurement.error
+    }
+    
     if(norm){
         out.matrix <- out.matrix/rowSums(out.matrix)
     }
@@ -221,7 +251,7 @@ simulateStochasticLogistic <- function(n.species,
     
     out.list <- list(matrix = out.matrix, 
                      metacommunity.probability = metacommunity.probability,
-                     migration.p = migration.p)
-    
+                     migration.p = migration.p,
+                     error.variance = error.variance)
     return(out.list)
 }

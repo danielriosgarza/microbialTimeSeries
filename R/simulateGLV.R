@@ -49,6 +49,10 @@
 #' during the simulation. If NULL, `rdirichlet(1, alpha = rep(1,n.species))` is 
 #' used.
 #' (default: \code{metacommunity.probability = NULL})
+#' @param error.variance Numeric: the variance of measurement error.
+#' By default it equals to 0, indicating that the result won't contain any 
+#' measurement error. This value should be non-negative.
+#' (default: \code{error.variance = 0})
 #' @param norm Logical scalar: returns normalized abundances (proportions
 #' in each generation) 
 #' (default: \code{norm = FALSE})
@@ -72,8 +76,16 @@
 #' makePlot(ExampleGLV$matrix)
 #' 
 #' # run the model with no pertubation nor migration
+#' set.seed(42)
 #' ExampleGLV <- simulateGLV(n.species = 4, A = ExampleA, stochastic = FALSE, 
 #'     sigma.migration = 0)
+#' # visualize the result
+#' makePlot(ExampleGLV$matrix)
+#' 
+#' # run the model with no pertubation nor migration but with measurement error
+#' set.seed(42)
+#' ExampleGLV <- simulateGLV(n.species = 4, A = ExampleA, stochastic = FALSE, 
+#'     error.variance = 0.001, sigma.migration = 0)
 #' # visualize the result
 #' makePlot(ExampleGLV$matrix)
 #'
@@ -145,6 +157,7 @@ simulateGLV <- function(n.species,
     stochastic = TRUE,
     migration.p = 0.01, 
     metacommunity.probability = NULL,
+    error.variance = 0,
     norm = FALSE, 
     t.end = 1000, ...){
     
@@ -200,6 +213,14 @@ simulateGLV <- function(n.species,
     
     out.matrix <- out.matrix[t.dyn$t.index,]
     
+    if(error.variance > 0){
+        measurement.error <- rnorm(n = length(t.dyn$t.index)*n.species, 
+                                   mean = 0, sd = sqrt(error.variance))
+        measurement.error <- matrix(measurement.error, 
+                                    nrow = length(t.dyn$t.index))
+        out.matrix <- out.matrix + measurement.error
+    }
+    
     if(norm){
         out.matrix <- out.matrix/rowSums(out.matrix)
     }
@@ -209,8 +230,9 @@ simulateGLV <- function(n.species,
     out.matrix <- cbind(out.matrix, time = t.dyn$t.sys[t.dyn$t.index])
     
     out.list <- list(matrix = out.matrix, 
-                     metacommunity.probability = metacommunity.probability,
-                     migration.p = migration.p)
+        metacommunity.probability = metacommunity.probability,
+        migration.p = migration.p,
+        error.variance = error.variance)
     
     return(out.list)
 }

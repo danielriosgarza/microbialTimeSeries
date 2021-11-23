@@ -27,13 +27,8 @@ SimulationTimes <- function(t.start = 0, t.end = 1000,
     t.step = 0.1, t.store = 1000){
     t.total <- t.end-t.start
     t.sys <- seq(t.start, t.end, by = t.step)
-    t.index <- seq(1, length(t.sys)-1, by=round(length(t.sys)/t.store))
-    # TODO: ####
-    # This function stores time points with fixed interval, 
-    # but cannot return a expected length (by t.store). 
-    # recommended change to the following:
-    # t.index <- as.integer(seq(from = t.start, to = length(t.sys)-1, length.out = t.store)) +1
-    return(list("t.sys" = t.sys, "t.index" = t.index))
+    t.index <- seq(1, length(t.sys)-1, by=floor(length(t.sys)/t.store))
+    return(list("t.sys" = t.sys, "t.index" = t.index[1:t.store]))
 }
 
 isPositiveInteger <- function(x, tol = .Machine$double.eps^0.5) {

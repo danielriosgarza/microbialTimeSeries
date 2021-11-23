@@ -17,6 +17,10 @@
 #' @param k.events Integer: number of events to simulate before updating the 
 #' sampling distributions.
 #' (default: \code{k.events = 1})
+#' @param error.variance Numeric: the variance of measurement error.
+#' By default it equals to 0, indicating that the result won't contain any 
+#' measurement error. This value should be non-negative.
+#' (default: \code{error.variance = 0})
 #' @param norm Logical: whether the time series should be returned with
 #' the abundances as proportions (\code{norm = TRUE}) or
 #' the raw counts (default: \code{norm = FALSE})
@@ -25,7 +29,32 @@
 #' see \code{\link{utils}} for more information.
 #'
 #' @examples
+#' set.seed(42)
 #' ExampleHubbell <- simulateHubbell(rep(1000, 10))
+#' makePlot(ExampleHubbell$matrix)
+#' 
+#' set.seed(42)
+#' ExampleHubbell <- simulateHubbell(rep(1000, 10), error.variance = 10)
+#' makePlot(ExampleHubbell$matrix)
+#' 
+#' set.seed(42)
+#' ExampleHubbell <- simulateHubbell(rep(1000, 10), migration.p = 0.1)
+#' makePlot(ExampleHubbell$matrix)
+#' 
+#' set.seed(42)
+#' ExampleHubbell <- simulateHubbell(rep(1000, 10), migration.p = 0.1,
+#'     error.variance = 10)
+#' makePlot(ExampleHubbell$matrix)
+#' 
+#' set.seed(42)
+#' ExampleHubbell <- simulateHubbell(rep(1000, 5), 
+#'     metacommunity.probability = c(0.01, 0.1, 0.19, 0.3, 0.4))
+#' makePlot(ExampleHubbell$matrix)
+#' 
+#' set.seed(42)
+#' ExampleHubbell <- simulateHubbell(rep(1000, 5), 
+#'     metacommunity.probability = c(0.01, 0.1, 0.19, 0.3, 0.4),
+#'     k.events = 5)
 #' makePlot(ExampleHubbell$matrix)
 #' 
 #' @return \code{simulateHubbell} returns a list of initial states, parameters
@@ -50,10 +79,12 @@ simulateHubbell <- function(community.initial,
     migration.p = 0.01, 
     metacommunity.probability = NULL,
     k.events = 1,
+    error.variance = 0,
     norm = FALSE, 
     t.end=1000, ...){
     
     # set the default values
+    n.species <- length(community.initial)
     if (is.null(names.species)) {
         names.species <- paste0("sp", seq_len(n.species))
     }
@@ -65,7 +96,6 @@ simulateHubbell <- function(community.initial,
         sum(metacommunity.probability)
     
     t.dyn <- SimulationTimes(t.end = t.end,...)
-    n.species <- length(community.initial)
     birth.p <- 1 - migration.p
     community <- community.initial
     
@@ -96,6 +126,15 @@ simulateHubbell <- function(community.initial,
         }
     
     }
+    
+    if(error.variance > 0){
+        measurement.error <- rnorm(n = length(t.dyn$t.index)*n.species, 
+                                   mean = 0, sd = sqrt(error.variance))
+        measurement.error <- matrix(measurement.error, 
+                                    nrow = length(t.dyn$t.index))
+        out.matrix <- out.matrix + measurement.error
+    }
+    
     if(norm){
         out.matrix <- out.matrix/rowSums(out.matrix)
     }
@@ -110,6 +149,7 @@ simulateHubbell <- function(community.initial,
         community.initial = community.initial,
         metacommunity.probability = metacommunity.probability,
         migration.p = migration.p, 
-        birth.p = birth.p)
+        birth.p = birth.p,
+        error.variance = error.variance)
     return(out.list)
 }
