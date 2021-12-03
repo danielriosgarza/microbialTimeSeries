@@ -107,7 +107,7 @@
 #'     migration.p = 0.01,
 #'     metacommunity.probability = rdirichlet(1, alpha = rep(1, 2)),
 #'     stochastic = TRUE,
-#'     error.variance = 0
+#'     error.variance = 0,
 #'     norm = TRUE, 
 #'     t.end = 400, 
 #'     t.start = 0, t.step = 0.01,
