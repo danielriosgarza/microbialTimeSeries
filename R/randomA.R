@@ -120,8 +120,14 @@ randomA <- function(n.species,
     if (is.null(names.species)) {
         if (!is.null(listA)) {
             names.species <- unlist(lapply(list_A, rownames))
+            # if same names found in different groups, overwrite names.
             if (length(names.species) != length(unique(names.species))) {
-                warning("same names of species found in different groups.")
+                listAlengths <- unlist(lapply(list_A, nrow))
+                sn <- c()
+                for(i in 1:length(listAlengths)){
+                    sn <- c(sn ,rep(i, times = listAlengths[i]))
+                }
+                names.species <- paste0("g", sn, "_", names.species)
             }
         } else {
             names.species <- paste0("sp", seq_len(n.species))
