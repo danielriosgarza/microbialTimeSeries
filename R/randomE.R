@@ -126,8 +126,13 @@ randomE <- function(n.species,
             production.pref <- trophic.preferences[[j]]*(trophic.preferences[[j]]<0)
             if (sum(production.pref) == 0) { # no production preference
                 production.pref <- NULL
-                index.production <- sample(setdiff(seq(n.resources), index.consumption),
-                                           size = max(1, rpois(1, mean.production)))
+                index.production <- unique(
+                    sample(setdiff(seq(n.resources), index.consumption),
+                        size = max(1, rpois(1, mean.production)),
+                        replace = TRUE)) 
+                # replace = TRUE here ensures at least one resource produced.
+                # Thus avoid error like "cannot take a sample larger than the
+                # population when 'replace = FALSE'"
             } else { # with production preference
                 index.production <- sample(seq(n.resources),
                     size = min(sum(production.pref < 0),
