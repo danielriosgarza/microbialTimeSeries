@@ -1,11 +1,11 @@
 library(shiny)
+library(shinyBS) # for tooltips on mouse floating
 library(ggplot2)
 library(deSolve)
 library(reshape2)
 library(gtools)
 library(DT) # for formatting data tables in HTML pages
 # library(dplyr) # for pipeline data tables coloring system 
-library(shinyBS) # for question marks and tooltips on mouse floating
 
 
 #### source all files ####
@@ -14,6 +14,7 @@ sapply(Rfiles, source)
 
 #### converting functions ####
 text2char <- function(text){
+    # split words or numbers by separators(',' and ';')
     if(trimws(text) == "") {
         return(NULL)
     } else {
@@ -21,15 +22,19 @@ text2char <- function(text){
     }
 }
 
-text2chars <- function(text, len, prefix = NULL, constant = NULL){
+text2chars <- function(text, len, prefix = NULL, expr = NULL){
+    # split words or numbers by separators(',' and ';')
+    # if length not enough, generate new values using expr.
+    # used for automatic names of species/compounds(resources) with prefix
+    # used for random numbers of initial abundances / growth rates with expr
     text <- text2char(text)
     if (length(text) < len){
-        if (is.null(prefix) & is.null(constant)){
-            stop("'prefix' or 'constant' not provided to function 'text2chars'")
-        } else if (is.null(constant)){
+        if (is.null(prefix) & is.null(expr)){
+            stop("'prefix' or 'expr' not provided to function 'text2chars'")
+        } else if (is.null(expr)){
             return(c(text, paste0(prefix, seq_len(len))[(length(text)+1):len]))
         } else if (is.null(prefix)){
-            return(c(text, rep(constant, len - length(text))))
+            return(c(text, eval(parse(text = expr)))[1:len])
         }
     } else if (length(text) > len){
         warning("length of text provided to 'textchars' more than needed")
@@ -45,12 +50,12 @@ makePlot <- function(out.matrix){
     dft <-  melt(df, id="time")
     names(dft)[2] = "species"
     names(dft)[3] = "x.t"
-    lgd = TRUE
-    if (ncol(df)>20){
-        lgd = FALSE
-    }
-    ggplot(dft, aes(time, x.t, col = species)) + geom_line(show.legend = lgd, lwd=0.5) + theme_linedraw()
-    
+    lgd = ncol(df)<= 20
+    ggplot(dft, aes(time, x.t, col = species)) +
+        geom_line(show.legend = lgd, lwd=0.5) +
+        ggtitle("abundance of species by time") + 
+        theme_linedraw() +
+        theme(plot.title = element_text(hjust = 0.5, size = 14))
 }
 
 makePlotRes <- function(out.matrix){
@@ -58,12 +63,12 @@ makePlotRes <- function(out.matrix){
     dft <-  melt(df, id="time")
     names(dft)[2] = "resources"
     names(dft)[3] = "S.t"
-    lgd = TRUE
-    if (ncol(df)>10){
-        lgd = FALSE
-    }
-    ggplot(dft, aes(time, S.t, col = resources)) + geom_line(show.legend = lgd, lwd=0.5) + theme_linedraw()
-    
+    lgd = ncol(df)<= 20
+    ggplot(dft, aes(time, S.t, col = resources)) + 
+        geom_line(show.legend = lgd, lwd=0.5) + 
+        ggtitle("quantity of compounds by time") + 
+        theme_linedraw() + 
+        theme(plot.title = element_text(hjust = 0.5, size = 14))
 }
 
 makePiePlot <- function(multinomdist, label = 'Meta\ncommunity', title = "Metacommunity \nspecies abundance\n"){
@@ -75,7 +80,6 @@ makePiePlot <- function(multinomdist, label = 'Meta\ncommunity', title = "Metaco
         theme_void() +
         coord_fixed(ratio = length(multinomdist)/4) +
         ggtitle(title) + theme_linedraw()
-    
     fig
 }
 
@@ -109,54 +113,95 @@ ui <- navbarPage(
         title = "Consumer-Resource Model",
         fluidPage(
             titlePanel("Consumer-Resource Model"),
-            bsCollapse(id = "contents", open = "Model", 
-                bsCollapsePanel("Model", 
+            bsCollapse(id = "contents", 
+                open = "Model", 
+                bsCollapsePanel(title = strong("Model"), value = "Model",
                     fluidRow(
                         column(width = 5,
                             wellPanel(
-                              # icon("question-circle"),
                                 tabsetPanel(
+                                    header = tags$style(HTML("
+                                        /* add a border for tabpanes */
+                                        .tabbable > .tab-content > .tab-pane {
+                                            border-left: 1px solid #ddd;
+                                            border-right: 1px solid #ddd;
+                                            border-bottom: 1px solid #ddd;
+                                            border-radius: 0px 0px 5px 5px;
+                                            padding: 10px;
+                                        }
+                                        .nav-tabs {
+                                            margin-bottom: 0;
+                                        }
+                                    ")),
                                     tabPanel("Basic",
-                                        sliderInput("n.species", "number of species", value = 2, min = 2, max = 100),
-                                        bsTooltip("n.species", "The wait times will be broken into this many equally spaced bins"),
-                                        sliderInput("n.resources", "number of resources", value = 4, min = 2, max = 100),
+                                        sliderInput("nSpecies", "number of species", value = 2, min = 2, max = 100),
+                                        bsTooltip("nSpecies", "Number of species in the simulation", "right", options = list(container = "body")),
+                                        sliderInput("nResources", "number of compounds", value = 4, min = 2, max = 100),
+                                        bsTooltip("nResources", "Number of compounds in the simulation", "right", options = list(container = "body")),
                                         hr(),
-                                        checkboxInput("changeNamesCRM", strong("custom names of species/resources"), value = FALSE),
+                                        checkboxInput("changeNamesCRM", strong("custom names of species/compounds"), value = FALSE),
                                         conditionalPanel(condition = "input.changeNamesCRM",
-                                            textInput("names.species", "names of species"),
-                                            textInput("names.resources", "names of resources"),
+                                            helpText("Custom names separate by ',' or ';' (and spaces) will replace default names."),
+                                            textInput("namesSpecies", "names of species"),
+                                            textInput("namesResources", "names of compounds"),
                                         ),
-                                   ),
-                                    tabPanel("Compounds",
-                                        sliderInput("mean.consumption", "consumption weight", value = 0.4, min = 0, max = 1),
-                                        sliderInput("mean.production", "production weight", value = 0.2, min = 0, max = 0.5),
-                                        sliderInput("maintenance", "maintenance weight", value = 0.5, min = 0, max = 1),
-                                        tags$label("Matrix Efficiency"),
-                                        dataTableOutput("tableE", width = "100%"),
                                     ),
+                                    
+                                    tabPanel("Compounds",
+                                        sliderInput("meanConsumption", "consumption weight", value = 0.4, min = 0, max = 1),
+                                        bsTooltip("meanConsumption", "Mean proportion of compounds consumed by each species.", "right", options = list(container = "body")),
+                                        sliderInput("meanProduction", "production weight", value = 0.2, min = 0, max = 0.5),
+                                        bsTooltip("meanProduction", "Mean proportion of compounds produced by each species.", "right", options = list(container = "body")),
+                                        sliderInput("maintenance", "maintenance weight", value = 0.5, min = 0, max = 1),
+                                        bsTooltip("maintenance", "How much compounds were used to maintain the microbial community (not involved in further calculation of flux).", "right", options = list(container = "body")),
+                                        
+                                        tags$label("Compounds Stochiometry"),
+                                        dataTableOutput("tableE", width = "100%"),
+                                        bsTooltip("tableE", "Stochiometric values of consumption and production of compounds by each cell. Positive efficiencies indicate the consumption of resources, whilst negatives indicate that the species would produce the resource.", "right", options = list(container = "body")),
+                                    ),
+                                    
                                     tabPanel("Growth rates",
                                         textInput("x0", "initial abundances of species"),
-                                        textInput("resources", "initial concentration of resources"),
+                                        bsTooltip("x0", "If the given initial abundances of species is not enough, random initial abundances will be added.", "right", options = list(container = "body")),
+                                        verbatimTextOutput("x0Output"),
+                                        textInput("resources", "initial concentration of compounds"),
+                                        bsTooltip("resources", "If the given initial concentrations of compounds are not enough, random values will be added.", "right", options = list(container = "body")),
+                                        verbatimTextOutput("resourcesOutput"),
                                         tags$label("Distribution of Growth Rates"),
                                         br(),
                                         actionButton("buttonBetaEven", "-", class = "btn btn-primary"),
+                                        bsTooltip("buttonBetaEven", "even distribution"),
                                         actionButton("buttonBetaRidge", "^", class = "btn btn-primary"),
+                                        bsTooltip("buttonBetaRidge", "normal-alike distribution"),
                                         actionButton("buttonBetaValley", "˅", class = "btn btn-primary"),
+                                        bsTooltip("buttonBetaValley", "U shape distribution"),
                                         actionButton("buttonBetaLeft", "◟", class = "btn btn-primary"),
+                                        bsTooltip("buttonBetaLeft", "left skewed distribution"),
                                         actionButton("buttonBetaRight", "◞", class = "btn btn-primary"),
+                                        bsTooltip("buttonBetaRight", "right skewed distribution"),
                                         actionButton("buttonBetaLeftTriangle", "\\", class = "btn btn-primary"),
+                                        bsTooltip("buttonBetaLeftTriangle", "left-triangle distribution"),
                                         actionButton("buttonBetaRightTriangle", "/", class = "btn btn-primary"),
-                                        sliderInput("alpha", "alpha", value = 1, min = 0, max = 10, step = 0.1),
-                                        sliderInput("beta", "beta", value = 1, min = 0, max = 10, step = 0.1),
+                                        bsTooltip("buttonBetaRightTriangle", "right-triangle distribution"),
                                         
-                                        textInput("growth.rates", "maximum growth rates of species"),
-                                        plotOutput("growth.rates.dist"),
-                                        textAreaInput("monod.constant", "constant of additive monod growth of n.species consuming n.resources"),
+                                        sliderInput("alpha", "alpha", value = 1, min = 0, max = 10, step = 0.1),
+                                        bsTooltip("alpha", "first parameter of beta distribution", "right", options = list(container = "body")),
+                                        sliderInput("beta", "beta", value = 1, min = 0, max = 10, step = 0.1),
+                                        bsTooltip("beta", "second parameter of beta distribution", "right", options = list(container = "body")),
+                                        
+                                        textInput("growthRates", "maximum growth rates of species"),
+                                        bsTooltip("growthRates", "If the given growth rates are not enough, random values will be added.", "right", options = list(container = "body")),
+                                        verbatimTextOutput("growthRatesOutput"),
+                                        
+                                        plotOutput("growthRatesDist"),
+                                        textAreaInput("monodConstant", "constant of additive monod growth of species consuming compounds"),
                                     ),
                                     tabPanel("Pertubations",
-                                        sliderInput("error.variance", "variance of measurement error", value = 0, min = 0, max = 10, step = 0.1),
+                                        sliderInput("errorVariance", "variance of measurement error", value = 0, min = 0, max = 10, step = 0.1),
+                                        bsTooltip("errorVariance", "The variance of measurement error. By default it equals to 0, indicating that the result won't contain any measurement error.", "right", options = list(container = "body")),
                                         checkboxInput("norm", strong("returns normalized abundances"), value = FALSE),
-                                        numericInput("t.end", "final time of the simulation", value = 1000, min = 100, max = 10000, step = 100),
+                                        numericInput("tEnd", "final time of the simulation", value = 1000, min = 100, max = 10000, step = 100),
+                                        bsTooltip("tEnd", "The end time of the simulation.", "right", options = list(container = "body")),
                                         # actionButton("buttonSimulateCRM", "Run the model", class = "btn btn-primary")
                                     ),
                                 ),
@@ -166,24 +211,27 @@ ui <- navbarPage(
                             br(),
                             plotOutput("CRMSpecies"),
                             plotOutput("CRMResources"),
-                       ),
-                   )
+                        ),
+                    )
                 ),
-                bsCollapsePanel("Description",
+                bsCollapsePanel(strong("Description"), value = "Description",
                     fluidRow(
                         column(width = 12,
-                            "Consumer-Resource Model describes the numerical relationships between microorganisms and the resources they consume. The idea is originated from ",
-                            tags$a("Chesson, P., 1990. MacArthur’s consumer-resource model. Theoretical Population Biology 37, 26–38. ", 
-                            href = "https://doi.org/10.1016/0040-5809(90)90025-Q"),
-                            ", and one of implementations (in Python) referred to is ",
-                            tags$a("Marsland, R., Cui, W., Goldford, J., Mehta, P., 2020. The Community Simulator: A Python package for microbial ecology. PLOS ONE 15, e0230430. ", 
-                            href = "https://doi.org/10.1371/journal.pone.0230430"),
+                              "Consumer-Resource Model describes the numerical relationships between microorganisms and the resources they consume. The idea is originated from ",
+                              tags$a("Chesson, P., 1990. MacArthur’s consumer-resource model. Theoretical Population Biology 37, 26–38. ", 
+                                     href = "https://doi.org/10.1016/0040-5809(90)90025-Q"),
+                              ", and one of implementations (in Python) referred to is ",
+                              tags$a("Marsland, R., Cui, W., Goldford, J., Mehta, P., 2020. The Community Simulator: A Python package for microbial ecology. PLOS ONE 15, e0230430. ", 
+                                     href = "https://doi.org/10.1371/journal.pone.0230430"),
                         ),
-                   )
-               ),
-               bsCollapsePanel("Inputs", "This is a panel of input table."),
-               bsCollapsePanel("Reference", "Panel of refs.")
+                    )
+                ),
+                bsCollapsePanel(strong("Inputs"), value = "Inputs",
+                    "This is a panel of input table."),
+                bsCollapsePanel(strong("References"), value = "References",
+                    "Panel of refs.")
             ),
+            
         )
     ),
     
@@ -274,17 +322,17 @@ server <- function(input, output, session) {
     
     #### model1 simulate consumer resource model ####
     ## basic
-    n.species <- reactive(input$n.species)
-    n.resources <- reactive(input$n.resources)
-    names.species <- reactive(text2chars(input$names.species, len = n.species(), prefix = "sp"))
-    names.resources <- reactive(text2chars(input$names.resources, len = n.resources(), prefix = "res"))
+    n.species <- reactive(input$nSpecies)
+    n.resources <- reactive(input$nResources)
+    names.species <- reactive(text2chars(input$namesSpecies, len = n.species(), prefix = "sp"))
+    names.resources <- reactive(text2chars(input$namesResources, len = n.resources(), prefix = "res"))
     
-    ## matrix efficiency
-    mean.consumption <- reactive(input$mean.consumption)
-    mean.production <- reactive(input$mean.production)
-    observeEvent(input$mean.consumption | input$mean.production, {
-        updateSliderInput(inputId = "mean.production", max = 1 - input$mean.consumption)
-        updateSliderInput(inputId = "mean.consumption", max = 1 - input$mean.production)
+    ## compounds stochiometry
+    mean.consumption <- reactive(input$meanConsumption)
+    mean.production <- reactive(input$meanProduction)
+    observeEvent(input$meanConsumption | input$meanProduction, {
+        updateSliderInput(inputId = "meanProduction", max = 1 - input$meanConsumption)
+        updateSliderInput(inputId = "meanConsumption", max = 1 - input$meanProduction)
     })
     maintenance <- reactive(input$maintenance)
     E <- reactive(
@@ -300,18 +348,22 @@ server <- function(input, output, session) {
     output$tableE <- renderDataTable(round(E(), digits = 3), selection = 'none', server = TRUE, options = list(scrollX = TRUE))
     
     ## growth rates
-    x0 <- reactive(as.numeric(text2chars(input$x0, len = n.species(), constant = 0.001)))
+    x0 <- reactive(as.numeric(text2chars(input$x0, len = n.species(), expr = paste0("runif(n = ", n.species() ,", min = 0.1, max = 10)"))))
+    output$x0Output <- renderPrint(x0())
+    resources <- reactive(as.numeric(text2chars(input$resources, len = n.resources(), expr = paste0("runif(n = ", n.resources() ,", min = 1, max = 100)"))))
+    output$resourcesOutput <- renderPrint(resources())
+    
     alpha <- reactive(input$alpha)
     beta <- reactive(input$beta)
     # listening to the changes in n.species, alpha, and beta
-    observeEvent(input$n.species | input$alpha | input$beta, {
-        updateTextInput(inputId = "growth.rates", value = round(rbeta(n.species(), alpha(), beta()), digits = 3))
+    observeEvent(input$nSpecies | input$alpha | input$beta, {
+        growth.rates <- reactive(as.numeric(text2chars(input$growthRates, len = n.species(), expr = paste0('round(rbeta(',n.species(), ',' ,alpha(), ',' , beta(),'), digits = 3)'))))
     })
-    observeEvent(input$n.species, {
-        updateTextInput(inputId = "x0", value = round(runif(n = n.species(), min = 0.1, max = 10), digits = 3))
+    observeEvent(input$nSpecies, {
+        x0 <- reactive(as.numeric(text2chars(input$x0, len = n.species(), expr = paste0("runif(n = ", n.species() ,", min = 0.1, max = 10)"))))
     })
-    observeEvent(input$n.resources, {
-        updateTextInput(inputId = "resources", value = round(runif(n = n.resources(), min = 1, max = 100), digits = 3))
+    observeEvent(input$nResources, {
+        resources <- reactive(as.numeric(text2chars(input$resources, len = n.resources(), expr = paste0("runif(n = ", n.resources() ,", min = 1, max = 100)"))))
     })
     observeEvent(input$buttonBetaEven, {
         updateSliderInput(inputId = "alpha", value = 1)
@@ -343,19 +395,20 @@ server <- function(input, output, session) {
         updateSliderInput(inputId = "beta", value = 1)
     })
     
-    resources <- reactive(as.numeric(text2chars(input$resources, len = n.resources(), constant = 1000)))
-    growth.rates <- reactive(as.numeric(text2chars(input$growth.rates, len = n.species(), constant = 1)))
-    output$growth.rates.dist <- renderPlot({
+    growth.rates <- reactive(as.numeric(text2chars(input$growthRates, len = n.species(), expr = paste0('round(rbeta(',n.species(), ',' ,alpha(), ',' , beta(),'), digits = 3)'))))
+    output$growthRatesOutput <- renderPrint(growth.rates())
+    
+    output$growthRatesDist <- renderPlot({
         ggplot(data.frame(x = c(-4, 4)), aes(x = x)) + 
             stat_function(fun = dbeta, args = list(shape1=alpha(), shape2=beta())) + 
             xlim(0,1) + theme_linedraw()
-    }, res = 120) 
-    monod.constant <- reactive(text2char(input$monod.constant)) # TODO: edit table
+    }, res = 96) 
+    monod.constant <- reactive(text2char(input$monodConstant)) # TODO: edit table
     
     ## miscellaneous
-    error.variance <- reactive(input$error.variance)
+    error.variance <- reactive(input$errorVariance)
     norm <- reactive(input$norm)
-    t.end <- reactive(input$t.end)
+    t.end <- reactive(input$tEnd)
     
     runCRM <- reactive(
         simulateConsumerResource(
@@ -374,8 +427,8 @@ server <- function(input, output, session) {
         )
     )
     
-    output$CRMSpecies <- renderPlot(makePlot(runCRM()$matrix))
-    output$CRMResources <- renderPlot(makePlot(runCRM()$resources))
+    output$CRMSpecies <- renderPlot(makePlot(runCRM()$matrix), res = 96)
+    output$CRMResources <- renderPlot(makePlotRes(runCRM()$resources),  res = 96)
     
     #### model2 simulate generalized Lotka-Volterra Model ####
     n.speciesGLV <- reactive(input$n.speciesGLV)
