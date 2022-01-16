@@ -5,8 +5,7 @@ library(deSolve)
 library(reshape2)
 library(gtools)
 library(DT) # for formatting data tables in HTML pages
-# library(dplyr) # for pipeline data tables coloring system 
-
+library(formattable)
 
 #### source all files ####
 Rfiles = gsub(" ", "", paste("../R/", list.files("../R")))
@@ -212,6 +211,13 @@ ui <- navbarPage(
                             plotOutput("CRMSpecies"),
                             plotOutput("CRMResources"),
                         ),
+                    ),
+                    fluidRow(
+                        column(width = 12,
+                            br(),
+                            tags$label("Compounds Stochiometry"),
+                            dataTableOutput("tableEc"),
+                        )
                     )
                 ),
                 bsCollapsePanel(strong("Description"), value = "Description",
@@ -335,17 +341,38 @@ server <- function(input, output, session) {
         updateSliderInput(inputId = "meanConsumption", max = 1 - input$meanProduction)
     })
     maintenance <- reactive(input$maintenance)
-    E <- reactive(
-        randomE(n.species(), 
-                n.resources(), 
-                names.species(), 
-                names.resources(),
-                mean.consumption = as.integer(mean.consumption() * n.resources()),
-                mean.production = as.integer(mean.production() * n.resources()),
-                maintenance = maintenance()
-        )
+    
+    # editable table
+    E <- reactiveValues(df = NULL)
+    observe({
+        roundE <- round(randomE(n.species(), 
+                                n.resources(), 
+                                names.species(), 
+                                names.resources(),
+                                mean.consumption = as.integer(mean.consumption() * n.resources()),
+                                mean.production = as.integer(mean.production() * n.resources()),
+                                maintenance = maintenance()
+        ), digits = 3)
+        E$df <- roundE
+        # 1st try
+        # colorbreaks <- seq(-1, 1, 0.2)
+        # colorgradients <- colorRampPalette(c("pink", "blue"))(length(colorbreaks)+1)
+        # E$df <- formatStyle(as.datatable(roundE), colnames(roundE), backgroundColor = styleInterval(colorbreaks, colorgradients))
+    })
+    # originally working table(without color heatmap)
+    output$tableE <- renderDataTable(E$df, editable = 'cell', selection = 'none', server = TRUE, options = list(scrollX = TRUE))
+    
+    # heatmap table
+    output$tableEc <- renderDataTable(
+        as.datatable(formattable(as.data.frame(E$df), lapply(1:nrow(E$df), function(row){area(row = row) ~ color_tile("pink", "green")}))),
+        editable = 'cell', selection = 'none', server = TRUE, options = list(scrollX = TRUE)
+        # renderDataTable ignores ... arguments when expr yields a datatable object.
     )
-    output$tableE <- renderDataTable(round(E(), digits = 3), selection = 'none', server = TRUE, options = list(scrollX = TRUE))
+    
+    observeEvent(input$tableE_cell_edit, {
+        E$df <<- editData(E$df, input$tableE_cell_edit, 'tableE')
+    })
+    
     
     ## growth rates
     x0 <- reactive(as.numeric(text2chars(input$x0, len = n.species(), expr = paste0("runif(n = ", n.species() ,", min = 0.1, max = 10)"))))
@@ -416,7 +443,8 @@ server <- function(input, output, session) {
             n.resources = n.resources(),
             names.species = names.species(), 
             names.resources = names.resources(), 
-            E = E(), 
+            #E = E(), 
+            E = E$df,
             x0 = x0(), 
             resources = resources(), 
             growth.rates = growth.rates(), 
