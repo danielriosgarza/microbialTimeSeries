@@ -6,6 +6,7 @@ library(reshape2)
 library(gtools)
 library(DT) # for formatting data tables in HTML pages
 library(formattable)
+library(dplyr)
 
 #### source all files ####
 Rfiles = gsub(" ", "", paste("../R/", list.files("../R")))
@@ -113,13 +114,13 @@ ui <- navbarPage(
         fluidPage(
             titlePanel("Consumer-Resource Model"),
             bsCollapse(id = "contents", 
-                open = "Model", 
-                bsCollapsePanel(title = strong("Model"), value = "Model",
-                    fluidRow(
-                        column(width = 5,
-                            wellPanel(
-                                tabsetPanel(
-                                    header = tags$style(HTML("
+                       open = "Model", 
+                       bsCollapsePanel(title = strong("Model"), value = "Model",
+                                       fluidRow(
+                                           column(width = 5,
+                                                  wellPanel(
+                                                      tabsetPanel(
+                                                          header = tags$style(HTML("
                                         /* add a border for tabpanes */
                                         .tabbable > .tab-content > .tab-pane {
                                             border-left: 1px solid #ddd;
@@ -132,110 +133,110 @@ ui <- navbarPage(
                                             margin-bottom: 0;
                                         }
                                     ")),
-                                    tabPanel("Basic",
-                                        sliderInput("nSpecies", "number of species", value = 2, min = 2, max = 100),
-                                        bsTooltip("nSpecies", "Number of species in the simulation", "right", options = list(container = "body")),
-                                        sliderInput("nResources", "number of compounds", value = 4, min = 2, max = 100),
-                                        bsTooltip("nResources", "Number of compounds in the simulation", "right", options = list(container = "body")),
-                                        hr(),
-                                        checkboxInput("changeNamesCRM", strong("custom names of species/compounds"), value = FALSE),
-                                        conditionalPanel(condition = "input.changeNamesCRM",
-                                            helpText("Custom names separate by ',' or ';' (and spaces) will replace default names."),
-                                            textInput("namesSpecies", "names of species"),
-                                            textInput("namesResources", "names of compounds"),
-                                        ),
-                                    ),
-                                    
-                                    tabPanel("Compounds",
-                                        sliderInput("meanConsumption", "consumption weight", value = 0.4, min = 0, max = 1),
-                                        bsTooltip("meanConsumption", "Mean proportion of compounds consumed by each species.", "right", options = list(container = "body")),
-                                        sliderInput("meanProduction", "production weight", value = 0.2, min = 0, max = 0.5),
-                                        bsTooltip("meanProduction", "Mean proportion of compounds produced by each species.", "right", options = list(container = "body")),
-                                        sliderInput("maintenance", "maintenance weight", value = 0.5, min = 0, max = 1),
-                                        bsTooltip("maintenance", "How much compounds were used to maintain the microbial community (not involved in further calculation of flux).", "right", options = list(container = "body")),
-                                        
-                                        tags$label("Compounds Stochiometry"),
-                                        dataTableOutput("tableE", width = "100%"),
-                                        bsTooltip("tableE", "Stochiometric values of consumption and production of compounds by each cell. Positive efficiencies indicate the consumption of resources, whilst negatives indicate that the species would produce the resource.", "right", options = list(container = "body")),
-                                    ),
-                                    
-                                    tabPanel("Growth rates",
-                                        textInput("x0", "initial abundances of species"),
-                                        bsTooltip("x0", "If the given initial abundances of species is not enough, random initial abundances will be added.", "right", options = list(container = "body")),
-                                        verbatimTextOutput("x0Output"),
-                                        textInput("resources", "initial concentration of compounds"),
-                                        bsTooltip("resources", "If the given initial concentrations of compounds are not enough, random values will be added.", "right", options = list(container = "body")),
-                                        verbatimTextOutput("resourcesOutput"),
-                                        tags$label("Distribution of Growth Rates"),
-                                        br(),
-                                        actionButton("buttonBetaEven", "-", class = "btn btn-primary"),
-                                        bsTooltip("buttonBetaEven", "even distribution"),
-                                        actionButton("buttonBetaRidge", "^", class = "btn btn-primary"),
-                                        bsTooltip("buttonBetaRidge", "normal-alike distribution"),
-                                        actionButton("buttonBetaValley", "˅", class = "btn btn-primary"),
-                                        bsTooltip("buttonBetaValley", "U shape distribution"),
-                                        actionButton("buttonBetaLeft", "◟", class = "btn btn-primary"),
-                                        bsTooltip("buttonBetaLeft", "left skewed distribution"),
-                                        actionButton("buttonBetaRight", "◞", class = "btn btn-primary"),
-                                        bsTooltip("buttonBetaRight", "right skewed distribution"),
-                                        actionButton("buttonBetaLeftTriangle", "\\", class = "btn btn-primary"),
-                                        bsTooltip("buttonBetaLeftTriangle", "left-triangle distribution"),
-                                        actionButton("buttonBetaRightTriangle", "/", class = "btn btn-primary"),
-                                        bsTooltip("buttonBetaRightTriangle", "right-triangle distribution"),
-                                        
-                                        sliderInput("alpha", "alpha", value = 1, min = 0, max = 10, step = 0.1),
-                                        bsTooltip("alpha", "first parameter of beta distribution", "right", options = list(container = "body")),
-                                        sliderInput("beta", "beta", value = 1, min = 0, max = 10, step = 0.1),
-                                        bsTooltip("beta", "second parameter of beta distribution", "right", options = list(container = "body")),
-                                        
-                                        textInput("growthRates", "maximum growth rates of species"),
-                                        bsTooltip("growthRates", "If the given growth rates are not enough, random values will be added.", "right", options = list(container = "body")),
-                                        verbatimTextOutput("growthRatesOutput"),
-                                        
-                                        plotOutput("growthRatesDist"),
-                                        textAreaInput("monodConstant", "constant of additive monod growth of species consuming compounds"),
-                                    ),
-                                    tabPanel("Pertubations",
-                                        sliderInput("errorVariance", "variance of measurement error", value = 0, min = 0, max = 10, step = 0.1),
-                                        bsTooltip("errorVariance", "The variance of measurement error. By default it equals to 0, indicating that the result won't contain any measurement error.", "right", options = list(container = "body")),
-                                        checkboxInput("norm", strong("returns normalized abundances"), value = FALSE),
-                                        numericInput("tEnd", "final time of the simulation", value = 1000, min = 100, max = 10000, step = 100),
-                                        bsTooltip("tEnd", "The end time of the simulation.", "right", options = list(container = "body")),
-                                        # actionButton("buttonSimulateCRM", "Run the model", class = "btn btn-primary")
-                                    ),
-                                ),
-                            )
-                        ),
-                        column(width = 7, 
-                            br(),
-                            plotOutput("CRMSpecies"),
-                            plotOutput("CRMResources"),
-                        ),
-                    ),
-                    fluidRow(
-                        column(width = 12,
-                            br(),
-                            tags$label("Compounds Stochiometry"),
-                            dataTableOutput("tableEc"),
-                        )
-                    )
-                ),
-                bsCollapsePanel(strong("Description"), value = "Description",
-                    fluidRow(
-                        column(width = 12,
-                              "Consumer-Resource Model describes the numerical relationships between microorganisms and the resources they consume. The idea is originated from ",
-                              tags$a("Chesson, P., 1990. MacArthur’s consumer-resource model. Theoretical Population Biology 37, 26–38. ", 
-                                     href = "https://doi.org/10.1016/0040-5809(90)90025-Q"),
-                              ", and one of implementations (in Python) referred to is ",
-                              tags$a("Marsland, R., Cui, W., Goldford, J., Mehta, P., 2020. The Community Simulator: A Python package for microbial ecology. PLOS ONE 15, e0230430. ", 
-                                     href = "https://doi.org/10.1371/journal.pone.0230430"),
-                        ),
-                    )
-                ),
-                bsCollapsePanel(strong("Inputs"), value = "Inputs",
-                    "This is a panel of input table."),
-                bsCollapsePanel(strong("References"), value = "References",
-                    "Panel of refs.")
+                                                          tabPanel("Basic",
+                                                                   sliderInput("nSpecies", "number of species", value = 2, min = 2, max = 100),
+                                                                   bsTooltip("nSpecies", "Number of species in the simulation", "right", options = list(container = "body")),
+                                                                   sliderInput("nResources", "number of compounds", value = 4, min = 2, max = 100),
+                                                                   bsTooltip("nResources", "Number of compounds in the simulation", "right", options = list(container = "body")),
+                                                                   hr(),
+                                                                   checkboxInput("changeNamesCRM", strong("custom names of species/compounds"), value = FALSE),
+                                                                   conditionalPanel(condition = "input.changeNamesCRM",
+                                                                                    helpText("Custom names separate by ',' or ';' (and spaces) will replace default names."),
+                                                                                    textInput("namesSpecies", "names of species"),
+                                                                                    textInput("namesResources", "names of compounds"),
+                                                                   ),
+                                                          ),
+                                                          
+                                                          tabPanel("Compounds",
+                                                                   sliderInput("meanConsumption", "consumption weight", value = 0.4, min = 0, max = 1),
+                                                                   bsTooltip("meanConsumption", "Mean proportion of compounds consumed by each species.", "right", options = list(container = "body")),
+                                                                   sliderInput("meanProduction", "production weight", value = 0.2, min = 0, max = 0.5),
+                                                                   bsTooltip("meanProduction", "Mean proportion of compounds produced by each species.", "right", options = list(container = "body")),
+                                                                   sliderInput("maintenance", "maintenance weight", value = 0.5, min = 0, max = 1),
+                                                                   bsTooltip("maintenance", "How much compounds were used to maintain the microbial community (not involved in further calculation of flux).", "right", options = list(container = "body")),
+                                                                   
+                                                                   tags$label("Compounds Stochiometry"),
+                                                                   dataTableOutput("tableE", width = "100%"),
+                                                                   bsTooltip("tableE", "Stochiometric values of consumption and production of compounds by each cell. Positive efficiencies indicate the consumption of resources, whilst negatives indicate that the species would produce the resource.", "right", options = list(container = "body")),
+                                                          ),
+                                                          
+                                                          tabPanel("Growth rates",
+                                                                   textInput("x0", "initial abundances of species"),
+                                                                   bsTooltip("x0", "If the given initial abundances of species is not enough, random initial abundances will be added.", "right", options = list(container = "body")),
+                                                                   verbatimTextOutput("x0Output"),
+                                                                   textInput("resources", "initial concentration of compounds"),
+                                                                   bsTooltip("resources", "If the given initial concentrations of compounds are not enough, random values will be added.", "right", options = list(container = "body")),
+                                                                   verbatimTextOutput("resourcesOutput"),
+                                                                   tags$label("Distribution of Growth Rates"),
+                                                                   br(),
+                                                                   actionButton("buttonBetaEven", "-", class = "btn btn-primary"),
+                                                                   bsTooltip("buttonBetaEven", "even distribution"),
+                                                                   actionButton("buttonBetaRidge", "^", class = "btn btn-primary"),
+                                                                   bsTooltip("buttonBetaRidge", "normal-alike distribution"),
+                                                                   actionButton("buttonBetaValley", "˅", class = "btn btn-primary"),
+                                                                   bsTooltip("buttonBetaValley", "U shape distribution"),
+                                                                   actionButton("buttonBetaLeft", "◟", class = "btn btn-primary"),
+                                                                   bsTooltip("buttonBetaLeft", "left skewed distribution"),
+                                                                   actionButton("buttonBetaRight", "◞", class = "btn btn-primary"),
+                                                                   bsTooltip("buttonBetaRight", "right skewed distribution"),
+                                                                   actionButton("buttonBetaLeftTriangle", "\\", class = "btn btn-primary"),
+                                                                   bsTooltip("buttonBetaLeftTriangle", "left-triangle distribution"),
+                                                                   actionButton("buttonBetaRightTriangle", "/", class = "btn btn-primary"),
+                                                                   bsTooltip("buttonBetaRightTriangle", "right-triangle distribution"),
+                                                                   
+                                                                   sliderInput("alpha", "alpha", value = 1, min = 0, max = 10, step = 0.1),
+                                                                   bsTooltip("alpha", "first parameter of beta distribution", "right", options = list(container = "body")),
+                                                                   sliderInput("beta", "beta", value = 1, min = 0, max = 10, step = 0.1),
+                                                                   bsTooltip("beta", "second parameter of beta distribution", "right", options = list(container = "body")),
+                                                                   
+                                                                   textInput("growthRates", "maximum growth rates of species"),
+                                                                   bsTooltip("growthRates", "If the given growth rates are not enough, random values will be added.", "right", options = list(container = "body")),
+                                                                   verbatimTextOutput("growthRatesOutput"),
+                                                                   
+                                                                   plotOutput("growthRatesDist"),
+                                                                   textAreaInput("monodConstant", "constant of additive monod growth of species consuming compounds"),
+                                                          ),
+                                                          tabPanel("Pertubations",
+                                                                   sliderInput("errorVariance", "variance of measurement error", value = 0, min = 0, max = 10, step = 0.1),
+                                                                   bsTooltip("errorVariance", "The variance of measurement error. By default it equals to 0, indicating that the result won't contain any measurement error.", "right", options = list(container = "body")),
+                                                                   checkboxInput("norm", strong("returns normalized abundances"), value = FALSE),
+                                                                   numericInput("tEnd", "final time of the simulation", value = 1000, min = 100, max = 10000, step = 100),
+                                                                   bsTooltip("tEnd", "The end time of the simulation.", "right", options = list(container = "body")),
+                                                                   # actionButton("buttonSimulateCRM", "Run the model", class = "btn btn-primary")
+                                                          ),
+                                                      ),
+                                                  )
+                                           ),
+                                           column(width = 7, 
+                                                  br(),
+                                                  plotOutput("CRMSpecies"),
+                                                  plotOutput("CRMResources"),
+                                           ),
+                                       ),
+                                       fluidRow(
+                                           column(width = 12,
+                                                  br(),
+                                                  tags$label("Compounds Stochiometry"),
+                                                  dataTableOutput("tableEc"),
+                                           )
+                                       )
+                       ),
+                       bsCollapsePanel(strong("Description"), value = "Description",
+                                       fluidRow(
+                                           column(width = 12,
+                                                  "Consumer-Resource Model describes the numerical relationships between microorganisms and the resources they consume. The idea is originated from ",
+                                                  tags$a("Chesson, P., 1990. MacArthur’s consumer-resource model. Theoretical Population Biology 37, 26–38. ", 
+                                                         href = "https://doi.org/10.1016/0040-5809(90)90025-Q"),
+                                                  ", and one of implementations (in Python) referred to is ",
+                                                  tags$a("Marsland, R., Cui, W., Goldford, J., Mehta, P., 2020. The Community Simulator: A Python package for microbial ecology. PLOS ONE 15, e0230430. ", 
+                                                         href = "https://doi.org/10.1371/journal.pone.0230430"),
+                                           ),
+                                       )
+                       ),
+                       bsCollapsePanel(strong("Inputs"), value = "Inputs",
+                                       "This is a panel of input table."),
+                       bsCollapsePanel(strong("References"), value = "References",
+                                       "Panel of refs.")
             ),
             
         )
@@ -354,20 +355,24 @@ server <- function(input, output, session) {
                                 maintenance = maintenance()
         ), digits = 3)
         E$df <- roundE
-        # 1st try
-        # colorbreaks <- seq(-1, 1, 0.2)
-        # colorgradients <- colorRampPalette(c("pink", "blue"))(length(colorbreaks)+1)
-        # E$df <- formatStyle(as.datatable(roundE), colnames(roundE), backgroundColor = styleInterval(colorbreaks, colorgradients))
     })
-    # originally working table(without color heatmap)
+    
+    # editable table (without color heatmap)
     output$tableE <- renderDataTable(E$df, editable = 'cell', selection = 'none', server = TRUE, options = list(scrollX = TRUE))
     
-    # heatmap table
-    output$tableEc <- renderDataTable(
-        as.datatable(formattable(as.data.frame(E$df), lapply(1:nrow(E$df), function(row){area(row = row) ~ color_tile("pink", "green")}))),
-        editable = 'cell', selection = 'none', server = TRUE, options = list(scrollX = TRUE)
-        # renderDataTable ignores ... arguments when expr yields a datatable object.
-    )
+    # heatmap table (cannot edit directly)
+    # option 1 color by row in each cell
+    # output$tableEc <- renderDataTable(
+    #     as.datatable(formattable(as.data.frame(E$df), lapply(1:nrow(E$df), function(row){area(row = row) ~ color_tile("pink", "green")}))),
+    #     editable = 'cell', selection = 'none', server = TRUE, options = list(scrollX = TRUE)
+    #     # renderDataTable ignores ... arguments when expr yields a datatable object.
+    # )
+    # option 2 background color (same scale for whole table)
+    output$tableEc <- renderDataTable({
+        brks <- seq(-1, 1, 0.05)
+        clrs <- colorRampPalette(c("green", "red"))(length(brks)+1)
+        datatable(as.data.frame(E$df), options = list(scrollX = TRUE)) %>% formatStyle(names(as.data.frame(E$df)), backgroundColor = styleInterval(brks, clrs))
+    })
     
     observeEvent(input$tableE_cell_edit, {
         E$df <<- editData(E$df, input$tableE_cell_edit, 'tableE')
