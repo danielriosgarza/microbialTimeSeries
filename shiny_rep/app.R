@@ -79,7 +79,7 @@ makePiePlot <- function(multinomdist, label = 'Meta\ncommunity', title = "Metaco
         scale_fill_gradient2(label, low = "white", high = "magenta3", midpoint = max(multinomdist)/8) +  
         theme_void() +
         coord_fixed(ratio = length(multinomdist)/4) +
-        ggtitle(title) + theme_linedraw()
+        ggtitle(title) # + theme_linedraw()
     fig
 }
 
@@ -150,6 +150,14 @@ ui <- navbarPage(
                                                           ),
                                                           
                                                           tabPanel("Compounds",
+                                                                   sliderInput("resourcesConcentration", "mean initial concentration of compounds", min = 0, max = 1000, value = 10, step = 1),
+                                                                   sliderInput("resourcesEvenness", "eveness of compounds", min = 0.1, max = 100, value = 10, step = 0.1),
+                                                                   # textInput("resources_custom", "initial concentration of compounds"),
+                                                                   # bsTooltip("resources_custom", "If the given initial concentrations of compounds are not enough, random values will be added.", "right", options = list(container = "body")),
+                                                                   tags$label("Initial concentration of compounds"),
+                                                                   verbatimTextOutput("resourcesOutput"),
+                                                                   plotOutput("resourcesPlot"),
+                                                                   
                                                                    sliderInput("meanConsumption", "consumption weight", value = 0.4, min = 0, max = 1),
                                                                    bsTooltip("meanConsumption", "Mean proportion of compounds consumed by each species.", "right", options = list(container = "body")),
                                                                    sliderInput("meanProduction", "production weight", value = 0.2, min = 0, max = 0.5),
@@ -166,9 +174,6 @@ ui <- navbarPage(
                                                                    textInput("x0", "initial abundances of species"),
                                                                    bsTooltip("x0", "If the given initial abundances of species is not enough, random initial abundances will be added.", "right", options = list(container = "body")),
                                                                    verbatimTextOutput("x0Output"),
-                                                                   textInput("resources", "initial concentration of compounds"),
-                                                                   bsTooltip("resources", "If the given initial concentrations of compounds are not enough, random values will be added.", "right", options = list(container = "body")),
-                                                                   verbatimTextOutput("resourcesOutput"),
                                                                    tags$label("Distribution of Growth Rates"),
                                                                    br(),
                                                                    actionButton("buttonBetaEven", "-", class = "btn btn-primary"),
@@ -333,6 +338,17 @@ server <- function(input, output, session) {
     names.resources <- reactive(text2chars(input$namesResources, len = n.resources(), prefix = "res"))
     
     ## compounds stochiometry
+    # observeEvent(input$nResources, {
+    #     resources <- reactive(as.numeric(text2chars(input$resources, len = n.resources(), expr = paste0("runif(n = ", n.resources() ,", min = 1, max = 100)"))))
+    # })
+    # resources_custom <- reactive(as.numeric(text2chars(input$resources_custom, len = n.resources(), expr = paste0("runif(n = ", n.resources() ,", min = 1, max = 100)"))))
+    res.conc <- reactive(input$resourcesConcentration)
+    res.even <- reactive(input$resourcesEvenness)
+    resources_dist <- reactive(rdirichlet(1, rep(1, n.resources())*res.even())*res.conc()*n.resources())
+    resources <- reactive(resources_dist())
+    output$resourcesOutput <- renderPrint(resources())
+    
+    output$resourcesPlot <- renderPlot(makePiePlot(resources()[,], label = 'concentration', title='compounds'))
     mean.consumption <- reactive(input$meanConsumption)
     mean.production <- reactive(input$meanProduction)
     observeEvent(input$meanConsumption | input$meanProduction, {
@@ -368,8 +384,7 @@ server <- function(input, output, session) {
     ## growth rates
     x0 <- reactive(as.numeric(text2chars(input$x0, len = n.species(), expr = paste0("runif(n = ", n.species() ,", min = 0.1, max = 10)"))))
     output$x0Output <- renderPrint(x0())
-    resources <- reactive(as.numeric(text2chars(input$resources, len = n.resources(), expr = paste0("runif(n = ", n.resources() ,", min = 1, max = 100)"))))
-    output$resourcesOutput <- renderPrint(resources())
+
     
     alpha <- reactive(input$alpha)
     beta <- reactive(input$beta)
@@ -379,9 +394,6 @@ server <- function(input, output, session) {
     })
     observeEvent(input$nSpecies, {
         x0 <- reactive(as.numeric(text2chars(input$x0, len = n.species(), expr = paste0("runif(n = ", n.species() ,", min = 0.1, max = 10)"))))
-    })
-    observeEvent(input$nResources, {
-        resources <- reactive(as.numeric(text2chars(input$resources, len = n.resources(), expr = paste0("runif(n = ", n.resources() ,", min = 1, max = 100)"))))
     })
     observeEvent(input$buttonBetaEven, {
         updateSliderInput(inputId = "alpha", value = 1)
