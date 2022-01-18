@@ -45,7 +45,7 @@ text2chars <- function(text, len, prefix = NULL, expr = NULL){
 }
 
 #### plotting functions ####
-makePlot <- function(out.matrix){
+makePlot <- function(out.matrix, title){
     df <- as.data.frame(out.matrix)
     dft <-  melt(df, id="time")
     names(dft)[2] = "species"
@@ -53,12 +53,12 @@ makePlot <- function(out.matrix){
     lgd = ncol(df)<= 20
     ggplot(dft, aes(time, x.t, col = species)) +
         geom_line(show.legend = lgd, lwd=0.5) +
-        ggtitle("abundance of species by time") + 
+        ggtitle(title) + 
         theme_linedraw() +
         theme(plot.title = element_text(hjust = 0.5, size = 14))
 }
 
-makePlotRes <- function(out.matrix){
+makePlotRes <- function(out.matrix, title){
     df <- as.data.frame(out.matrix)
     dft <-  melt(df, id="time")
     names(dft)[2] = "resources"
@@ -66,7 +66,7 @@ makePlotRes <- function(out.matrix){
     lgd = ncol(df)<= 20
     ggplot(dft, aes(time, S.t, col = resources)) + 
         geom_line(show.legend = lgd, lwd=0.5) + 
-        ggtitle("quantity of compounds by time") + 
+        ggtitle(title) + 
         theme_linedraw() + 
         theme(plot.title = element_text(hjust = 0.5, size = 14))
 }
@@ -90,17 +90,19 @@ makeHeatmap <-function(matrix.A, title){
     fig <- ggplot(df, aes(x,y,fill=strength)) + geom_tile() + coord_equal() +
         theme(axis.title = element_blank()) + 
         scale_fill_gradient2('strength', low = "red", mid = "white", high = "blue", midpoint = 0)+
-        theme_void() + ggtitle(title)  
+        theme_void() + ggtitle(title)
     
     if (ncol(matrix.A)<21 & nrow(matrix.A)<21){
         fig <- fig + geom_text(aes(label = round(strength, 1)))
     }
     
-    fig <- fig + labs(x = "species", y = "resources")+
+    fig <- fig + labs(x = "species", y = "compounds")+
+        theme_linedraw() + 
         theme(
-            axis.title.x = element_text(size = 14, face = "bold.italic"),
-            axis.title.y = element_text(size = 14, face = "bold.italic")
-        ) + theme_linedraw()
+            # axis.title.x = element_text(size = 14, face = "bold.italic"),
+            # axis.title.y = element_text(size = 14, face = "bold.italic"),
+            plot.title = element_text(hjust = 0.5, size = 14)
+        )
     fig
 }
 
@@ -211,14 +213,10 @@ ui <- navbarPage(
                                                   br(),
                                                   plotOutput("CRMSpecies"),
                                                   plotOutput("CRMResources"),
+                                                  plotOutput("CRMPlotE"),
+                                                  bsTooltip("CRMPlotE", "Positive values indicate consumption, and negative values indicate production", "left", options = list(container = "body")),
+                                                  
                                            ),
-                                       ),
-                                       fluidRow(
-                                           column(width = 12,
-                                                  br(),
-                                                  tags$label("Compounds Stochiometry"),
-                                                  dataTableOutput("tableEc"),
-                                           )
                                        )
                        ),
                        bsCollapsePanel(strong("Description"), value = "Description",
@@ -360,19 +358,7 @@ server <- function(input, output, session) {
     # editable table (without color heatmap)
     output$tableE <- renderDataTable(E$df, editable = 'cell', selection = 'none', server = TRUE, options = list(scrollX = TRUE))
     
-    # heatmap table (cannot edit directly)
-    # option 1 color by row in each cell
-    # output$tableEc <- renderDataTable(
-    #     as.datatable(formattable(as.data.frame(E$df), lapply(1:nrow(E$df), function(row){area(row = row) ~ color_tile("pink", "green")}))),
-    #     editable = 'cell', selection = 'none', server = TRUE, options = list(scrollX = TRUE)
-    #     # renderDataTable ignores ... arguments when expr yields a datatable object.
-    # )
-    # option 2 background color (same scale for whole table)
-    output$tableEc <- renderDataTable({
-        brks <- seq(-1, 1, 0.05)
-        clrs <- colorRampPalette(c("green", "red"))(length(brks)+1)
-        datatable(as.data.frame(E$df), options = list(scrollX = TRUE)) %>% formatStyle(names(as.data.frame(E$df)), backgroundColor = styleInterval(brks, clrs))
-    })
+    output$CRMPlotE <- renderPlot(makeHeatmap(t(E$df), 'Consumption/production matrix'), res = 96)
     
     observeEvent(input$tableE_cell_edit, {
         E$df <<- editData(E$df, input$tableE_cell_edit, 'tableE')
@@ -460,8 +446,8 @@ server <- function(input, output, session) {
         )
     )
     
-    output$CRMSpecies <- renderPlot(makePlot(runCRM()$matrix), res = 96)
-    output$CRMResources <- renderPlot(makePlotRes(runCRM()$resources),  res = 96)
+    output$CRMSpecies <- renderPlot(makePlot(runCRM()$matrix, "abundance of species by time"), res = 96)
+    output$CRMResources <- renderPlot(makePlotRes(runCRM()$resources, "quantity of compounds by time"),  res = 96)
     
     #### model2 simulate generalized Lotka-Volterra Model ####
     n.speciesGLV <- reactive(input$n.speciesGLV)
