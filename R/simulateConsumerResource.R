@@ -81,11 +81,28 @@ simulateConsumerResource <- function(n.species, n.resources,
     resources = NULL,
     growth.rates = NULL,
     monod.constant = NULL,
+    sigma.drift = 0.001,
+    sigma.epoch = 0.1,
+    sigma.external = 0.3,
+    sigma.migration = 0.01,
+    epoch.p = 0.001,
+    t.external_events = NULL,
+    t.external_durations = NULL,
+    stochastic = TRUE,
+    migration.p = 0.01, 
+    metacommunity.probability = NULL,
     error.variance = 0,
     norm = FALSE,
     t.end = 1000, ...){
     
     t.dyn <- SimulationTimes(t.end = t.end,...)
+    
+    # calculate the time points influenced by the disturbances
+    tEvent = eventTimes(
+        t.events = t.external_events,
+        t.duration = t.external_durations,
+        t.end = t.end,
+        ... = ...)
     
     # define the consumer-resource model
     consumerResourceModel <- function(t, state, params){
@@ -132,10 +149,66 @@ simulateConsumerResource <- function(n.species, n.resources,
                                         shape = 50*max(resources), rate = 1), nrow = n.species)
     }
     
+    if (is.null(metacommunity.probability)) {
+        metacommunity.probability <- rdirichlet(1, alpha = rep(1,n.species))
+    }
+    
+    #normalize metacommunity.probability
+    metacommunity.probability <- metacommunity.probability/
+        sum(metacommunity.probability)
+    
+    # define the perturbation event
+    perturb <- function(t, y, parameters){
+        with(as.list(y),{
+            #continuous or episodic perturbation
+            epoch.rN <- 0
+            external.rN <- 0
+            migration.rN <- 0
+            if (rbinom(1,1, parameters$epoch.p)){
+                epoch.rN <- rnorm(parameters$n.species, sd=parameters$sigma.epoch)
+                epoch.rN <- parameters$stochastic*epoch.rN
+            }
+            
+            if (rbinom(1,1, parameters$migration.p)){
+                migration.rN <- rmultinom(n = 1, size = 1, 
+                                          prob = parameters$metacommunity.probability)[,]*abs(rnorm(n=1, 
+                                                                                                    mean=0, sd = parameters$sigma.migration))
+                
+            }
+            
+            if (t %in% parameters$tEvent){
+                external.rN <- rnorm(parameters$n.species,
+                                     sd=parameters$sigma.external)
+                external.rN <- parameters$stochastic*external.rN
+            }
+            drift.rN <- rnorm(parameters$n.species, sd=parameters$sigma.drift)
+            drift.rN <- parameters$stochastic*drift.rN
+            
+            
+            #perturbation is applied to the current population
+            consumer <- pmax(y[names(y)=='consumer'], 0)
+            consumer <- consumer*(1+drift.rN)*(1+epoch.rN)*(1+external.rN)+ migration.rN
+            resource <- y[names(y)=='resource']
+            
+            return(c(consumer, resource))})
+            
+           
+        
+    }
+    
+    
     state.init <- c(x0, resources)
     names(state.init) <- c(paste0("consumer", seq(length(x0))),
                            paste0("resource", seq(length(resources))))
-    parameters <- list(growth.rates = growth.rates, E = E, monod.constant = monod.constant)
+    
+    
+    
+    parameters <- list(growth.rates = growth.rates, E = E, monod.constant = monod.constant,  
+                       n.species = n.species, sigma.drift = sigma.drift, stochastic = stochastic,
+                       sigma.epoch = sigma.epoch, epoch.p = epoch.p,
+                       sigma.external = sigma.external, tEvent = tEvent,
+                       migration.p = migration.p, metacommunity.probability = metacommunity.probability,
+                       sigma.migration = sigma.migration)
     
     out <- as.data.frame(ode(y = state.init, times = t.dyn$t.sys,
                              func = consumerResourceModel, parms = parameters))
