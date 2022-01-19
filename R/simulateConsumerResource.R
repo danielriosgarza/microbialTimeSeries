@@ -236,7 +236,7 @@ simulateConsumerResource <- function(n.species, n.resources,
     out.species.matrix <- as.matrix(out.species.matrix[t.dyn$t.index,])
     
     out.resource.matrix <- as.matrix(out[,resource.index])
-    out.resource.matrix <- out.resource.matrix[t.dyn$t.index,]
+    out.resource.matrix <- as.matrix(out.resource.matrix[t.dyn$t.index,])
     
     if(error.variance > 0){
         measurement.error <- rnorm(n = length(t.dyn$t.index)*n.species, 
