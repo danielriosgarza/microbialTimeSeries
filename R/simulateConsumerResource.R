@@ -79,8 +79,10 @@ simulateConsumerResource <- function(n.species, n.resources,
     E = NULL,
     x0 = NULL,
     resources = NULL,
+    resources.dilution = NULL,
     growth.rates = NULL,
     monod.constant = NULL,
+    dilution.rate = 0,
     sigma.drift = 0.001,
     sigma.epoch = 0.1,
     sigma.external = 0.3,
@@ -109,6 +111,7 @@ simulateConsumerResource <- function(n.species, n.resources,
         with(as.list(c(state, params)),{
             x0 <- pmax(0, state[startsWith(names(state), "consumer")])
             resources <- pmax(0, state[startsWith(names(state), "resource")])
+            
             growth.rates <- params[['growth.rates']]
             E <- params[['E']]
             monod.constant <- params[['monod.constant']]
@@ -116,10 +119,17 @@ simulateConsumerResource <- function(n.species, n.resources,
                         ncol = length(resources), byrow = TRUE) + monod.constant
             growth <- ((E*(E>0)/B) %*% resources)*x0
             
-            consumption <- (t(growth) %*% ((E>0)/B))*resources
-            production <- -(t(growth) %*% (E*(E<0)/B))*resources
-            dResources <- -consumption + production
-            dConsumers <- growth.rates*growth
+            
+            consumption <- -resources*(t(1/B*(E>0))%*%x0)
+            
+            production <- -t(E*(E<0)) %*% growth
+            
+            
+            #consumption <- (t(growth) %*% ((E>0)/B))*resources
+            #production <- -(t(growth) %*% (E*(E<0)/B))*resources
+            
+            dResources <- consumption + production - dilution.rate*(resources - resources.dilution)
+            dConsumers <- growth.rates*growth - dilution.rate*x0
             dxdt <- list(c(dConsumers, dResources))
             return(dxdt)
         })
@@ -140,6 +150,9 @@ simulateConsumerResource <- function(n.species, n.resources,
     }
     if (is.null(resources)) {
         resources <- runif(n = n.resources, min = 1, max = 100)
+    }
+    if (is.null(resources.dilution)) {
+        resources.dilution <- resources
     }
     if (is.null(growth.rates)) {
         growth.rates <- rep(1, n.species)
@@ -186,9 +199,10 @@ simulateConsumerResource <- function(n.species, n.resources,
             
             
             #perturbation is applied to the current population
-            consumer <- pmax(y[names(y)=='consumer'], 0)
+            consumer <- pmax(y[grepl('consumer', names(y))], 0)
+            
             consumer <- consumer*(1+drift.rN)*(1+epoch.rN)*(1+external.rN)+ migration.rN
-            resource <- y[names(y)=='resource']
+            resource <- y[grepl('resource', names(y))]
             
             return(c(consumer, resource))})
             
@@ -211,13 +225,15 @@ simulateConsumerResource <- function(n.species, n.resources,
                        sigma.migration = sigma.migration)
     
     out <- as.data.frame(ode(y = state.init, times = t.dyn$t.sys,
-                             func = consumerResourceModel, parms = parameters))
+                             func = consumerResourceModel, parms = parameters, 
+                             events = list(func = perturb, time = t.dyn$t.sys)))
+    
     
     species.index <- grepl('consumer', names(out))
     resource.index <- grepl('resource', names(out))
     
     out.species.matrix <- as.matrix(out[,species.index])
-    out.species.matrix <- out.species.matrix[t.dyn$t.index,]
+    out.species.matrix <- as.matrix(out.species.matrix[t.dyn$t.index,])
     
     out.resource.matrix <- as.matrix(out[,resource.index])
     out.resource.matrix <- out.resource.matrix[t.dyn$t.index,]
