@@ -108,7 +108,7 @@ randomE <- function(n.species,
             if (length(consumption.pref) == 0 && is.null(list.auto.trophic.preference[[j]])) { # no consumption preference
                 consumption.pref <- NULL
                 index.consumption <- sample(seq(n.resources), 
-                    size = min(max(1, rpois(1, mean.consumption)), n.resources-1))
+                    size = min(max(1, rpois(1, mean.consumption)), n.resources))
             } else { # with consumption preference
                 if (length(consumption.pref) == 0) {
                     consumption.pref <- list.auto.trophic.preference[[j]]
@@ -126,17 +126,23 @@ randomE <- function(n.species,
             production.pref <- trophic.preferences[[j]]*(trophic.preferences[[j]]<0)
             if (sum(production.pref) == 0) { # no production preference
                 production.pref <- NULL
-                index.production <- unique(
-                    sample(setdiff(seq(n.resources), index.consumption),
-                        size = max(1, rpois(1, mean.production)),
-                        replace = TRUE)) 
+                setprod <- setdiff(seq(n.resources), index.consumption)
+                if(length(setprod)>0){
+                    index.production <- unique(
+                        sample(setprod,
+                            size = rpois(1, mean.production),
+                            replace = TRUE)) 
+                } else{
+                    index.production <- c()
+                }
+
                 # replace = TRUE here ensures at least one resource produced.
                 # Thus avoid error like "cannot take a sample larger than the
                 # population when 'replace = FALSE'"
             } else { # with production preference
                 index.production <- sample(seq(n.resources),
                     size = min(sum(production.pref < 0),
-                        max(1, rpois(1, mean.production))),
+                        rpois(1, mean.production)),
                     replace = FALSE,
                     prob = abs(production.pref))
             }
