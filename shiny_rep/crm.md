@@ -35,20 +35,50 @@ In practice, a species either consumes or produces a metabolite (or is indiffere
 
 There are many possibilities for structuring $E$ according to specific assumptions. We will later summarize the options that are built into miaSim. We will first jump to some quick examples of how to simulate a consumer resource model with miaSim.
 
-To illustrate the basic parameters, we begin with a model of a single species that grows in an environment with five independent substrates. MiaSim provides a helper function to generate matrix $E$, this
+### **Examples**
+
+To illustrate the basic parameters, we begin with a model of a single species that grows in an environment with five independent substrates. Some of the examples below are compatible with the Shiny app, click on the button to explore them with the app.
+
+If not provided by the user, all parameters have defaults except for the the number of species and the number of resources. Check the list of parameters below for a complete description of the parameters and their defaults
 
 ```{n.species <- 1}
 n.resources <- 5
 
 
+#simulate the model
+CRMsimul <- simulateConsumerResource(n.species = n.species, n.resources = n.resources)
+
+#visualize the result
+makePlot(CRMsimul$matrix) #species plot
+makePlot(CRMsimul$resources) #resources plot
 ```
 
-## Including Plots
+MiaSim provides a helper function to generate matrix the matrix $E$. Below is a simulation of the same model where the user has more control over the parameters.
 
-You can also embed plots, for example:
+```{#generate the matrix E}
+E = randomE(n.species = n.species, n.resources = n.resources)
+print(E)
 
-```{r pressure, echo=FALSE}
-plot(pressure)
+#positive entries are consumed, negative produced, zero has no influence on the species
+
+#define some simulation parameters
+t.end = 2000 #when to stop
+t.store = 500 #how many samples of the simulation to store (evenly spaced)
+migration.p = 0 #whether to allow migration from a metacommunity
+stochastic = 0 # whether to use noise in the simulation
+dilution.rate = 0.01 #adding a dilution rate
+
+#simulate the model
+CRMsimul <- simulateConsumerResource(n.species = n.species, n.resources = n.resources, stochastic = stochastic, migration.p = migration.p, E=E, t.end = t.end, t.store = t.store, dilution.rate=dilution.rate)
+
+#visualize the result
+makePlot(CRMsimul$matrix) #species plot
+makePlot(CRMsimul$resources) #resources plot
+
+
+
 ```
 
-Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.
+Click on the example button to
+
+## .
