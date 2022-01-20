@@ -67,6 +67,31 @@
 #' makePlot(ExampleConsumerResource$matrix)
 #' makePlot(ExampleConsumerResource$resources)
 #' 
+#' # example with trophic levels
+#' n.species <- 10
+#' n.resources <- 15
+#' 
+#' ExampleEfficiencyMatrix <- randomE(n.species = 10, n.resources = 15,
+#'                                    trophic.levels = c(6,3,1),
+#'                                    trophic.preferences = list(c(rep(1,5), rep(-1, 5), rep(0, 5)), 
+#'                                                               c(rep(0,5), rep(1, 5), rep(-1, 5)), 
+#'                                                               c(rep(0,10), rep(1, 5))))
+#' makeHeatmap(ExampleEfficiencyMatrix)
+#' 
+#' # ExampleResources <- rep(100, n.resources)
+#' ExampleResources <- c(rep(500, 5), rep(200, 5), rep(50, 5))
+#' ExampleConsumerResource <- simulateConsumerResource(n.species = n.species, 
+#'                                                     n.resources = n.resources, names.species = letters[1:n.species], 
+#'                                                     names.resources = paste0("res",LETTERS[1:n.resources]), E = ExampleEfficiencyMatrix, 
+#'                                                     x0 = rep(0.001, n.species), resources = ExampleResources, 
+#'                                                     growth.rates = rep(1, n.species),
+#'                                                     error.variance = 0.001,
+#'                                                     t.end = 5000, t.step = 1)
+#' makePlot(ExampleConsumerResource$matrix)
+#' makePlotRes(ExampleConsumerResource$resources)
+
+#' 
+#' 
 #' @docType methods
 #' @aliases simulateConsumerResource-numeric
 #' 
@@ -111,7 +136,7 @@ simulateConsumerResource <- function(n.species, n.resources,
         with(as.list(c(state, params)),{
             x0 <- pmax(0, state[startsWith(names(state), "consumer")])
             resources <- pmax(0, state[startsWith(names(state), "resource")])
-            
+
             growth.rates <- params[['growth.rates']]
             E <- params[['E']]
             monod.constant <- params[['monod.constant']]
@@ -203,19 +228,14 @@ simulateConsumerResource <- function(n.species, n.resources,
             
             consumer <- consumer*(1+drift.rN)*(1+epoch.rN)*(1+external.rN)+ migration.rN
             resource <- y[grepl('resource', names(y))]
-            
+
             return(c(consumer, resource))})
-            
-           
-        
     }
     
     
     state.init <- c(x0, resources)
     names(state.init) <- c(paste0("consumer", seq(length(x0))),
                            paste0("resource", seq(length(resources))))
-    
-    
     
     parameters <- list(growth.rates = growth.rates, E = E, monod.constant = monod.constant,  
                        n.species = n.species, sigma.drift = sigma.drift, stochastic = stochastic,
@@ -239,11 +259,8 @@ simulateConsumerResource <- function(n.species, n.resources,
     out.resource.matrix <- as.matrix(out.resource.matrix[t.dyn$t.index,])
     
     if(error.variance > 0){
-        measurement.error <- rnorm(n = length(t.dyn$t.index)*n.species, 
-            mean = 0, sd = sqrt(error.variance))
-        measurement.error <- matrix(measurement.error, 
-            nrow = length(t.dyn$t.index))
-        out.species.matrix <- out.species.matrix + measurement.error
+        measurement.error <- rgamma(length(out.species.matrix), 1/error.variance, 1/error.variance)
+        out.species.matrix <- out.species.matrix * matrix(measurement.error, ncol = n.species)
     }
     
     if(norm){
