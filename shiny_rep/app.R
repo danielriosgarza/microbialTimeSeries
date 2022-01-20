@@ -45,7 +45,7 @@ text2chars <- function(text, len, prefix = NULL, expr = NULL){
 }
 
 #### plotting functions ####
-makePlot <- function(out.matrix, title){
+makePlot <- function(out.matrix, title = "abundance of species by time"){
     df <- as.data.frame(out.matrix)
     dft <-  melt(df, id="time")
     names(dft)[2] = "species"
@@ -58,7 +58,7 @@ makePlot <- function(out.matrix, title){
         theme(plot.title = element_text(hjust = 0.5, size = 14))
 }
 
-makePlotRes <- function(out.matrix, title){
+makePlotRes <- function(out.matrix, title = "quantity of compounds by time"){
     df <- as.data.frame(out.matrix)
     dft <-  melt(df, id="time")
     names(dft)[2] = "resources"
@@ -83,8 +83,8 @@ makePiePlot <- function(multinomdist, label = 'Meta\ncommunity', title = "Metaco
     fig
 }
 
-makeHeatmap <-function(matrix.A, title){
-    df = melt(matrix.A)
+makeHeatmap <-function(matrix.A, title = "Consumption/production matrix"){
+    df = melt(t(matrix.A))
     names(df)<- c("x", "y", "strength")
     df$y <- factor(df$y, levels=rev(unique(sort(df$y))))
     fig <- ggplot(df, aes(x,y,fill=strength)) + geom_tile() + coord_equal() +
@@ -93,10 +93,10 @@ makeHeatmap <-function(matrix.A, title){
         theme_void() + ggtitle(title)
     
     if (ncol(matrix.A)<21 & nrow(matrix.A)<21){
-        fig <- fig + geom_text(aes(label = round(strength, 1)))
+        fig <- fig + geom_text(aes(label = round(strength, 2)))
     }
     
-    fig <- fig + labs(x = "species", y = "compounds")+
+    fig <- fig + labs(x = "compounds", y = "species")+
         theme_linedraw() + 
         theme(
             # axis.title.x = element_text(size = 14, face = "bold.italic"),
@@ -151,10 +151,12 @@ ui <- navbarPage(
                                                           
                                                           tabPanel("Compounds",
                                                                    sliderInput("resourcesConcentration", "mean initial concentration of compounds", min = 0, max = 1000, value = 10, step = 1),
+                                                                   bsTooltip("nResources", "mean initial concentration of compounds", "right", options = list(container = "body")),
                                                                    sliderInput("resourcesEvenness", "eveness of compounds", min = 0.1, max = 100, value = 10, step = 0.1),
+                                                                   bsTooltip("nResources", "higher evenness leads to similar concentrations of initial compounds", "right", options = list(container = "body")),
                                                                    # textInput("resources_custom", "initial concentration of compounds"),
                                                                    # bsTooltip("resources_custom", "If the given initial concentrations of compounds are not enough, random values will be added.", "right", options = list(container = "body")),
-                                                                   tags$label("Initial concentration of compounds"),
+                                                                   tags$label("Initial concentrations of compounds"),
                                                                    verbatimTextOutput("resourcesOutput"),
                                                                    plotOutput("resourcesPlot"),
                                                                    
@@ -227,12 +229,7 @@ ui <- navbarPage(
                        bsCollapsePanel(strong("Description"), value = "Description",
                                        fluidRow(
                                            column(width = 12,
-                                                  "Consumer-Resource Model describes the numerical relationships between microorganisms and the resources they consume. The idea is originated from ",
-                                                  tags$a("Chesson, P., 1990. MacArthur’s consumer-resource model. Theoretical Population Biology 37, 26–38. ", 
-                                                         href = "https://doi.org/10.1016/0040-5809(90)90025-Q"),
-                                                  ", and one of implementations (in Python) referred to is ",
-                                                  tags$a("Marsland, R., Cui, W., Goldford, J., Mehta, P., 2020. The Community Simulator: A Python package for microbial ecology. PLOS ONE 15, e0230430. ", 
-                                                         href = "https://doi.org/10.1371/journal.pone.0230430"),
+                                                  includeMarkdown("crm.md"),
                                            ),
                                        )
                        ),
@@ -374,7 +371,7 @@ server <- function(input, output, session) {
     # editable table (without color heatmap)
     output$tableE <- renderDataTable(E$df, editable = 'cell', selection = 'none', server = TRUE, options = list(scrollX = TRUE))
     
-    output$CRMPlotE <- renderPlot(makeHeatmap(t(E$df), 'Consumption/production matrix'), res = 96)
+    output$CRMPlotE <- renderPlot(makeHeatmap(E$df, 'Consumption/production matrix'), res = 96)
     
     observeEvent(input$tableE_cell_edit, {
         E$df <<- editData(E$df, input$tableE_cell_edit, 'tableE')
@@ -446,12 +443,23 @@ server <- function(input, output, session) {
             n.resources = n.resources(),
             names.species = names.species(), 
             names.resources = names.resources(), 
-            #E = E(), 
             E = E$df,
             x0 = x0(), 
             resources = resources(), 
+            resources.dilution = resources(), # TODO: add interface
             growth.rates = growth.rates(), 
             monod.constant = monod.constant(), 
+            dilution.rate = 0, # TODO: add interface
+            sigma.drift = 0,
+            sigma.epoch = 0.001,
+            sigma.external = 0.3,
+            sigma.migration = 0.01, 
+            epoch.p = 0.001, 
+            t.external_events = NULL,
+            t.external_durations = NULL,
+            stochastic = TRUE,
+            migration.p = 0.01,
+            metacommunity.probability = NULL, # TODO: add interface
             error.variance = error.variance(), 
             norm = norm(), 
             t.end = t.end()
