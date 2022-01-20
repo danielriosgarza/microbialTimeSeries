@@ -11,11 +11,11 @@ knitr::opts_chunk$set(echo = TRUE)
 
 ## simulateConsumerResource
 
-Function to simulate McArthur's consumer-resource model and extensions for microbiomes. The model describes the explicit interaction between microbes in a community via the consumption and production of metabolites.
+Function to simulate McArthur's consumer-resource model and its extensions for microbiomes. The model describes the dynamics of microbes and substrates in a community where the ecological interactions are explicitly encoded via the consumption and production of metabolites.
 
 #### **Model Description**
 
-Each microbial species from a pool of $n$ different species has preferences for specific subset of the $k$ different substrates that are available to the community. Their growth rates depend on the availability of these resources, through the following differential equation:
+Each microbial species from a community of $n$ different species has preferences for a specific subset of the $k$ different substrates that are available to the community. Their growth rates depend on the availability of these resources, through the following differential equation:
 
 $\frac{dX_i}{dt} = \mu_{i}X_i (\sum_{j=1}^{k} e_{i,j} f_{i,j} S_j - \delta_i)$
 
@@ -37,6 +37,8 @@ There are many possibilities for structuring $E$ according to specific assumptio
 
 ### **Examples**
 
+##### Default parameters
+
 To illustrate the basic parameters, we begin with a model of a single species that grows in an environment with five independent substrates. Some of the examples below are compatible with the Shiny app, click on the button to explore them with the app.
 
 If not provided by the user, all parameters have defaults except for the the number of species and the number of resources. Check the list of parameters below for a complete description of the parameters and their defaults
@@ -52,6 +54,8 @@ CRMsimul <- simulateConsumerResource(n.species = n.species, n.resources = n.reso
 makePlot(CRMsimul$matrix) #species plot
 makePlot(CRMsimul$resources) #resources plot
 ```
+
+##### Exploring parameters
 
 MiaSim provides a helper function to generate matrix the matrix $E$. Below is a simulation of the same model where the user has more control over the parameters.
 
@@ -79,6 +83,12 @@ makePlot(CRMsimul$resources) #resources plot
 
 ```
 
-Click on the example button to
+##### More about the $E$ matrix
+
+##### Adding Noise and simulating measurement error
+
+##### More advanced example
+
+##### Exploring the relationship between diversity and environmental noise
 
 ## .
