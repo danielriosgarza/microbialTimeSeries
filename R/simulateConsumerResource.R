@@ -136,10 +136,13 @@ simulateConsumerResource <- function(n.species, n.resources,
         with(as.list(c(state, params)),{
             x0 <- pmax(0, state[startsWith(names(state), "consumer")])
             resources <- pmax(0, state[startsWith(names(state), "resource")])
-
             growth.rates <- params[['growth.rates']]
             E <- params[['E']]
             monod.constant <- params[['monod.constant']]
+            
+            resources.dilution <- params[['resources.dilution']]
+            dilution.rate <- params[['dilution.rate']]
+
             B <- matrix(rep(resources, length(x0)),
                         ncol = length(resources), byrow = TRUE) + monod.constant
             growth <- ((E*(E>0)/B) %*% resources)*x0
@@ -152,8 +155,7 @@ simulateConsumerResource <- function(n.species, n.resources,
             
             #consumption <- (t(growth) %*% ((E>0)/B))*resources
             #production <- -(t(growth) %*% (E*(E<0)/B))*resources
-            
-            dResources <- consumption + production - dilution.rate*(resources - resources.dilution)
+            dResources <- consumption + production - dilution.rate*(resources - as.vector(resources.dilution))
             dConsumers <- growth.rates*growth - dilution.rate*x0
             dxdt <- list(c(dConsumers, dResources))
             return(dxdt)
@@ -242,7 +244,9 @@ simulateConsumerResource <- function(n.species, n.resources,
                        sigma.epoch = sigma.epoch, epoch.p = epoch.p,
                        sigma.external = sigma.external, tEvent = tEvent,
                        migration.p = migration.p, metacommunity.probability = metacommunity.probability,
-                       sigma.migration = sigma.migration)
+                       sigma.migration = sigma.migration, 
+                       resources.dilution = resources.dilution,
+                       dilution.rate = dilution.rate)
     
     out <- as.data.frame(ode(y = state.init, times = t.dyn$t.sys,
                              func = consumerResourceModel, parms = parameters, 
