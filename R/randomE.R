@@ -57,6 +57,7 @@
 #' ExampleEfficiencyMatrix <- randomE(n.species = 10, n.resources = 15,
 #'     trophic.levels = c(6,3,1))
 #' makeHeatmap(ExampleEfficiencyMatrix, lowColor = "Red4", highColor = "Blue")
+#' 
 #' @return
 #' \code{randomE} returns a matrix E with dimensions (n.species x n.resources),
 #' and each row represents a species.
@@ -102,11 +103,12 @@ randomE <- function(n.species,
             irow <- efficiency.matrix[i+sum(trophic.levels[0:(j-1)]),]
             consumption <- irow
             production <- irow
-            
             # calculate consumption
             consumption.pref <- trophic.preferences[[j]]*(trophic.preferences[[j]]>0)
-            if (length(consumption.pref) == 0 && is.null(list.auto.trophic.preference[[j]])) { # no consumption preference
-                consumption.pref <- NULL
+            if (length(consumption.pref) == 0 && is.null(list.auto.trophic.preference[[j]])) {
+                # no consumption preference nor auto.trophic.preference
+                # consumption.pref <- NULL
+                consumption.pref <- rep(1, n.resources)
                 index.consumption <- sample(seq(n.resources), 
                     size = min(max(1, rpois(1, mean.consumption)), n.resources))
             } else { # with consumption preference
@@ -120,8 +122,8 @@ randomE <- function(n.species,
                     prob = consumption.pref)
             }
             consumption[index.consumption] <- 1
-            irow <- rdirichlet(1, consumption)
-            
+            irow <- rdirichlet(1, consumption * consumption.pref * 100)
+
             # calculate production
             production.pref <- trophic.preferences[[j]]*(trophic.preferences[[j]]<0)
             if (sum(production.pref) == 0) { # no production preference
@@ -132,13 +134,10 @@ randomE <- function(n.species,
                         sample(setprod,
                             size = rpois(1, mean.production),
                             replace = TRUE)) 
+                    index.production <- setdiff(index.production, index.consumption)
                 } else{
                     index.production <- c()
                 }
-
-                # replace = TRUE here ensures at least one resource produced.
-                # Thus avoid error like "cannot take a sample larger than the
-                # population when 'replace = FALSE'"
             } else { # with production preference
                 index.production <- sample(seq(n.resources),
                     size = min(sum(production.pref < 0),
@@ -146,9 +145,12 @@ randomE <- function(n.species,
                     replace = FALSE,
                     prob = abs(production.pref))
             }
+
             production[index.production] <- 1
             prod <- (-1)*(1-maintenance)*rdirichlet(1, production)
             irow[index.production] <- prod[index.production]
+            
+            
             efficiency.matrix[i+sum(trophic.levels[0:(j-1)]),] <- irow
         }
         
@@ -162,6 +164,7 @@ randomE <- function(n.species,
                 list.auto.trophic.preference[[j+1]] <- colSums(eff.mat)
             }
         }
+        
     }
     return(efficiency.matrix)
 }
