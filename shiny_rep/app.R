@@ -92,17 +92,30 @@ makeHeatmap <-function(matrix.A, title = "Consumption/production matrix"){
         scale_fill_gradient2('strength', low = "red", mid = "white", high = "blue", midpoint = 0)+
         theme_void() + ggtitle(title)
     
-    if (ncol(matrix.A)<21 & nrow(matrix.A)<21){
+    if (ncol(matrix.A)<=20 & nrow(matrix.A)<=20){
         fig <- fig + geom_text(aes(label = round(strength, 2)))
     }
     
     fig <- fig + labs(x = "compounds", y = "species")+
         theme_linedraw() + 
-        theme(
-            # axis.title.x = element_text(size = 14, face = "bold.italic"),
-            # axis.title.y = element_text(size = 14, face = "bold.italic"),
-            plot.title = element_text(hjust = 0.5, size = 14)
+        theme(plot.title = element_text(hjust = 0.5, size = 14))
+    
+    if (nrow(matrix.A) > 20){
+        # too many species 
+        fig <- fig + theme(
+            axis.title.y=element_blank(),
+            axis.text.y=element_blank(),
+            axis.ticks.y=element_blank(),
         )
+    }
+    if (ncol(matrix.A) > 20){
+        # too many resources
+        fig <- fig + theme(
+            axis.title.x=element_blank(),
+            axis.text.x=element_blank(),
+            axis.ticks.x=element_blank()
+        )
+    }
     fig
 }
 
