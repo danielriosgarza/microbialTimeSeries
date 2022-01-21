@@ -1,10 +1,10 @@
 library(shiny)
-library(shinyBS) # for tooltips on mouse floating
+library(shinyBS)
 library(ggplot2)
 library(deSolve)
 library(reshape2)
 library(gtools)
-library(DT) # for formatting data tables in HTML pages
+library(DT)
 library(formattable)
 library(dplyr)
 
@@ -92,8 +92,10 @@ makeHeatmap <-function(matrix.A, title = "Consumption/production matrix"){
         scale_fill_gradient2('strength', low = "red", mid = "white", high = "blue", midpoint = 0)+
         theme_void() + ggtitle(title)
     
-    if (ncol(matrix.A)<=20 & nrow(matrix.A)<=20){
+    if (ncol(matrix.A)<=12 & nrow(matrix.A)<=12){
         fig <- fig + geom_text(aes(label = round(strength, 2)))
+    } else if (ncol(matrix.A)<=20 & nrow(matrix.A)<=20){
+        fig <- fig + geom_text(aes(label = round(strength, 1)))
     }
     
     fig <- fig + labs(x = "compounds", y = "species")+
@@ -119,223 +121,8 @@ makeHeatmap <-function(matrix.A, title = "Consumption/production matrix"){
     fig
 }
 
-
 #### ui ####
-ui <- navbarPage(
-    title ="microSimShiny",
-    #### tab1 Consumer-Resource Model ####
-    tabPanel(
-        title = "Consumer-Resource Model",
-        fluidPage(
-            titlePanel("Consumer-Resource Model"),
-            bsCollapse(id = "contents", 
-                       open = "Model", 
-                       bsCollapsePanel(title = strong("Model"), value = "Model",
-                                       fluidRow(
-                                           column(width = 5,
-                                                  wellPanel(
-                                                      tabsetPanel(
-                                                          header = tags$style(HTML("
-                                        /* add a border for tabpanes */
-                                        .tabbable > .tab-content > .tab-pane {
-                                            border-left: 1px solid #ddd;
-                                            border-right: 1px solid #ddd;
-                                            border-bottom: 1px solid #ddd;
-                                            border-radius: 0px 0px 5px 5px;
-                                            padding: 10px;
-                                        }
-                                        .nav-tabs {
-                                            margin-bottom: 0;
-                                        }
-                                    ")),
-                                                          tabPanel("Basic",
-                                                                   sliderInput("nSpecies", "number of species", value = 2, min = 2, max = 100),
-                                                                   bsTooltip("nSpecies", "Number of species in the simulation", "right", options = list(container = "body")),
-                                                                   sliderInput("nResources", "number of compounds", value = 4, min = 2, max = 100),
-                                                                   bsTooltip("nResources", "Number of compounds in the simulation", "right", options = list(container = "body")),
-                                                                   hr(),
-                                                                   checkboxInput("changeNamesCRM", strong("custom names of species/compounds"), value = FALSE),
-                                                                   conditionalPanel(condition = "input.changeNamesCRM",
-                                                                                    helpText("Custom names separate by ',' or ';' (and spaces) will replace default names."),
-                                                                                    textInput("namesSpecies", "names of species"),
-                                                                                    textInput("namesResources", "names of compounds"),
-                                                                   ),
-                                                          ),
-                                                          
-                                                          tabPanel("Compounds",
-                                                                   sliderInput("resourcesConcentration", "mean initial concentration of compounds", min = 0, max = 1000, value = 10, step = 1),
-                                                                   bsTooltip("nResources", "mean initial concentration of compounds", "right", options = list(container = "body")),
-                                                                   sliderInput("resourcesEvenness", "eveness of compounds", min = 0.1, max = 100, value = 10, step = 0.1),
-                                                                   bsTooltip("nResources", "higher evenness leads to similar concentrations of initial compounds", "right", options = list(container = "body")),
-                                                                   # textInput("resources_custom", "initial concentration of compounds"),
-                                                                   # bsTooltip("resources_custom", "If the given initial concentrations of compounds are not enough, random values will be added.", "right", options = list(container = "body")),
-                                                                   tags$label("Initial concentrations of compounds"),
-                                                                   verbatimTextOutput("resourcesOutput"),
-                                                                   plotOutput("resourcesPlot"),
-                                                                   
-                                                                   sliderInput("meanConsumption", "consumption weight", value = 0.4, min = 0, max = 1),
-                                                                   bsTooltip("meanConsumption", "Mean proportion of compounds consumed by each species.", "right", options = list(container = "body")),
-                                                                   sliderInput("meanProduction", "production weight", value = 0.2, min = 0, max = 0.5),
-                                                                   bsTooltip("meanProduction", "Mean proportion of compounds produced by each species.", "right", options = list(container = "body")),
-                                                                   sliderInput("maintenance", "maintenance weight", value = 0.5, min = 0, max = 1),
-                                                                   bsTooltip("maintenance", "How much compounds were used to maintain the microbial community (not involved in further calculation of flux).", "right", options = list(container = "body")),
-                                                                   
-                                                                   tags$label("Compounds Stochiometry"),
-                                                                   dataTableOutput("tableE", width = "100%"),
-                                                                   bsTooltip("tableE", "Stochiometric values of consumption and production of compounds by each cell. Positive efficiencies indicate the consumption of resources, whilst negatives indicate that the species would produce the resource.", "right", options = list(container = "body")),
-                                                          ),
-                                                          
-                                                          tabPanel("Growth rates",
-                                                                   textInput("x0", "initial abundances of species"),
-                                                                   bsTooltip("x0", "If the given initial abundances of species is not enough, random initial abundances will be added.", "right", options = list(container = "body")),
-                                                                   verbatimTextOutput("x0Output"),
-                                                                   tags$label("Distribution of Growth Rates"),
-                                                                   br(),
-                                                                   actionButton("buttonBetaEven", "-", class = "btn btn-primary"),
-                                                                   bsTooltip("buttonBetaEven", "even distribution"),
-                                                                   actionButton("buttonBetaRidge", "^", class = "btn btn-primary"),
-                                                                   bsTooltip("buttonBetaRidge", "normal-alike distribution"),
-                                                                   actionButton("buttonBetaValley", "˅", class = "btn btn-primary"),
-                                                                   bsTooltip("buttonBetaValley", "U shape distribution"),
-                                                                   actionButton("buttonBetaLeft", "◟", class = "btn btn-primary"),
-                                                                   bsTooltip("buttonBetaLeft", "left skewed distribution"),
-                                                                   actionButton("buttonBetaRight", "◞", class = "btn btn-primary"),
-                                                                   bsTooltip("buttonBetaRight", "right skewed distribution"),
-                                                                   actionButton("buttonBetaLeftTriangle", "\\", class = "btn btn-primary"),
-                                                                   bsTooltip("buttonBetaLeftTriangle", "left-triangle distribution"),
-                                                                   actionButton("buttonBetaRightTriangle", "/", class = "btn btn-primary"),
-                                                                   bsTooltip("buttonBetaRightTriangle", "right-triangle distribution"),
-                                                                   
-                                                                   sliderInput("alpha", "alpha", value = 1, min = 0, max = 10, step = 0.1),
-                                                                   bsTooltip("alpha", "first parameter of beta distribution", "right", options = list(container = "body")),
-                                                                   sliderInput("beta", "beta", value = 1, min = 0, max = 10, step = 0.1),
-                                                                   bsTooltip("beta", "second parameter of beta distribution", "right", options = list(container = "body")),
-                                                                   
-                                                                   textInput("growthRates", "maximum growth rates of species"),
-                                                                   bsTooltip("growthRates", "If the given growth rates are not enough, random values will be added.", "right", options = list(container = "body")),
-                                                                   verbatimTextOutput("growthRatesOutput"),
-                                                                   
-                                                                   plotOutput("growthRatesDist"),
-                                                                   textAreaInput("monodConstant", "constant of additive monod growth of species consuming compounds"),
-                                                          ),
-                                                          tabPanel("Pertubations",
-                                                                   sliderInput("errorVariance", "variance of measurement error", value = 0, min = 0, max = 10, step = 0.1),
-                                                                   bsTooltip("errorVariance", "The variance of measurement error. By default it equals to 0, indicating that the result won't contain any measurement error.", "right", options = list(container = "body")),
-                                                                   checkboxInput("norm", strong("returns normalized abundances"), value = FALSE),
-                                                                   numericInput("tEnd", "final time of the simulation", value = 1000, min = 100, max = 10000, step = 100),
-                                                                   bsTooltip("tEnd", "The end time of the simulation.", "right", options = list(container = "body")),
-                                                                   # actionButton("buttonSimulateCRM", "Run the model", class = "btn btn-primary")
-                                                          ),
-                                                      ),
-                                                  )
-                                           ),
-                                           column(width = 7, 
-                                                  br(),
-                                                  plotOutput("CRMSpecies"),
-                                                  plotOutput("CRMResources"),
-                                                  plotOutput("CRMPlotE"),
-                                                  bsTooltip("CRMPlotE", "Positive values indicate consumption, and negative values indicate production", "left", options = list(container = "body")),
-                                                  
-                                           ),
-                                       )
-                       ),
-                       bsCollapsePanel(strong("Description"), value = "Description",
-                                       fluidRow(
-                                           column(width = 12,
-                                                  includeMarkdown("crm.md"),
-                                           ),
-                                       )
-                       ),
-                       bsCollapsePanel(strong("Inputs"), value = "Inputs",
-                                       "This is a panel of input table."),
-                       bsCollapsePanel(strong("References"), value = "References",
-                                       "Panel of refs.")
-            ),
-            
-        )
-    ),
-    
-    #### tab2 Generalized Lotka-Volterra (GLV) Model ####
-    tabPanel(
-        title = "Generalized Lotka-Volterra (GLV)",
-        fluidPage(
-            fluidRow(
-                "Generalized Lotka-Volterra (GLV) Model is defined by a set of 
-                differential equations describing the interspecies interactions."
-            ),
-            br(),
-            fluidRow(
-                sidebarLayout(
-                    sidebarPanel(
-                        tags$h2("input controls"),
-                        tags$h4("1. Generate interspecies interactions"),
-                        
-                        sliderInput("n.speciesGLV", "number of species", value = 2, min = 2, max = 20),
-                        checkboxInput("advancedRandomA", strong("show advanced parameters"), value = FALSE),
-                        conditionalPanel(condition = "input.advancedRandomA",
-                                         textInput("names.speciesGLV", "names of species"),
-                                         sliderInput("diagonalGLV", "diagonal values of matrix A", value = -0.5, min = -2, max = 0, step = 0.1),
-                                         sliderInput("connectanceGLV", "connectance of matrix A", value = 0.2, min = 0, max = 1),
-                                         sliderInput("scaleGLV", "scale of matrix A", value = 0.1, min = 0, max = 1),
-                                         numericInput("mutualismGLV", "relative proportion of mutualism in matrix A", value = 1, min = 0, max = 10,step = 0.05),
-                                         numericInput("commensalismGLV", "relative proportion of commensalism in matrix A", value = 1, min = 0, max = 10,step = 0.05),
-                                         numericInput("parasitismGLV", "relative proportion of parasitism in matrix A", value = 1, min = 0, max = 10,step = 0.05),
-                                         numericInput("amensalismGLV", "relative proportion of amensalism in matrix A", value = 1, min = 0, max = 10,step = 0.05),
-                                         numericInput("competitionGLV", "relative proportion of competition in matrix A", value = 1, min = 0, max = 10,step = 0.05),
-                                         textInput("interactionsGLV", "interactions between species"),
-                                         checkboxInput("symmetricGLV", strong("whether matrix A is symmetric"), value = FALSE),
-                                         textInput("listAGLV", "a list of previous generated matrix"),
-                        ),
-                        actionButton("buttonRandomA", "generate random matrix A of interspecies interactions", class = "btn btn-primary"),
-                        
-                        tags$h4("2. Calculate generalized Lotka-Volterra (GLV) Model"),
-                        checkboxInput("advancedGLV", strong("show advanced parameters"), value = FALSE),
-                        conditionalPanel(condition = "input.advancedGLV",
-                                         textInput("x0GLV", "initial abundances of species"),
-                                         textInput("growth.ratesGLV", "maximum growth rates of species"),
-                                         checkboxInput("stochasticGLV", "apply stochasticity in the simulation", value = TRUE),
-                                         conditionalPanel(condition = "input.stochasticGLV",
-                                                          numericInput("sigma.driftGLV", "sigma.driftGLV", value = 0.001, min = 0, max = 1, step = 0.001),
-                                                          numericInput("sigma.epochGLV", "sigma.epochGLV", value = 0.1, min = 0, max = 1, step = 0.001),
-                                                          numericInput("sigma.externalGLV", "sigma.externalGLV", value = 0.3, min = 0, max = 1, step = 0.001),
-                                                          numericInput("epoch.pGLV", "epoch.pGLV", value = 0.001, min = 0, max = 1, step = 0.001),
-                                                          
-                                         ),
-                                         numericInput("sigma.migrationGLV", "sigma.migrationGLV", value = 0.01, min = 0, max = 1, step = 0.001),
-                                         textInput("t.external_eventsGLV", "timepoints of external events"),
-                                         textInput("t.external_durationsGLV", "time durations of external events"),
-                                         numericInput("migration.pGLV", "migration.p", value = 0.01, min = 0, max = 1, step = 0.001),
-                                         textInput("metacommunity.probabilityGLV", "metacommunity.probability"),
-                                         sliderInput("error.varianceGLV", "variance of measurement error", value = 0, min = 0, max = 10, step = 0.1),
-                                         checkboxInput("normGLV", strong("returns normalized abundances"), value = FALSE),
-                                         numericInput("t.endGLV", "final time of the simulation", value = 1000, min = 100, max = 10000),
-                        ),
-                        actionButton("buttonSimulateGLV", "Run the GLV Model", class = "btn btn-primary"),
-                    ),
-                    mainPanel(
-                        br(),
-                        tags$h2("output"),
-                        tableOutput("TableA"),
-                        plotOutput("GLVSpecies"),
-                    )
-                )
-            )
-        )),
-    
-    #### tab3 Hubbell Model ####
-    tabPanel(
-        title = "Hubbell Model (with death rates)",
-        fluidPage(
-            
-        )),
-    
-    #### tab4 Logistic Model (with stochasticity) ####
-    tabPanel(
-        title = "Logistic Model (with stochasticity)",
-        fluidPage(
-            
-        )),
-)
+source("ui.R")
 
 #### server ####
 server <- function(input, output, session) {
