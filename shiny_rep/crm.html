@@ -174,22 +174,70 @@ pre code {
 <p><code>{r setup, include=FALSE} knitr::opts_chunk$set(echo = TRUE)</code></p>
 <div id="simulateconsumerresource" class="section level2">
 <h2>simulateConsumerResource</h2>
-<p>Function to simulate McArthur’s consumer-resource model and extensions for microbiomes. The model describes the explicit interaction between microbes in a community via the consumption and production of metabolites.</p>
+<p>Function to simulate McArthur’s consumer-resource model and its extensions for microbiomes. The model describes the dynamics of microbes and substrates in a community where the ecological interactions are explicitly encoded via the consumption and production of metabolites.</p>
 <div id="model-description" class="section level4">
 <h4><strong>Model Description</strong></h4>
-<p>Each microbial species from a pool of <span class="math inline">\(n\)</span> different species has preferences for specific subset of substrates from the <span class="math inline">\(k\)</span> different substrates that are available to the community. Their growth rates depend on the availability of these resources, through the following differential equation:</p>
-<p><span class="math inline">\(\frac{dX_i}{dt} = X_i (\sum_{j=1}^{k} e_{i,j} f_{i,j} S_j - \delta)\)</span></p>
-<p>where, <span class="math inline">\(X_i\)</span> is the abundance of species <span class="math inline">\(i\)</span> at a given time <span class="math inline">\(t\)</span>, <span class="math inline">\(e_{i,j}\)</span>, <span class="math inline">\(f_{i,j}\)</span> constraints the quantity of the substrate that can be consumed at each time step, <span class="math inline">\(s_j\)</span> is the concentration of the substrate <span class="math inline">\(j\)</span> at time <span class="math inline">\(t\)</span>, and <span class="math inline">\(\delta\)</span> is a dilution term.</p>
-<p>This is an R Markdown document. Markdown is a simple formatting syntax for authoring HTML, PDF, and MS Word documents. For more details on using R Markdown see <a href="http://rmarkdown.rstudio.com" class="uri">http://rmarkdown.rstudio.com</a>.</p>
-<p>When you click the <strong>Knit</strong> button a document will be generated that includes both content as well as the output of any embedded R code chunks within the document. You can embed an R code chunk like this:</p>
-<p><code>{r cars} summary(cars)</code></p>
+<p>Each microbial species from a community of <span class="math inline">\(n\)</span> different species has preferences for a specific subset of the <span class="math inline">\(k\)</span> different substrates that are available to the community. Their growth rates depend on the availability of these resources, through the following differential equation:</p>
+<p><span class="math inline">\(\frac{dX_i}{dt} = \mu_{i}X_i (\sum_{j=1}^{k} e_{i,j} f_{i,j} S_j - \delta_i)\)</span></p>
+<p>where, where <span class="math inline">\(\mu_{i}\)</span> is the maximum growth rate of species <span class="math inline">\(i\)</span>, while <span class="math inline">\(X_i\)</span> is its abundance at time <span class="math inline">\(t\)</span>.</p>
+<p><span class="math inline">\(e_{i,j}\)</span> is the yield of substrate <span class="math inline">\(j\)</span> for species <span class="math inline">\(i\)</span>, <span class="math inline">\(f_{i,j}\)</span> is the feeding form, which constraints the quantity of the substrate that can be consumed at each time step, while <span class="math inline">\(S_j\)</span> is the concentration of the substrate <span class="math inline">\(j\)</span> at time <span class="math inline">\(t\)</span>, and <span class="math inline">\(\delta_i\)</span> is a dilution term.</p>
+<p>The form of the feeding term is the Monod equation <span class="math inline">\(f_{i,j}=\frac{S_j}{k_{i,j}+S_j}\)</span>, where <span class="math inline">\(k_{i,j}\)</span> is the Monod constant.</p>
+<p>Resources change according to the following differential equation:</p>
+<p><span class="math inline">\(\frac{dS_j}{dt}=\phi_j - \sum_{i=1}^{n} e_{i,j}f_{i,j}X_i + \sum_{i=1}^{n}p_{i,j} X_{i} (\sum_{j=1}^{k}e_{i,j}f_{i,j}-\delta_i)\)</span></p>
+<p>where <span class="math inline">\(\phi_j\)</span> is a dilution term and <span class="math inline">\(p_{i,j}\)</span> is the yield of production of substrate <span class="math inline">\(j\)</span> that results from the growth species <span class="math inline">\(i\)</span>.</p>
+<p>In practice, a species either consumes or produces a metabolite (or is indifferent to its presence). Allowing us to summarize <span class="math inline">\(e_{i,j}\)</span> and <span class="math inline">\(p_{i,j}\)</span> in a single matrix (<span class="math inline">\(E\)</span>, containing <span class="math inline">\(n\)</span> rows and <span class="math inline">\(k\)</span> columns). To distinguish them, the entries of <span class="math inline">\(E\)</span> are, respectively, positive and negative for the consumed and produced substrates.</p>
+<p>There are many possibilities for structuring <span class="math inline">\(E\)</span> according to specific assumptions. We will later summarize the options that are built into miaSim. We will first jump to some quick examples of how to simulate a consumer resource model with miaSim.</p>
+</div>
+<div id="examples" class="section level3">
+<h3><strong>Examples</strong></h3>
+<div id="example1-default-parameters" class="section level5">
+<h5>Example1: Default parameters</h5>
+<p>To illustrate the basic parameters, we begin with a model of a single species that grows in an environment with five independent substrates. Some of the examples below are compatible with the Shiny app, click on the button to explore them with the app.</p>
+<p>If not provided by the user, all parameters have defaults except for the the number of species and the number of resources. Check the list of parameters below for a complete description of the parameters and their defaults</p>
+<p>```{n.species &lt;- 1} n.resources &lt;- 5</p>
+<p>#simulate the model CRMsimul &lt;- simulateConsumerResource(n.species = n.species, n.resources = n.resources)</p>
+<p>#visualize the result makePlot(CRMsimul<span class="math inline">\(matrix) #species plot makePlot(CRMsimul\)</span>resources) #resources plot</p>
+<p>##### Example2: Exploring parameters</p>
+<p>MiaSim provides a helper function to generate matrix the matrix $E$. Below is a simulation of the same model where the user has more control over the parameters.</p>
+<pre><code>```{#generate the matrix E}
+E = randomE(n.species = n.species, n.resources = n.resources)
+print(E)
+
+#positive entries are consumed, negative produced, zero has no influence on the species
+
+#define some simulation parameters
+t.end = 2000 #when to stop
+t.store = 500 #how many samples of the simulation to store (evenly spaced)
+migration.p = 0 #whether to allow migration from a metacommunity
+stochastic = 0 # whether to use noise in the simulation
+dilution.rate = 0.01 #adding a dilution rate
+
+#simulate the model
+CRMsimul &lt;- simulateConsumerResource(n.species = n.species, n.resources = n.resources, stochastic = stochastic, migration.p = migration.p, E=E, t.end = t.end, t.store = t.store, dilution.rate=dilution.rate)
+
+#visualize the result
+makePlot(CRMsimul$matrix) #species plot
+makePlot(CRMsimul$resources) #resources plot</code></pre>
+</div>
+<div id="more-about-the-e-matrix" class="section level5">
+<h5>More about the <span class="math inline">\(E\)</span> matrix</h5>
+<p>1) Constraint on the amount of the secreted compounds (maintenance parameter) - toy example of energy content for nutrients</p>
+<p>2) mean consumption/mean production</p>
+<p>3) trophic preferences</p>
+</div>
+<div id="adding-noise-and-simulating-measurement-error" class="section level5">
+<h5>Adding Noise and simulating measurement error</h5>
+</div>
+<div id="more-advanced-example" class="section level5">
+<h5>More advanced example</h5>
+</div>
+<div id="exploring-the-relationship-between-diversity-and-environmental-noise" class="section level5">
+<h5>Exploring the relationship between diversity and environmental noise</h5>
 </div>
 </div>
-<div id="including-plots" class="section level2">
-<h2>Including Plots</h2>
-<p>You can also embed plots, for example:</p>
-<p><code>{r pressure, echo=FALSE} plot(pressure)</code></p>
-<p>Note that the <code>echo = FALSE</code> parameter was added to the code chunk to prevent printing of the R code that generated the plot.</p>
+</div>
+<div id="section" class="section level2">
+<h2>.</h2>
 </div>
 
 
