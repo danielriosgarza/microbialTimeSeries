@@ -39,9 +39,9 @@ There are many possibilities for structuring $E$ according to specific assumptio
 
 ##### Example1: Default parameters
 
-To illustrate the basic parameters, we begin simulating five species consuming producing five different substrates. Some of the examples below are compatible with the Shiny app, click on the numbered example button on the top of the app screen to explore them.
+To illustrate the basic parameters, we begin simulating five species consuming or producing five different substrates. Some of the examples below are compatible with the Shiny app, click on the numbered example button on the top of the app screen to explore them.
 
-If not provided by the user, all parameters have defaults except for the the number of species and the number of resources. Check the list of parameters below for a complete description of the parameters and their defaults
+If not provided by the user, all parameters have default values except for the the number of species and the number of resources, which need to be provided. Check the list of parameters below for a complete description of the parameters and their defaults
 
 ```{r}
 
