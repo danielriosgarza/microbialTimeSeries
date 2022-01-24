@@ -27,19 +27,34 @@ ui <- navbarPage(
                                         }
                                     ")),
                                                           tabPanel("Basic",
-                                                                   sliderInput("nSpecies", "number of species", value = 2, min = 2, max = 100),
+                                                                   sliderInput("nSpecies", "number of species", value = 2, min = 1, max = 100),
                                                                    bsTooltip("nSpecies", "Number of species in the simulation", "right", options = list(container = "body")),
-                                                                   sliderInput("nResources", "number of compounds", value = 4, min = 2, max = 100),
+                                                                   sliderInput("nResources", "number of compounds", value = 4, min = 1, max = 100),
                                                                    bsTooltip("nResources", "Number of compounds in the simulation", "right", options = list(container = "body")),
                                                                    hr(),
-                                                                   checkboxInput("changeNamesCRM", strong("custom names of species/compounds"), value = FALSE),
-                                                                   conditionalPanel(condition = "input.changeNamesCRM",
+                                                                   checkboxInput("CustomCRM", strong("custom names of species/compounds or simulating time points"), value = FALSE),
+                                                                   conditionalPanel(condition = "input.CustomCRM",
                                                                                     helpText("Custom names separate by ',' or ';' (and spaces) will replace default names."),
                                                                                     textInput("namesSpecies", "names of species"),
                                                                                     textInput("namesResources", "names of compounds"),
                                                                    ),
+                                                                   conditionalPanel(condition = "input.CustomCRM",
+                                                                                    hr(),
+                                                                                    numericInput("tStart", "start time of the simulation", value = 0, min = 0, max = 10000, step = 100),
+                                                                                    bsTooltip("tStart", "The start time of the simulation.", "right", options = list(container = "body")),
+                                                                   ),
+                                                                   
                                                                    numericInput("tEnd", "final time of the simulation", value = 1000, min = 100, max = 10000, step = 100),
                                                                    bsTooltip("tEnd", "The end time of the simulation.", "right", options = list(container = "body")),
+                                                                   
+                                                                   conditionalPanel(condition = "input.CustomCRM",
+                                                                                    numericInput("tStep", "time step of the simulation", value = 0.1, min = 0.01, max = 10, step = 0.01),
+                                                                                    bsTooltip("tStep", "The time step of the simulation.", "right", options = list(container = "body")),
+                                                                                    numericInput("tStore", "stored time points of the simulation", value = 1000, min = 100, max = 10000, step = 100),
+                                                                                    bsTooltip("tStore", "The stored time points of the simulation.", "right", options = list(container = "body")),
+                                                                   ),
+                                                                   
+                                                                   
                                                                    
                                                           ),
                                                           
@@ -52,7 +67,7 @@ ui <- navbarPage(
                                                                    bsTooltip("resourcesCustom", "If the given initial concentrations of compounds are not enough, random values will be added.", "right", options = list(container = "body")),
                                                                    verbatimTextOutput("resourcesOutput"),
                                                                    
-                                                                   sliderInput("dilutionRate", "dilution rate", min = 0, max = 1, value = 0, step = 0.01),
+                                                                   sliderInput("dilutionRate", "dilution rate", min = 0, max = 1, value = 0, step = 0.001),
                                                                    bsTooltip("dilutionRate", "rate of nutrient exchange as in a Chemostat bioreactor. Flow rate / culture volume", "right", options = list(container = "body")),
                                                                    
                                                                    conditionalPanel(condition = "input.dilutionRate > 0",
@@ -79,7 +94,7 @@ ui <- navbarPage(
                                                                    bsTooltip("x0", "If the given initial abundances of species is not enough, random initial abundances will be added.", "right", options = list(container = "body")),
                                                                    verbatimTextOutput("x0Output"),
                                                                    tags$label("Distribution of Growth Rates"),
-                                                                   br(),
+                                                                   hr(),
                                                                    actionButton("buttonBetaEven", "-", class = "btn btn-primary"),
                                                                    bsTooltip("buttonBetaEven", "even distribution"),
                                                                    actionButton("buttonBetaRidge", "^", class = "btn btn-primary"),
@@ -133,7 +148,14 @@ ui <- navbarPage(
                                                   )
                                            ),
                                            column(width = 7, 
-                                                  br(),
+                                                  fluidRow(
+                                                      actionButton("CRMEX1", "Example 1", class = "btn btn-primary"),
+                                                      actionButton("CRMEX2", "Example 2", class = "btn btn-primary"),
+                                                      actionButton("CRMEX3", "Example 3", class = "btn btn-primary"),
+                                                      actionButton("CRMEX4", "Example 4", class = "btn btn-primary"),
+                                                      actionButton("CRMEX5", "Example 5", class = "btn btn-primary"),
+                                                      actionButton("CRMEX6", "Example 6", class = "btn btn-primary"),
+                                                  ),
                                                   plotOutput("CRMSpecies"),
                                                   plotOutput("CRMResources"),
                                                   plotOutput("CRMPlotE"),

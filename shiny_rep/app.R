@@ -92,17 +92,19 @@ makeHeatmap <-function(matrix.A, title = "Consumption/production matrix"){
         scale_fill_gradient2('strength', low = "red", mid = "white", high = "blue", midpoint = 0)+
         theme_void() + ggtitle(title)
     
-    if (ncol(matrix.A)<=12 & nrow(matrix.A)<=12){
+    if (ncol(matrix.A)<=10 & nrow(matrix.A)<=10){
         fig <- fig + geom_text(aes(label = round(strength, 2)))
-    } else if (ncol(matrix.A)<=20 & nrow(matrix.A)<=20){
+    } else if (ncol(matrix.A)<=15 & nrow(matrix.A)<=15){
         fig <- fig + geom_text(aes(label = round(strength, 1)))
+    } else {
+        fig <- fig
     }
     
     fig <- fig + labs(x = "compounds", y = "species")+
         theme_linedraw() + 
         theme(plot.title = element_text(hjust = 0.5, size = 14))
     
-    if (nrow(matrix.A) > 20){
+    if (nrow(matrix.A) >= 20){
         # too many species 
         fig <- fig + theme(
             axis.title.y=element_blank(),
@@ -110,7 +112,7 @@ makeHeatmap <-function(matrix.A, title = "Consumption/production matrix"){
             axis.ticks.y=element_blank(),
         )
     }
-    if (ncol(matrix.A) > 20){
+    if (ncol(matrix.A) >= 20){
         # too many resources
         fig <- fig + theme(
             axis.title.x=element_blank(),
@@ -133,7 +135,20 @@ server <- function(input, output, session) {
     n.resources <- reactive(input$nResources)
     names.species <- reactive(text2chars(input$namesSpecies, len = n.species(), prefix = "sp"))
     names.resources <- reactive(text2chars(input$namesResources, len = n.resources(), prefix = "res"))
+    t.start <- reactive(input$tStart)
     t.end <- reactive(input$tEnd)
+    observeEvent(input$tStart | input$tEnd, {
+        updateNumericInput(inputId = "tStart", max = input$tEnd)
+        updateNumericInput(inputId = "tEnd", min = input$tStart)
+    })
+    
+    t.step <- reactive(input$tStep)
+    t.store <- reactive(input$tStore)
+    observeEvent(input$tStart | input$tEnd | input$tStep | input$tStore, {
+        updateNumericInput(inputId = "tStep", max = (input$tEnd-input$tStart)/input$tStore)
+        updateNumericInput(inputId = "tStore", max = (input$tEnd-input$tStart)/input$tStep)
+    })
+    
     ## compounds stochiometry
     # observeEvent(input$nResources, {
     #     resources <- reactive(as.numeric(text2chars(input$resources, len = n.resources(), expr = paste0("runif(n = ", n.resources() ,", min = 1, max = 100)"))))
@@ -267,6 +282,46 @@ server <- function(input, output, session) {
     migration.p <- reactive(input$migrationP)
     metacommunity.probability <- reactive(as.numeric(text2chars(input$metacommunityProbability, len = n.species(), expr = paste0("rdirichlet(1, alpha = rep(1,", n.species(), "))"))))
     output$metacommunityProbability <- renderPrint(metacommunity.probability())
+    
+    ## examples
+    observeEvent(input$CRMEX1, {
+        updateSliderInput(inputId = "nSpecies", value = 5)
+        updateSliderInput(inputId = "nResources", value = 5)
+    })
+    observeEvent(input$CRMEX2, {
+        updateNumericInput(inputId = "tEnd", value = 2000)
+        updateNumericInput(inputId = "tStore", value = 500)
+        updateSliderInput(inputId = "migrationP", value = 0)
+        updateCheckboxInput(inputId = "stochastic", value = FALSE)
+        updateSliderInput(inputId = "dilutionRate", value = 0.001)
+    })
+    observeEvent(input$CRMEX3, {
+        updateSliderInput(inputId = "nSpecies", value = 1)
+        updateSliderInput(inputId = "nResources", value = 10)
+        updateSliderInput(inputId = "maintenance", value = 0.1)
+    })
+    observeEvent(input$CRMEX4, {
+        updateSliderInput(inputId = "nSpecies", value = 3)
+        updateSliderInput(inputId = "nResources", value = 4)
+        updateTextInput(inputId = "growthRates", value = "2, 4.5, 2.6")
+        updateTextInput(inputId = "x0", value = "1, 2, 1")
+        updateTextInput(inputId = "resources", value = "10, 0, 0, 0")
+        E$df <- matrix(c(1, -3, 0, 0, 1, 0, -2, 0, 0, 0, 4, -3), nrow = 3, byrow = TRUE)*
+            c(4.3/4, 2/4, 1/4)
+        
+    })
+    observeEvent(input$CRMEX5, {
+        updateSliderInput(inputId = "nSpecies", value = 10)
+        updateSliderInput(inputId = "nResources", value = 10)
+        E$df <- randomE(n.species = 10, n.resources = 10, mean.consumption = 3, mean.production = 1,
+                        maintenance = 0.5, trophic.preferences = list(c(5,3,1,1,1,1,1,1,1,1)))
+    })
+    observeEvent(input$CRMEX6, {
+        updateSliderInput(inputId = "nSpecies", value = 20)
+        updateSliderInput(inputId = "nResources", value = 20)
+        E$df <- randomE(n.species = 20, n.resources = 20, mean.consumption = 3, mean.production = 2, maintenance = 0.0, trophic.levels = c(7, 13))
+    })
+    
     runCRM <- reactive(
         simulateConsumerResource(
             n.species = n.species(),
@@ -292,7 +347,10 @@ server <- function(input, output, session) {
             metacommunity.probability = metacommunity.probability(),
             error.variance = error.variance(), 
             norm = norm(), 
-            t.end = t.end()
+            t.end = t.end(),
+            t.start = t.start(),
+            t.step = t.step(),
+            t.store = t.store()
         )
     )
     
