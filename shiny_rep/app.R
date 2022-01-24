@@ -133,7 +133,7 @@ server <- function(input, output, session) {
     n.resources <- reactive(input$nResources)
     names.species <- reactive(text2chars(input$namesSpecies, len = n.species(), prefix = "sp"))
     names.resources <- reactive(text2chars(input$namesResources, len = n.resources(), prefix = "res"))
-    
+    t.end <- reactive(input$tEnd)
     ## compounds stochiometry
     # observeEvent(input$nResources, {
     #     resources <- reactive(as.numeric(text2chars(input$resources, len = n.resources(), expr = paste0("runif(n = ", n.resources() ,", min = 1, max = 100)"))))
@@ -142,10 +142,29 @@ server <- function(input, output, session) {
     res.conc <- reactive(input$resourcesConcentration)
     res.even <- reactive(input$resourcesEvenness)
     resources_dist <- reactive(rdirichlet(1, rep(1, n.resources())*res.even())*res.conc()*n.resources())
-    resources <- reactive(resources_dist())
+    res.custom <- reactive(as.numeric(as.vector(text2char(input$resourcesCustom))))
+    resources <- reactive({
+        if (length(res.custom()) < n.resources()){
+            return(c(res.custom(), as.vector(resources_dist())[(length(res.custom())+1):n.resources()]))
+        } else {
+            return(head(res.custom(), n.resources()))
+        }
+    })
     output$resourcesOutput <- renderPrint(resources())
     
-    output$resourcesPlot <- renderPlot(makePiePlot(resources()[,], label = 'concentration', title='compounds'))
+    # dilution
+    res.dilu <- reactive(as.numeric(as.vector(text2char(input$resourcesDilution))))
+    resources.dilution <- reactive({
+        if (length(res.dilu()) < n.resources()){
+            return(c(res.dilu(), resources()[(length(res.dilu())+1):n.resources()]))
+        } else {
+            return(head(res.dilu(), n.resources()))
+        }
+    })
+    output$resourcesDilutionOutput <- renderPrint(resources.dilution())
+    dilution.rate <- reactive(input$dilutionRate)
+    
+    output$resourcesPlot <- renderPlot(makePiePlot(resources(), label = 'concentration', title='compounds'))
     mean.consumption <- reactive(input$meanConsumption)
     mean.production <- reactive(input$meanProduction)
     observeEvent(input$meanConsumption | input$meanProduction, {
@@ -181,7 +200,7 @@ server <- function(input, output, session) {
     ## growth rates
     x0 <- reactive(as.numeric(text2chars(input$x0, len = n.species(), expr = paste0("runif(n = ", n.species() ,", min = 0.1, max = 10)"))))
     output$x0Output <- renderPrint(x0())
-
+    
     
     alpha <- reactive(input$alpha)
     beta <- reactive(input$beta)
@@ -232,11 +251,22 @@ server <- function(input, output, session) {
     }, res = 96) 
     monod.constant <- reactive(text2char(input$monodConstant)) # TODO: edit table
     
-    ## miscellaneous
+    ## pertubation
     error.variance <- reactive(input$errorVariance)
     norm <- reactive(input$norm)
-    t.end <- reactive(input$tEnd)
-    
+    stochastic <- reactive(input$stochastic)
+    sigma.drift <- reactive(input$sigmaDrift)
+    sigma.epoch <- reactive(input$sigmaEpoch)
+    sigma.external <- reactive(input$sigmaExternal)
+    sigma.migration <- reactive(input$sigmaMigration)
+    epoch.p <- reactive(input$epochP)
+    t.external_events <- reactive(as.numeric(text2char(input$tExternalEvents)))
+    output$tExternalEventsOutput <- renderPrint(t.external_events())
+    t.external_durations <- reactive(as.numeric(text2char(input$tExternalDurations)))
+    output$tExternalDurationsOutput <- renderPrint(t.external_durations())
+    migration.p <- reactive(input$migrationP)
+    metacommunity.probability <- reactive(as.numeric(text2chars(input$metacommunityProbability, len = n.species(), expr = paste0("rdirichlet(1, alpha = rep(1,", n.species(), "))"))))
+    output$metacommunityProbability <- renderPrint(metacommunity.probability())
     runCRM <- reactive(
         simulateConsumerResource(
             n.species = n.species(),
@@ -246,20 +276,20 @@ server <- function(input, output, session) {
             E = E$df,
             x0 = x0(), 
             resources = resources(), 
-            resources.dilution = resources(), # TODO: add interface
+            resources.dilution = resources.dilution(),
             growth.rates = growth.rates(), 
             monod.constant = monod.constant(), 
-            dilution.rate = 0, # TODO: add interface
-            sigma.drift = 0,
-            sigma.epoch = 0.001,
-            sigma.external = 0.3,
-            sigma.migration = 0.01, 
-            epoch.p = 0.001, 
-            t.external_events = NULL,
-            t.external_durations = NULL,
-            stochastic = TRUE,
-            migration.p = 0.01,
-            metacommunity.probability = NULL, # TODO: add interface
+            dilution.rate = dilution.rate(),
+            sigma.drift = sigma.drift(),
+            sigma.epoch = sigma.epoch(),
+            sigma.external = sigma.external(),
+            sigma.migration = sigma.migration(), 
+            epoch.p = epoch.p(), 
+            t.external_events = t.external_events(),
+            t.external_durations = t.external_durations(),
+            stochastic = stochastic(),
+            migration.p = migration.p(),
+            metacommunity.probability = metacommunity.probability(),
             error.variance = error.variance(), 
             norm = norm(), 
             t.end = t.end()
