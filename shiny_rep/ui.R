@@ -145,7 +145,7 @@ ui <- navbarPage(
                        bsCollapsePanel(strong("Description"), value = "Description",
                                        fluidRow(
                                            column(width = 12,
-                                                  includeMarkdown("crm.md"),
+                                                  withMathJax(includeMarkdown("crm.md")),
                                            ),
                                        )
                        ),
