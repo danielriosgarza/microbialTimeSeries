@@ -1,5 +1,5 @@
 ---
-title: "Consumer Resource Model"
+title: "Consumer Resource Model - description"
 author: "Daniel Garza"
 date: "1/19/2022"
 output: html_document
@@ -107,9 +107,9 @@ print(abs(sum(E*(E<0)))) #produced
 
 ```
 
-##### Using stoichiometries of biological metabolisms
+##### Using stoichiometric relatioships for the secretion of metabolic by-products
 
-MiaSim is flexible for other relationships between the consumption and secretion of byproducts since the user may provide their own $E$ matrix to the `simulateConsumerResource` function.
+MiaSim is flexible for other relationships between the consumption of growth compounds and the secretion of byproducts since the user may provide their own $E$ matrix to the `simulateConsumerResource` function.
 
 One approach is to tie the consumption and production of resources to the stoichiometry of biological reactions (see [Marsland III, et al. 2019](https://journals.plos.org/ploscompbiol/article?id=10.1371/journal.pcbi.1006793)) .
 
