@@ -1,0 +1,56 @@
+---
+title: "Consumer Resource Model - parameters"
+author: "Daniel Garza"
+date: "1/22/2022"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+#### randomE
+
+**`n.species`** : `Integer`
+
+number of species in community
+
+**`n.resources`** : `integer`
+
+number of compounds that are either consumed or produced by the community members
+
+**`names.species`** : `character vector`
+
+names of species to use during the simulation. If not provided, species are named as *sp1, sp2, ...*
+
+must have same length as `n.species`
+
+**`names.resources`** : `character vector`
+
+names of compounds to use during the simulation. If not provided, compounds are named as *res1, res2, ...*
+
+must have same length as `n.resources`
+
+**`mean.consumption`** : `numeric`
+
+Average number of compounds that are required for the growth of each species. This is determined by sampling from a Poisson distribution with $\lambda$ = `mean.consumption`.
+
+The default values is one fourth of the `n.resources`
+
+**`mean.production`** : `numeric`
+
+Average number of compounds that are released as by-product from the growth of each species. This is determined by sampling from a Poisson distribution with $\lambda$ = `mean.production`.
+
+The default values is one sixth of the `n.resources`
+
+**`maintenance`** : `numeric`
+
+fraction of the consumption fluxes that are channeled into the organism's growth and maintenance, which constrains the sum of fluxes of the metabolic by-products.
+
+default is 0.5 (see example 3 for more detail).
+
+trophic.levels = NULL,
+
+trophic.preferences = NULL
+
+#### similateConsumerResource
