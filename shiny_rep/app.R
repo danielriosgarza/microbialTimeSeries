@@ -189,7 +189,7 @@ server <- function(input, output, session) {
     maintenance <- reactive(input$maintenance)
     
     # editable table
-    E <- reactiveValues(df = NULL)
+    RV <- reactiveValues(matrixE = NULL, matrixMonodConstant = NULL)
     observe({
         roundE <- round(randomE(n.species(), 
                                 n.resources(), 
@@ -199,16 +199,16 @@ server <- function(input, output, session) {
                                 mean.production = as.integer(mean.production() * n.resources()),
                                 maintenance = maintenance()
         ), digits = 3)
-        E$df <- roundE
+        RV$matrixE <- roundE
     })
     
     # editable table (without color heatmap)
-    output$tableE <- renderDataTable(E$df, editable = 'cell', selection = 'none', server = TRUE, options = list(scrollX = TRUE))
+    output$tableE <- renderDataTable(RV$matrixE, editable = 'cell', selection = 'none', server = TRUE, options = list(scrollX = TRUE))
     
-    output$CRMPlotE <- renderPlot(makeHeatmap(E$df, 'Consumption/production matrix'), res = 96)
+    output$CRMPlotE <- renderPlot(makeHeatmap(RV$matrixE, 'Consumption/production matrix'), res = 96)
     
     observeEvent(input$tableE_cell_edit, {
-        E$df <<- editData(E$df, input$tableE_cell_edit, 'tableE')
+        RV$matrixE <<- editData(RV$matrixE, input$tableE_cell_edit, 'tableE')
     })
     
     
@@ -264,8 +264,16 @@ server <- function(input, output, session) {
             stat_function(fun = dbeta, args = list(shape1=alpha(), shape2=beta())) + 
             xlim(0,1) + theme_linedraw()
     }, res = 96) 
-    monod.constant <- reactive(text2char(input$monodConstant)) # TODO: edit table
-    
+    observe({
+        roundMonodConstant <- round(
+            matrix(rgamma(n = n.species()*n.resources(), shape = 50*max(resources()), rate = 1), nrow = n.species()), 
+            digits = 3)
+        RV$matrixMonodConstant <- roundMonodConstant
+    })
+    output$tableMonodConstant <- renderDataTable(RV$matrixMonodConstant, editable = 'cell', selection = 'none', server = TRUE, options = list(scrollX = TRUE))
+    observeEvent(input$tableMonodConstant_cell_edit, {
+        RV$matrixMonodConstant <<- editData(RV$matrixMonodConstant, input$tableMonodConstant_cell_edit, 'tableE')
+    })
     ## pertubation
     error.variance <- reactive(input$errorVariance)
     norm <- reactive(input$norm)
@@ -305,21 +313,20 @@ server <- function(input, output, session) {
         updateSliderInput(inputId = "nResources", value = 4)
         updateTextInput(inputId = "growthRates", value = "2, 4.5, 2.6")
         updateTextInput(inputId = "x0", value = "1, 2, 1")
-        updateTextInput(inputId = "resources", value = "10, 0, 0, 0")
-        E$df <- matrix(c(1, -3, 0, 0, 1, 0, -2, 0, 0, 0, 4, -3), nrow = 3, byrow = TRUE)*
+        updateTextInput(inputId = "resourcesCustom", value = "10, 0, 0, 0")
+        RV$matrixE <- matrix(c(1, -3, 0, 0, 1, 0, -2, 0, 0, 0, 4, -3), nrow = 3, byrow = TRUE)*
             c(4.3/4, 2/4, 1/4)
-        
     })
     observeEvent(input$CRMEX5, {
         updateSliderInput(inputId = "nSpecies", value = 10)
         updateSliderInput(inputId = "nResources", value = 10)
-        E$df <- randomE(n.species = 10, n.resources = 10, mean.consumption = 3, mean.production = 1,
+        RV$matrixE <- randomE(n.species = 10, n.resources = 10, mean.consumption = 3, mean.production = 1,
                         maintenance = 0.5, trophic.preferences = list(c(5,3,1,1,1,1,1,1,1,1)))
     })
     observeEvent(input$CRMEX6, {
         updateSliderInput(inputId = "nSpecies", value = 20)
         updateSliderInput(inputId = "nResources", value = 20)
-        E$df <- randomE(n.species = 20, n.resources = 20, mean.consumption = 3, mean.production = 2, maintenance = 0.0, trophic.levels = c(7, 13))
+        RV$matrixE <- randomE(n.species = 20, n.resources = 20, mean.consumption = 3, mean.production = 2, maintenance = 0.0, trophic.levels = c(7, 13))
     })
     
     runCRM <- reactive(
@@ -328,12 +335,12 @@ server <- function(input, output, session) {
             n.resources = n.resources(),
             names.species = names.species(), 
             names.resources = names.resources(), 
-            E = E$df,
+            E = RV$matrixE,
             x0 = x0(), 
             resources = resources(), 
             resources.dilution = resources.dilution(),
             growth.rates = growth.rates(), 
-            monod.constant = monod.constant(), 
+            monod.constant = RV$matrixMonodConstant, 
             dilution.rate = dilution.rate(),
             sigma.drift = sigma.drift(),
             sigma.epoch = sigma.epoch(),

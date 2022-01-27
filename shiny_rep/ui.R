@@ -120,7 +120,8 @@ ui <- navbarPage(
                                                                    verbatimTextOutput("growthRatesOutput"),
                                                                    
                                                                    plotOutput("growthRatesDist"),
-                                                                   textAreaInput("monodConstant", "constant of additive monod growth of species consuming compounds"),
+                                                                   tags$label("Monod Constant"),
+                                                                   dataTableOutput("tableMonodConstant", width = "100%"),
                                                           ),
                                                           tabPanel("Pertubations",
                                                                    sliderInput("errorVariance", "variance of measurement error", value = 0, min = 0, max = 10, step = 0.1),
