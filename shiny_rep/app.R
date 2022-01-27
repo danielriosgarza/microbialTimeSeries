@@ -123,14 +123,13 @@ makeHeatmap <-function(matrix.A, title = "Consumption/production matrix"){
     fig
 }
 
-#### ui ####
+# ui ####
 source("ui.R")
 
-#### server ####
 server <- function(input, output, session) {
     
-    #### model1 simulate consumer resource model ####
-    ## basic
+    # model1 simulate consumer resource model ####
+    ## basic ####
     n.species <- reactive(input$nSpecies)
     n.resources <- reactive(input$nResources)
     names.species <- reactive(text2chars(input$namesSpecies, len = n.species(), prefix = "sp"))
@@ -149,11 +148,7 @@ server <- function(input, output, session) {
         updateNumericInput(inputId = "tStore", max = (input$tEnd-input$tStart)/input$tStep)
     })
     
-    ## compounds stochiometry
-    # observeEvent(input$nResources, {
-    #     resources <- reactive(as.numeric(text2chars(input$resources, len = n.resources(), expr = paste0("runif(n = ", n.resources() ,", min = 1, max = 100)"))))
-    # })
-    # resources_custom <- reactive(as.numeric(text2chars(input$resources_custom, len = n.resources(), expr = paste0("runif(n = ", n.resources() ,", min = 1, max = 100)"))))
+    ## compounds stochiometry ####
     res.conc <- reactive(input$resourcesConcentration)
     res.even <- reactive(input$resourcesEvenness)
     resources_dist <- reactive(rdirichlet(1, rep(1, n.resources())*res.even())*res.conc()*n.resources())
@@ -167,7 +162,7 @@ server <- function(input, output, session) {
     })
     output$resourcesOutput <- renderPrint(resources())
     
-    # dilution
+    ## dilution ####
     res.dilu <- reactive(as.numeric(as.vector(text2char(input$resourcesDilution))))
     resources.dilution <- reactive({
         if (length(res.dilu()) < n.resources()){
@@ -188,7 +183,7 @@ server <- function(input, output, session) {
     })
     maintenance <- reactive(input$maintenance)
     
-    # editable table
+    ## editable matrixE ####
     RV <- reactiveValues(matrixE = NULL, matrixMonodConstant = NULL)
     observe({
         roundE <- round(randomE(n.species(), 
@@ -201,10 +196,7 @@ server <- function(input, output, session) {
         ), digits = 3)
         RV$matrixE <- roundE
     })
-    
-    # editable table (without color heatmap)
     output$tableE <- renderDataTable(RV$matrixE, editable = 'cell', selection = 'none', server = TRUE, options = list(scrollX = TRUE))
-    
     output$CRMPlotE <- renderPlot(makeHeatmap(RV$matrixE, 'Consumption/production matrix'), res = 96)
     
     observeEvent(input$tableE_cell_edit, {
@@ -212,7 +204,7 @@ server <- function(input, output, session) {
     })
     
     
-    ## growth rates
+    ## growth rates ####
     x0 <- reactive(as.numeric(text2chars(input$x0, len = n.species(), expr = paste0("runif(n = ", n.species() ,", min = 0.1, max = 10)"))))
     output$x0Output <- renderPrint(x0())
     
@@ -274,7 +266,7 @@ server <- function(input, output, session) {
     observeEvent(input$tableMonodConstant_cell_edit, {
         RV$matrixMonodConstant <<- editData(RV$matrixMonodConstant, input$tableMonodConstant_cell_edit, 'tableE')
     })
-    ## pertubation
+    ## pertubation ####
     error.variance <- reactive(input$errorVariance)
     norm <- reactive(input$norm)
     stochastic <- reactive(input$stochastic)
@@ -291,7 +283,7 @@ server <- function(input, output, session) {
     metacommunity.probability <- reactive(as.numeric(text2chars(input$metacommunityProbability, len = n.species(), expr = paste0("rdirichlet(1, alpha = rep(1,", n.species(), "))"))))
     output$metacommunityProbability <- renderPrint(metacommunity.probability())
     
-    ## examples
+    ## examples ####
     observeEvent(input$CRMEX1, {
         updateSliderInput(inputId = "nSpecies", value = 5)
         updateSliderInput(inputId = "nResources", value = 5)
@@ -364,7 +356,7 @@ server <- function(input, output, session) {
     output$CRMSpecies <- renderPlot(makePlot(runCRM()$matrix, "abundance of species by time"), res = 96)
     output$CRMResources <- renderPlot(makePlotRes(runCRM()$resources, "quantity of compounds by time"),  res = 96)
     
-    #### model2 simulate generalized Lotka-Volterra Model ####
+    # model2 simulate generalized Lotka-Volterra Model ####
     n.speciesGLV <- reactive(input$n.speciesGLV)
     names.speciesGLV <- reactive(text2char(input$names.speciesGLV))
     diagonalGLV <- reactive(input$diagonalGLV)

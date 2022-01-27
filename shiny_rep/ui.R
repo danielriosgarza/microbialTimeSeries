@@ -1,13 +1,13 @@
-#### ui ####
 ui <- navbarPage(
     title ="microSimShiny",
-    #### tab1 Consumer-Resource Model ####
+    # tab1 Consumer-Resource Model ####
     tabPanel(
         title = "Consumer-Resource Model",
         fluidPage(
             titlePanel("Consumer-Resource Model"),
             bsCollapse(id = "contents", 
                        open = "Model", 
+                       ## Model ####
                        bsCollapsePanel(title = strong("Model"), value = "Model",
                                        fluidRow(
                                            column(width = 5,
@@ -26,6 +26,7 @@ ui <- navbarPage(
                                             margin-bottom: 0;
                                         }
                                     ")),
+                                                          ### Basic ####
                                                           tabPanel("Basic",
                                                                    sliderInput("nSpecies", "number of species", value = 2, min = 1, max = 100),
                                                                    bsTooltip("nSpecies", "Number of species in the simulation", "right", options = list(container = "body")),
@@ -57,7 +58,7 @@ ui <- navbarPage(
                                                                    
                                                                    
                                                           ),
-                                                          
+                                                          ### Compounds ####
                                                           tabPanel("Compounds",
                                                                    sliderInput("resourcesConcentration", "mean initial concentration of compounds", min = 0, max = 1000, value = 100, step = 1),
                                                                    bsTooltip("resourcesConcentration", "mean initial concentration of compounds", "right", options = list(container = "body")),
@@ -88,7 +89,7 @@ ui <- navbarPage(
                                                                    dataTableOutput("tableE", width = "100%"),
                                                                    bsTooltip("tableE", "Stochiometric values of consumption and production of compounds by each cell. Positive efficiencies indicate the consumption of resources, whilst negatives indicate that the species would produce the resource.", "right", options = list(container = "body")),
                                                           ),
-                                                          
+                                                          ### Growth rates ####
                                                           tabPanel("Growth rates",
                                                                    textInput("x0", "initial abundances of species"),
                                                                    bsTooltip("x0", "If the given initial abundances of species is not enough, random initial abundances will be added.", "right", options = list(container = "body")),
@@ -123,7 +124,8 @@ ui <- navbarPage(
                                                                    tags$label("Monod Constant"),
                                                                    dataTableOutput("tableMonodConstant", width = "100%"),
                                                           ),
-                                                          tabPanel("Pertubations",
+                                                          ### Perturbations ####
+                                                          tabPanel("Perturbations",
                                                                    sliderInput("errorVariance", "variance of measurement error", value = 0, min = 0, max = 10, step = 0.1),
                                                                    bsTooltip("errorVariance", "The variance of measurement error. By default it equals to 0, indicating that the result won't contain any measurement error.", "right", options = list(container = "body")),
                                                                    checkboxInput("stochastic", "use stochasitic", value = TRUE),
@@ -165,6 +167,7 @@ ui <- navbarPage(
                                            ),
                                        )
                        ),
+                       ## Description ####
                        bsCollapsePanel(strong("Description"), value = "Description",
                                        fluidRow(
                                            column(width = 12,
@@ -172,8 +175,15 @@ ui <- navbarPage(
                                            ),
                                        )
                        ),
+                       ## Inputs ####
                        bsCollapsePanel(strong("Inputs"), value = "Inputs",
-                                       "This is a panel of input table."),
+                                       fluidRow(
+                                           column(width = 12,
+                                                  withMathJax(includeMarkdown("crm_parms.Rmd")),
+                                           ),
+                                       )
+                       ),
+                       
                        bsCollapsePanel(strong("References"), value = "References",
                                        "Panel of refs.")
             ),
@@ -181,7 +191,7 @@ ui <- navbarPage(
         )
     ),
     
-    #### tab2 Generalized Lotka-Volterra (GLV) Model ####
+    # tab2 Generalized Lotka-Volterra (GLV) Model ####
     tabPanel(
         title = "Generalized Lotka-Volterra (GLV)",
         fluidPage(
@@ -248,14 +258,14 @@ ui <- navbarPage(
             )
         )),
     
-    #### tab3 Hubbell Model ####
+    # tab3 Hubbell Model ####
     tabPanel(
         title = "Hubbell Model (with death rates)",
         fluidPage(
             
         )),
     
-    #### tab4 Logistic Model (with stochasticity) ####
+    # tab4 Logistic Model (with stochasticity) ####
     tabPanel(
         title = "Logistic Model (with stochasticity)",
         fluidPage(
