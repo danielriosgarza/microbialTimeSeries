@@ -8,11 +8,14 @@ library(DT)
 library(formattable)
 library(dplyr)
 
-#### source all files ####
+# debug with reactlog ####
+library(reactlog)
+
+# source all files ####
 Rfiles = gsub(" ", "", paste("../R/", list.files("../R")))
 sapply(Rfiles, source)
 
-#### converting functions ####
+# converting functions ####
 text2char <- function(text){
     # split words or numbers by separators(',' and ';')
     if(trimws(text) == "") {
@@ -44,7 +47,7 @@ text2chars <- function(text, len, prefix = NULL, expr = NULL){
     }
 }
 
-#### plotting functions ####
+# plotting functions ####
 makePlot <- function(out.matrix, title = "abundance of species by time"){
     df <- as.data.frame(out.matrix)
     dft <-  melt(df, id="time")
@@ -126,6 +129,7 @@ makeHeatmap <-function(matrix.A, title = "Consumption/production matrix"){
 # ui ####
 source("ui.R")
 
+# server ####
 server <- function(input, output, session) {
     
     # model1 simulate consumer resource model ####
@@ -242,7 +246,6 @@ server <- function(input, output, session) {
         updateSliderInput(inputId = "alpha", value = 1)
         updateSliderInput(inputId = "beta", value = 2)
     })
-    
     observeEvent(input$buttonBetaRightTriangle, {
         updateSliderInput(inputId = "alpha", value = 2)
         updateSliderInput(inputId = "beta", value = 1)
@@ -300,27 +303,37 @@ server <- function(input, output, session) {
         updateSliderInput(inputId = "nResources", value = 10)
         updateSliderInput(inputId = "maintenance", value = 0.1)
     })
-    observeEvent(input$CRMEX4, {
+    observeEvent(input$CRMEX4pre, {
         updateSliderInput(inputId = "nSpecies", value = 3)
         updateSliderInput(inputId = "nResources", value = 4)
         updateTextInput(inputId = "growthRates", value = "2, 4.5, 2.6")
         updateTextInput(inputId = "x0", value = "1, 2, 1")
         updateTextInput(inputId = "resourcesCustom", value = "10, 0, 0, 0")
-        RV$matrixE <- matrix(c(1, -3, 0, 0, 1, 0, -2, 0, 0, 0, 4, -3), nrow = 3, byrow = TRUE)*
-            c(4.3/4, 2/4, 1/4)
+        updateButton(session, "CRMEX4", disabled = !input$CRMEX4pre)
     })
-    observeEvent(input$CRMEX5, {
+    observeEvent(input$CRMEX4, {
+        # auto update matrixE, then take changes after it.
+        matrixExample4 <- matrix(c(1, -3, 0, 0, 1, 0, -2, 0, 0, 0, 4, -3), nrow = 3, byrow = TRUE)*c(4.3/4, 2/4, 1/4)
+        RV$matrixE <- matrixExample4
+    })
+    observeEvent(input$CRMEX5pre, {
         updateSliderInput(inputId = "nSpecies", value = 10)
         updateSliderInput(inputId = "nResources", value = 10)
-        RV$matrixE <- randomE(n.species = 10, n.resources = 10, mean.consumption = 3, mean.production = 1,
-                        maintenance = 0.5, trophic.preferences = list(c(5,3,1,1,1,1,1,1,1,1)))
+        updateButton(session, "CRMEX5", disabled = !input$CRMEX5pre)
+        
     })
-    observeEvent(input$CRMEX6, {
+    observeEvent(input$CRMEX5, {
+        RV$matrixE <- randomE(n.species = 10, n.resources = 10, mean.consumption = 3, mean.production = 1,
+                              maintenance = 0.5, trophic.preferences = list(c(5,3,1,1,1,1,1,1,1,1)))
+    })
+    observeEvent(input$CRMEX6pre, {
         updateSliderInput(inputId = "nSpecies", value = 20)
         updateSliderInput(inputId = "nResources", value = 20)
+        updateButton(session, "CRMEX6", disabled = !input$CRMEX6pre)
+    })
+    observeEvent(input$CRMEX6, {
         RV$matrixE <- randomE(n.species = 20, n.resources = 20, mean.consumption = 3, mean.production = 2, maintenance = 0.0, trophic.levels = c(7, 13))
     })
-    
     runCRM <- reactive(
         simulateConsumerResource(
             n.species = n.species(),

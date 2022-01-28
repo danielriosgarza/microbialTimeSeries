@@ -150,19 +150,29 @@ ui <- navbarPage(
                                                       ),
                                                   )
                                            ),
+                                           ### DisplayPanel(Right) ####
                                            column(width = 7, 
                                                   fluidRow(
-                                                      actionButton("CRMEX1", "Example 1", class = "btn btn-primary"),
-                                                      actionButton("CRMEX2", "Example 2", class = "btn btn-primary"),
-                                                      actionButton("CRMEX3", "Example 3", class = "btn btn-primary"),
-                                                      actionButton("CRMEX4", "Example 4", class = "btn btn-primary"),
-                                                      actionButton("CRMEX5", "Example 5", class = "btn btn-primary"),
-                                                      actionButton("CRMEX6", "Example 6", class = "btn btn-primary"),
+                                                      actionButton("CRMEX1", "Ex.1", class = "btn btn-primary", width = "15%"),
+                                                      actionButton("CRMEX2", "Ex.2", class = "btn btn-primary", width = "15%"),
+                                                      actionButton("CRMEX3", "Ex.3", class = "btn btn-primary", width = "15%"),
+                                                      bsButton("CRMEX4pre", "Pre.4", style = "info", width = "8%"),
+                                                      bsButton("CRMEX4", "Ex.4", style = "primary", disabled = TRUE, width = "8%"),
+                                                      bsTooltip("CRMEX4", "Please run the Pre.4 First", "top", options = list(container = "body")),
+                                                      bsButton("CRMEX5pre", "Pre.5", style = "info", width = "8%"),
+                                                      bsButton("CRMEX5", "Ex.5", style = "primary", disabled = TRUE, width = "8%"),
+                                                      bsTooltip("CRMEX5", "Please run the Pre.5 First", "top", options = list(container = "body")),
+                                                      bsButton("CRMEX6pre", "Pre.6", style = "info", width = "8%"),
+                                                      bsButton("CRMEX6", "Ex.6", style = "primary", disabled = TRUE, width = "8%"),
+                                                      bsTooltip("CRMEX6", "Please run the Pre.6 First", "top", options = list(container = "body")),
                                                   ),
-                                                  plotOutput("CRMSpecies"),
-                                                  plotOutput("CRMResources"),
-                                                  plotOutput("CRMPlotE"),
-                                                  bsTooltip("CRMPlotE", "Positive values indicate consumption, and negative values indicate production", "left", options = list(container = "body")),
+                                                  fluidRow(
+                                                      plotOutput("CRMSpecies"),
+                                                      plotOutput("CRMResources"),
+                                                      plotOutput("CRMPlotE"),
+                                                      bsTooltip("CRMPlotE", "Positive values indicate consumption, and negative values indicate production", "left", options = list(container = "body")),
+                                                  ),
+                                                  
                                                   
                                            ),
                                        )
