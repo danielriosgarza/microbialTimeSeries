@@ -87,6 +87,9 @@ randomE <- function(n.species,
         stop("Sum of 'trophic.levels' should equal to 'n.species'.")
     }
     if (!is.null(trophic.preferences)) {
+        if(!is.list(trophic.preferences) && length(trophic.preferences) == n.resources){
+            trophic.preferences <- list(trophic.preferences)
+        }
         while(length(trophic.preferences) < length(trophic.levels)){
             warning("Autofilling 'trophic.preferences' with NULL")
             trophic.preferences <- c(trophic.preferences, list(NULL))
