@@ -35,13 +35,13 @@ must have same length as `n.resources`
 
 Average number of compounds that are required for the growth of each species. This is determined by sampling from a Poisson distribution with $\lambda$ = `mean.consumption`.
 
-The default values is one fourth of the `n.resources`
+The default values is one fourth of `n.resources`
 
 **`mean.production`** : `numeric`
 
 Average number of compounds that are released as by-product from the growth of each species. This is determined by sampling from a Poisson distribution with $\lambda$ = `mean.production`.
 
-The default values is one sixth of the `n.resources`
+The default values is one sixth of `n.resources`
 
 **`maintenance`** : `numeric`
 
