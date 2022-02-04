@@ -181,6 +181,14 @@ makeHeatmap(levels)
 
 ```
 
+##### Example 6: Nested tropic levels
+
+The default implementation of MiaSim supports only the definition of linear levels.
+
+One can easily add nested relationships using the `trophic.preferences` parameter. For instance, consider the interactions depicted in the following cartoon where arrows represent the direction of the secretion/consumption flux of metabolic by-products between species.
+
+![interaction cartoon](https://raw.githubusercontent.com/danielriosgarza/microbialTimeSeries/reviewed/files/images/interactionCartoon.png)
+
 ##### Adding Noise and simulating measurement error
 
 ##### More advanced example
