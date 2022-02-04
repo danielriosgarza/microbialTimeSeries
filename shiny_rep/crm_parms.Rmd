@@ -49,7 +49,11 @@ fraction of the consumption fluxes that are channeled into the organism's growth
 
 default is 0.5 (see example 3 for more detail).
 
-trophic.levels = NULL,
+**`trophic.levels`** : `integer`
+
+Hierarchical allocation of species into trophic groups. The input should be a list of integers allocating the total `n.species` into groups (see example 6).
+
+For example, a community with 10 species can have a distribution of `c(3,4,3)`, meaning the secretion products of the three first species are preferred by the next four, while the secretion products of these four are preferred by the last three.
 
 trophic.preferences = NULL
 

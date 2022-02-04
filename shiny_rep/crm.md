@@ -11,7 +11,7 @@ knitr::opts_chunk$set(echo = TRUE)
 
 ## simulateConsumerResource
 
-Function to simulate McArthur's consumer-resource model and its extensions for microbiomes. The model describes the dynamics of microbes and substrates in a community where the ecological interactions are explicitly encoded via the consumption and production of metabolites.
+Function to simulate McArthur's consumer-resource model and its extensions for microbiomes. The model describe the dynamics of microbes and substrates in a community where the ecological interactions are explicitly encoded via the consumption and production of metabolites.
 
 #### **Model Description**
 
@@ -117,9 +117,9 @@ One approach is to tie the consumption and production of resources to the stoich
 
 For instance, consider a community consisting of three microbes:
 
--   One that converts 1 mol of glucose to 3 mols of acetate with a yield of 4.3 mols of ATP, that we'll name "homoacetogen".
+-   One that converts 1 mol of glucose to 3 mols of acetate with a yield of 4.3 mols of ATP, that we'll label as an "homoacetogen".
 
--   One that converts 1 mol of glucose into 2 mols of lactate, with a yield of two mols of ATP, that we'll name "homofermenter";
+-   One that converts 1 mol of glucose into 2 mols of lactate, with a yield of two mols of ATP, that we'll label "homofermenter";
 
 -   One that converts 4 mols of lactate and into 3 mols of butyrate, with a yield of 1 ATP, that we'll name "butyrateProducer".
 
@@ -161,7 +161,7 @@ makeHeatmap(E)
 
 ##### Example 6: hierarchical trophic preferences
 
-In a complex community, feeding might be structured in a hierarchical way through trophic groups. Each group would prefer certain substrates and secrete by-products that are then preferred by the next subgroup. Evidence of such multi-level organization has been shown for the human gut microbiome ([Wong et al. 2019](https://journals.plos.org/ploscompbiol/article?id=10.1371/journal.pcbi.1007524)).
+In a complex community, feeding might be structured in a hierarchical way through trophic groups. Each group would prefer certain substrates and secrete by-products that are then preferred by the next subgroup. Evidence of such multilevel organization has been shown for the human gut microbiome ([Wong et al. 2019](https://journals.plos.org/ploscompbiol/article?id=10.1371/journal.pcbi.1007524)).
 
 The parameter `trophic.levels` or the `randomE` function allows users to simulate communities with multiple levels of substrate preferences, that cross-feed to each other in hierarchical fashion.
 
@@ -188,6 +188,83 @@ The default implementation of MiaSim supports only the definition of linear leve
 One can easily add nested relationships using the `trophic.preferences` parameter. For instance, consider the interactions depicted in the following cartoon where arrows represent the direction of the secretion/consumption flux of metabolic by-products between species.
 
 ![interaction cartoon](https://raw.githubusercontent.com/danielriosgarza/microbialTimeSeries/reviewed/files/images/interactionCartoon.png)
+
+To simulate a model with similar topology. We begin by setting the basic parameters:
+
+```{r}
+n.species = 4
+n.resources = 11
+names.species = c('A', 'B', 'C', 'D')
+
+#initial species composition
+x0 <- rep(1, 4)
+
+#initial media composition
+resources <- rep(1.5, 11)
+```
+
+Next, we go species-by-species and define their trophic preferences according to the cartoon, but making some use of the stochastic choices from the `randomE` function.
+
+we start drawing three secretion products for species C from a Dirichlet distribution, making sure it adds to $.5.$ These will be the first three metabolites from the eleven that are present in the community. We use these to make the preferences of species A and D, and use the `random.E` function to draw their secretion products.
+
+```{r}
+#secretion of C
+sec.C <- rdirichlet(1, c(1,1,1))*.5
+
+#The metabolic preferences of A are set to the secretion products of C
+pref.A.D <- list(c(sec.C*1000, rep(1,8)))
+
+em.A <- randomE(n.species = 1, n.resources = 11, names.species = 'A', trophic.preferences = pref.A.D, mean.production = 3, mean.consumption = 3)
+
+#secretion of A
+sec.A <- abs(em.A*(em.A<0))
+
+#The metabolic preferences of D are set to the secretion products of A
+em.D <- randomE(n.species = 1, n.resources = 11, names.species = 'D', trophic.preferences = pref.A.D, mean.production = 3, mean.consumption = 3)
+
+#secretion of D
+sec.D <- abs(em.D*(em.D<0))
+
+```
+
+Now we can use the byproducts of A and D as the preferred nutrients for B and use its byproducts as the preferred nutrients of C. For this, we need to assure that the three first metabolites are not byproducts of B so that it does not contradict the secretion of C when given as its preferred nutrients.
+
+```{r}
+
+#The metabolic preferences of B are set to the secretion products of A and D
+pref.B <- 1000*((sec.A + sec.D)/(sum(sec.A)+sum(sec.D)))
+pref.B[pref.B==0] <- 1
+pref.B <- list(pref.B[4:11])
+
+em.B <- randomE(n.species = 1, n.resources = 8, names.species = 'B', trophic.preferences = pref.B, mean.production = 3, mean.consumption = 3)
+
+#secretion of D
+sec.B <- abs(em.B*(em.B<0))
+
+#The metabolic preferences of C are set to the secretion products B
+pref.C <- sec.B*1000
+pref.C[pref.C==0] <- 1
+
+em.B <-t(as.matrix(c(rep(0,3),em.B)))
+row.names(em.B) = 'B'
+
+em.C <- randomE(n.species = 1, n.resources = 8, names.species = 'C', trophic.preferences = list(pref.C), mean.production = 0, mean.consumption = 3)
+
+em.C <- cbind(-sec.C, em.C)
+
+#Assembing the matrix
+E <- rbind(em.A, em.B, em.C, em.D)
+
+#visualize the matrix
+makeHeatmap(E)
+
+#simulate the model
+CRMsimul <- simulateConsumerResource(n.species = n.species, n.resources = n.resources, stochastic = 0, migration.p = 0.0, E=E,dilution.rate=0, names.species = c('A', 'B', 'C', 'D'), resources = resources, x0 = x0)
+
+#visualize the result
+makePlot(CRMsimul$matrix) #species plot
+makePlot(CRMsimul$resources) #resources plot
+```
 
 ##### Adding Noise and simulating measurement error
 
