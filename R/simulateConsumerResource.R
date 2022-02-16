@@ -17,7 +17,7 @@
 #' @param x0 Numeric: initial abundances of simulated species. If NULL,
 #' `runif(n = n.species, min = 0.1, max = 10)` is used.
 #' (default: \code{x0 = NULL})
-#' @param resources Numeric: initlal concentrations of resources. If NULL,
+#' @param resources Numeric: initial concentrations of resources. If NULL,
 #' `runif(n = n.resources, min = 1, max = 100)` is used.
 #' (default: \code{resources = NULL})
 #' @param growth.rates Numeric: vector of maximum growth rates(mu) of species.
@@ -53,7 +53,7 @@
 #' (default: \code{t.external_durations = NULL})
 #' @param stochastic Logical: whether to introduce noise in the simulation.
 #' If False, sigma.drift, sigma.epoch, and sigma.external are ignored.
-#' (default: \code{stochastic = TRUE})
+#' (default: \code{stochastic = FALSE})
 #' @param migration.p Numeric: the probability/frequency of migration from a 
 #' metacommunity.
 #' (default: \code{migration.p = 0.01})
@@ -123,9 +123,24 @@
 #'                                                     t.end = 5000, t.step = 1)
 #' makePlot(ExampleConsumerResource$matrix)
 #' makePlotRes(ExampleConsumerResource$resources)
-
 #' 
 #' 
+#' # example with trophic priority
+#' n.species <- 4
+#' n.resources <- 6
+#' ExampleE <- randomE(n.species = n.species, n.resources = n.resources, mean.consumption = n.resources, mean.production = 0)
+#' ExampleTrophicPriority <- t(apply(matrix(sample(n.species * n.resources), nrow = n.species), 1, order))
+#' # make sure that for non-consumables resources for each species, 
+#' # the priority is 0 (smaller than any given priority) 
+#' ExampleTrophicPriority <- (ExampleE > 0) * ExampleTrophicPriority
+#' ExampleConsumerResource <- simulateConsumerResource(n.species = n.species, 
+#'                                                     n.resources = n.resources, 
+#'                                                     E = ExampleE, 
+#'                                                     trophic.priority = ExampleTrophicPriority,
+#'                                                     t.end = 2000
+#'                                                     )
+#' makePlot(ExampleConsumerResource$matrix)
+#' makePlotRes(ExampleConsumerResource$resources)
 #' @docType methods
 #' @aliases simulateConsumerResource-numeric
 #' 
@@ -149,12 +164,14 @@ simulateConsumerResource <- function(n.species, n.resources,
     epoch.p = 0.001,
     t.external_events = NULL,
     t.external_durations = NULL,
-    stochastic = TRUE,
+    stochastic = FALSE,
     migration.p = 0.01, 
     metacommunity.probability = NULL,
     error.variance = 0,
     norm = FALSE,
-    t.end = 1000, ...){
+    t.end = 1000,
+    trophic.priority = NULL,
+    ...){
     
     t.dyn <- SimulationTimes(t.end = t.end,...)
     
@@ -165,9 +182,12 @@ simulateConsumerResource <- function(n.species, n.resources,
         t.end = t.end,
         ... = ...)
     
+    
     # define the consumer-resource model
+    
     consumerResourceModel <- function(t, state, params){
         with(as.list(c(state, params)),{
+            
             x0 <- pmax(0, state[startsWith(names(state), "consumer")])
             resources <- pmax(0, state[startsWith(names(state), "resource")])
             growth.rates <- params[['growth.rates']]
@@ -176,6 +196,19 @@ simulateConsumerResource <- function(n.species, n.resources,
             
             resources.dilution <- params[['resources.dilution']]
             dilution.rate <- params[['dilution.rate']]
+            trophic.priority <- params[['trophic.priority']]
+            
+            if(!is.null(trophic.priority)){
+                if (!identical(dim(ExampleE), dim(ExampleTrophicPriority))){
+                    stop("The dimension of trophic priority is not correct.")
+                }
+                # modify E in each step
+                Emod <- trophic.priority
+                ## resources <= a relatively small number(instead of 0) ######
+                Emod[, resources <= 0.1] <- 0 
+                Emod <- E*(t(apply(Emod, 1, getRowMax))>0) + E*(E<0)
+                E <- Emod
+            }
 
             B <- matrix(rep(resources, length(x0)),
                         ncol = length(resources), byrow = TRUE) + monod.constant
@@ -222,7 +255,6 @@ simulateConsumerResource <- function(n.species, n.resources,
         monod.constant <- matrix(rgamma(n = n.species*n.resources,
                                         shape = 50*max(resources), rate = 1), nrow = n.species)
     }
-    
     if (is.null(metacommunity.probability)) {
         metacommunity.probability <- rdirichlet(1, alpha = rep(1,n.species))
     }
@@ -280,7 +312,8 @@ simulateConsumerResource <- function(n.species, n.resources,
                        migration.p = migration.p, metacommunity.probability = metacommunity.probability,
                        sigma.migration = sigma.migration, 
                        resources.dilution = resources.dilution,
-                       dilution.rate = dilution.rate)
+                       dilution.rate = dilution.rate,
+                       trophic.priority = trophic.priority)
     
     out <- as.data.frame(ode(y = state.init, times = t.dyn$t.sys,
                              func = consumerResourceModel, parms = parameters, 

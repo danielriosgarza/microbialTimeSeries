@@ -86,3 +86,10 @@ getInteractions <- function(n.species, weights, connectance){
     }
     return (I)
 }
+
+getRowMax <- function(aRow){
+    maxPos <- which.max(aRow)
+    newRow <- rep(FALSE, length(aRow))
+    newRow[maxPos] <- TRUE
+    return(aRow * newRow)
+}
