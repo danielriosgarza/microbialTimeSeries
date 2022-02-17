@@ -71,6 +71,11 @@
 #' (default: \code{norm = FALSE})
 #' @param t.end Numeric scalar indicating the final time of the simulation
 #' (default: \code{t.end = 1000})
+#' @param trophic.priority Matrix: a matrix defining the orders of resources to 
+#' be consumed by each species. If NULL, by default, this feature won't be 
+#' turned on, and species will consume all resources simultaneously to grow. 
+#' The dimension should be identical to matrix E.
+#' (default: \code{trophic.priority = NULL})
 #' @param ... additional parameters, see \code{\link{utils}} to know more.
 #'
 #' @examples
