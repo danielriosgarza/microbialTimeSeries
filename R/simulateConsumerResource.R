@@ -204,7 +204,7 @@ simulateConsumerResource <- function(n.species, n.resources,
             trophic.priority <- params[['trophic.priority']]
             
             if(!is.null(trophic.priority)){
-                if (!identical(dim(ExampleE), dim(ExampleTrophicPriority))){
+                if (!identical(dim(E), dim(trophic.priority))){
                     stop("The dimension of trophic priority is not correct.")
                 }
                 # modify E in each step

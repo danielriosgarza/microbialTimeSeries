@@ -47,7 +47,7 @@ for (n.species in c(13, 3, 4)){
                                                     x0 = rep(10, n.species),
                                                     resources = rep(1000/n.resources, n.resources),
                                                     E = Etest[,sample.resources],
-                                                    trophic.priority = Priority,
+                                                    trophic.priority = NULL,
                                                     stochastic = TRUE)
                 CRMspecies <- CRMtest$matrix[1000, seq_len(n.species)]
                 CRMspeciesTotal <- sum(CRMspecies)
