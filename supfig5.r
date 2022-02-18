@@ -35,19 +35,20 @@ for (n.species in c(13, 3, 4)){
                 }
             }
             for (n.resources in c(1,2,4,8,16,32)) {
+                sample.resources <- sample(seq_len(32), n.resources)
                 if (n.resources > 1){
                     Priority <- t(apply(matrix(sample(n.species * n.resources), nrow = n.species), 1, order))
+                    Priority <- (Etest[, sample.resources] > 0) * Priority
                 } else {
                     Priority <- NULL
                 }
-                sample.resources <- sample(seq_len(32), n.resources)
                 print(paste(n.species, theta, i, n.resources))
                 CRMtest <- simulateConsumerResource(n.species = n.species,
                                                     n.resources = n.resources,
                                                     x0 = rep(10, n.species),
                                                     resources = rep(1000/n.resources, n.resources),
                                                     E = Etest[,sample.resources],
-                                                    trophic.priority = NULL,
+                                                    trophic.priority = Priority,
                                                     stochastic = TRUE)
                 CRMspecies <- CRMtest$matrix[1000, seq_len(n.species)]
                 CRMspeciesTotal <- sum(CRMspecies)
@@ -64,7 +65,29 @@ for (n.species in c(13, 3, 4)){
 
 p.result.df <- ggplot(result.df, aes(x = n.resources, y = value, group = n.resources)) + 
     geom_boxplot() + 
-    facet_grid(n.species ~ theta) +
+    facet_grid(factor(n.species, levels = c(13, 3,4)) ~ factor(theta, levels = c(1, 0.75,0.5))) +
     theme_bw()+
     scale_x_continuous(trans = "log2")
+p.result.df
+
+p.result.df <- p.result.df + geom_text(data = sorensen.df,
+                                       mapping = aes(x = 2^2.5, y = 250, label = paste0("ρ = ", round(rho.mean, 2), "±", round(rho.sd, 2))))
+p.result.df
+
+# paired one-sided t test
+ttest.df <- data.frame(n.species = integer(),
+                       theta = numeric(),
+                       p = numeric())
+
+for (n.row in seq_len(nrow(sorensen.df))) {
+    n.species <- sorensen.df[n.row, "n.species"]
+    theta <- sorensen.df[n.row, "theta"]
+    ttestres <- t.test(x = result.df[result.df$n.species == n.species & result.df$theta == theta & result.df$n.resources == 1, "value"], 
+                       y = result.df[result.df$n.species == n.species & result.df$theta == theta & result.df$n.resources == 32, "value"],
+                       alternative = "less")
+    ttest.df[nrow(ttest.df)+1, ] <- c(n.species, theta, ttestres$p.value)
+}
+
+p.result.df <- p.result.df + geom_text(data = ttest.df,
+                                       mapping = aes(x = 2^2.5, y = 300, label = paste0("P = ", signif(p, 2))))
 p.result.df
