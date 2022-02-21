@@ -26,6 +26,10 @@
 #' @param trophic.preferences List: preferred resources and productions of each 
 #' trophic level. Positive values indicate the consumption of resources,
 #' whilst negatives indicate that the species would produce the resource.
+#' @param exact Logical: whether to set the number of consumption/production to 
+#' be exact as mean.consumption/mean.production or to set them using a Poisson 
+#' distribution.
+#' (default: \code{exact = FALSE})
 #' If `length(trophic.preferences)` is smaller than `length(trophic.levels)`,
 #' then NULL values would be appended to lower trophic levels.
 #' If NULL, by default, the consumption preference will be defined randomly.
@@ -71,7 +75,8 @@ randomE <- function(n.species,
     mean.production = n.resources/6,
     maintenance = 0.5,
     trophic.levels = NULL,
-    trophic.preferences = NULL){
+    trophic.preferences = NULL,
+    exact = FALSE){
     
     # set the default values
     if (is.null(names.species)) {
@@ -112,17 +117,30 @@ randomE <- function(n.species,
                 # no consumption preference nor auto.trophic.preference
                 # consumption.pref <- NULL
                 consumption.pref <- rep(1, n.resources)
-                index.consumption <- sample(seq(n.resources), 
-                    size = min(max(1, rpois(1, mean.consumption)), n.resources))
+                if (exact) {
+                    index.consumption <- sample(seq(n.resources), 
+                                                size = min(max(1, round(mean.consumption)), n.resources))
+                } else {
+                    index.consumption <- sample(seq(n.resources), 
+                                                size = min(max(1, rpois(1, mean.consumption)), n.resources))
+                }
             } else { # with consumption preference
                 if (length(consumption.pref) == 0) {
                     consumption.pref <- list.auto.trophic.preference[[j]]
                 }
-                index.consumption <- sample(seq(n.resources),
-                    size = min(sum(consumption.pref > 0),
-                        max(1, rpois(1, mean.consumption))),
-                    replace = FALSE,
-                    prob = consumption.pref)
+                if (exact) {
+                    index.consumption <- sample(seq(n.resources),
+                                                size = min(sum(consumption.pref > 0),
+                                                           max(1, round(mean.consumption))),
+                                                replace = FALSE,
+                                                prob = consumption.pref)
+                } else {
+                    index.consumption <- sample(seq(n.resources),
+                                                size = min(sum(consumption.pref > 0),
+                                                           max(1, rpois(1, mean.consumption))),
+                                                replace = FALSE,
+                                                prob = consumption.pref)
+                }
             }
             consumption[index.consumption] <- 1
             irow <- rdirichlet(1, consumption * consumption.pref * 100)
@@ -133,20 +151,35 @@ randomE <- function(n.species,
                 production.pref <- NULL
                 setprod <- setdiff(seq(n.resources), index.consumption)
                 if(length(setprod)>0){
-                    index.production <- unique(
-                        sample(setprod,
-                            size = rpois(1, mean.production),
-                            replace = TRUE)) 
+                    if (exact) {
+                        index.production <- unique(
+                            sample(setprod,
+                                   size = round(mean.production),
+                                   replace = TRUE)) 
+                    } else {
+                        index.production <- unique(
+                            sample(setprod,
+                                   size = rpois(1, mean.production),
+                                   replace = TRUE)) 
+                    }
                     index.production <- setdiff(index.production, index.consumption)
                 } else{
                     index.production <- c()
                 }
             } else { # with production preference
-                index.production <- sample(seq(n.resources),
-                    size = min(sum(production.pref < 0),
-                        rpois(1, mean.production)),
-                    replace = FALSE,
-                    prob = abs(production.pref))
+                if (exact) {
+                    index.production <- sample(seq(n.resources),
+                                               size = min(sum(production.pref < 0),
+                                                          round(mean.production)),
+                                               replace = FALSE,
+                                               prob = abs(production.pref))
+                } else {
+                    index.production <- sample(seq(n.resources),
+                                               size = min(sum(production.pref < 0),
+                                                          rpois(1, mean.production)),
+                                               replace = FALSE,
+                                               prob = abs(production.pref))
+                }
             }
 
             production[index.production] <- 1

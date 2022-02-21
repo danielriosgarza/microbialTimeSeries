@@ -211,7 +211,6 @@ simulateConsumerResource <- function(n.species, n.resources,
                 Emod <- trophic.priority
                 ## resources <= a relatively small number(instead of 0) ######
                 Emod[, resources <= 0.1] <- 0 
-                Emodpos <- Emod
                 Emod <- t(apply(Emod, 1, getRowMax))>0
                 ## 1. E*(Emod): consumption of prior resource 
                 ## 2. E*(E<0): production 

@@ -22,23 +22,25 @@ for (n.species in c(13, 3, 4)){
     for (theta in c(1, 0.75, 0.5)) {
         sorensen <- c()
         for (i in seq_len(n.rep)){
-            
-            ### generate E ####
-            Etest <- randomE(n.species = n.species, n.resources = 32, mean.consumption = theta*32, maintenance = 0)
-            ### calculate rho ####
-            Etest.pos <- Etest
-            Etest.pos[Etest.pos<0] <- 0
-            for (j in seq_len(n.species - 1)){
-                for (k in 2:n.species){
-                    sorensen <- c(sorensen, 
-                                  sum(apply(Etest.pos[c(j,k),], 2, min)))
-                }
-            }
             for (n.resources in c(1,2,4,8,16,32)) {
-                sample.resources <- sample(seq_len(32), n.resources)
+                ### generate E ####
+                Etest <- randomE(n.species = n.species, n.resources = n.resources, mean.consumption = theta*n.resources, exact = TRUE)
+
+                ### calculate rho ####
+                if (n.resources == 32){
+                    Etest.pos <- Etest
+                    Etest.pos[Etest.pos<0] <- 0
+                    for (j in seq_len(n.species - 1)){
+                        for (k in 2:n.species){
+                            sorensen <- c(sorensen, 
+                                          sum(apply(Etest.pos[c(j,k),], 2, min)))
+                        }
+                    }
+                }
+                
                 if (n.resources > 1){
                     Priority <- t(apply(matrix(sample(n.species * n.resources), nrow = n.species), 1, order))
-                    Priority <- (Etest[, sample.resources] > 0) * Priority
+                    Priority <- (Etest > 0) * Priority
                 } else {
                     Priority <- NULL
                 }
@@ -47,7 +49,7 @@ for (n.species in c(13, 3, 4)){
                                                     n.resources = n.resources,
                                                     x0 = rep(10, n.species),
                                                     resources = rep(1000/n.resources, n.resources),
-                                                    E = Etest[,sample.resources],
+                                                    E = Etest,
                                                     trophic.priority = Priority,
                                                     stochastic = TRUE)
                 CRMspecies <- CRMtest$matrix[1000, seq_len(n.species)]
