@@ -131,7 +131,6 @@ source("ui.R")
 
 # server ####
 server <- function(input, output, session) {
-    
     # model1 simulate consumer resource model ####
     ## basic ####
     n.species <- reactive(input$nSpecies)
@@ -334,6 +333,45 @@ server <- function(input, output, session) {
     observeEvent(input$CRMEX6, {
         RV$matrixE <- randomE(n.species = 20, n.resources = 20, mean.consumption = 3, mean.production = 2, maintenance = 0.0, trophic.levels = c(7, 13))
     })
+    observeEvent(input$CRMEX7pre, {
+        updateSliderInput(inputId = "nSpecies", value = 4)
+        updateSliderInput(inputId = "nResources", value = 11)
+        updateTextInput(inputId = "namesSpecies", value = "A, B, C, D")
+        updateTextInput(inputId = "x0", value = "1, 1, 1, 1")
+        updateTextInput(inputId = "resourcesCustom", value = "1.5, 1.5, 1.5, 1.5, 1.5, 1.5, 1.5, 1.5, 1.5, 1.5, 1.5")
+        updateCheckboxInput(inputId = "stochastic", value = FALSE)
+        updateSliderInput(inputId = "migrationP", value = 0)
+        updateSliderInput(inputId = "dilutionRate", value = 0)
+        updateButton(session, "CRMEX7", disabled = !input$CRMEX7pre)
+    })
+    observeEvent(input$CRMEX7, {
+        #secretion of C
+        sec.C <- rdirichlet(1, c(1,1,1))*.5
+        #The metabolic preferences of A are set to the secretion products of C
+        pref.A.D <- list(c(sec.C*1000, rep(1,8)))
+        em.A <- randomE(n.species = 1, n.resources = 11, names.species = 'A', trophic.preferences = pref.A.D, mean.production = 3, mean.consumption = 3)
+        #secretion of A
+        sec.A <- abs(em.A*(em.A<0))
+        #The metabolic preferences of D are set to the secretion products of A
+        em.D <- randomE(n.species = 1, n.resources = 11, names.species = 'D', trophic.preferences = pref.A.D, mean.production = 3, mean.consumption = 3)
+        #secretion of D
+        sec.D <- abs(em.D*(em.D<0))
+        pref.B <- 1000*((sec.A + sec.D)/(sum(sec.A)+sum(sec.D)))
+        pref.B[pref.B==0] <- 1
+        pref.B <- list(pref.B[4:11])
+        em.B <- randomE(n.species = 1, n.resources = 8, names.species = 'B', trophic.preferences = pref.B, mean.production = 3, mean.consumption = 3)
+        #secretion of B
+        sec.B <- abs(em.B*(em.B<0))
+        #The metabolic preferences of C are set to the secretion products B
+        pref.C <- sec.B*1000
+        pref.C[pref.C==0] <- 1
+        em.B <-t(as.matrix(c(rep(0,3),em.B)))
+        row.names(em.B) = 'B'
+        em.C <- randomE(n.species = 1, n.resources = 8, names.species = 'C', trophic.preferences = list(pref.C), mean.production = 0, mean.consumption = 3)
+        em.C <- cbind(-sec.C, em.C)
+        RV$matrixE <- rbind(em.A, em.B, em.C, em.D)
+    })
+    
     runCRM <- reactive(
         simulateConsumerResource(
             n.species = n.species(),
