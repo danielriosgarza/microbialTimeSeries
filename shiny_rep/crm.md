@@ -181,7 +181,7 @@ makeHeatmap(levels)
 
 ```
 
-##### Example 6: Nested tropic levels
+##### Example 7: Nested tropic levels
 
 The default implementation of MiaSim supports only the definition of linear levels.
 
@@ -238,7 +238,7 @@ pref.B <- list(pref.B[4:11])
 
 em.B <- randomE(n.species = 1, n.resources = 8, names.species = 'B', trophic.preferences = pref.B, mean.production = 3, mean.consumption = 3)
 
-#secretion of D
+#secretion of B
 sec.B <- abs(em.B*(em.B<0))
 
 #The metabolic preferences of C are set to the secretion products B
@@ -259,7 +259,7 @@ E <- rbind(em.A, em.B, em.C, em.D)
 makeHeatmap(E)
 
 #simulate the model
-CRMsimul <- simulateConsumerResource(n.species = n.species, n.resources = n.resources, stochastic = 0, migration.p = 0.0, E=E,dilution.rate=0, names.species = c('A', 'B', 'C', 'D'), resources = resources, x0 = x0)
+CRMsimul <- simulateConsumerResource(n.species = n.species, n.resources = n.resources, stochastic = FALSE, migration.p = 0.0, E=E,dilution.rate=0, names.species = c('A', 'B', 'C', 'D'), resources = resources, x0 = x0)
 
 #visualize the result
 makePlot(CRMsimul$matrix) #species plot
