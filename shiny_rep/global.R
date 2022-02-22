@@ -1,5 +1,4 @@
 library(shiny)
-library(shinyBS) # tooltip and buttons
 library(bsplus) # collapsed panels
 library(ggplot2)
 library(deSolve)
