@@ -1,16 +1,3 @@
-library(shiny)
-library(shinyBS)
-library(ggplot2)
-library(deSolve)
-library(reshape2)
-library(gtools)
-library(DT)
-library(formattable)
-library(dplyr)
-
-# debug with reactlog ####
-library(reactlog)
-
 # source all files ####
 Rfiles = gsub(" ", "", paste("../R/", list.files("../R")))
 sapply(Rfiles, source)
@@ -125,9 +112,6 @@ makeHeatmap <-function(matrix.A, title = "Consumption/production matrix"){
     }
     fig
 }
-
-# ui ####
-source("ui.R")
 
 # server ####
 server <- function(input, output, session) {
@@ -484,5 +468,3 @@ server <- function(input, output, session) {
     output$GLVSpecies <- renderPlot(makePlot(runGLV()$matrix))
     
 }
-
-shinyApp(ui, server)
