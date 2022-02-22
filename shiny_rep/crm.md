@@ -266,9 +266,13 @@ makePlot(CRMsimul$matrix) #species plot
 makePlot(CRMsimul$resources) #resources plot
 ```
 
+##### More advanced example
+
+The models we have so far simulated in a single instance, generating one simulated time series. There might be occasions when one is interested in studying the outcome of multiple simulations. One example could be exploring if a set of parameters influence the diversity of the steady-state communities. Or studying if a different set of parameters are give rise to communities that are different enough fundamentally different separate ourm
+
 ##### Adding Noise and simulating measurement error
 
-##### More advanced example
+##### 
 
 ##### Exploring the relationship between diversity and environmental noise
 
