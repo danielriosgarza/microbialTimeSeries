@@ -1,6 +1,7 @@
 library(shiny)
 library(bsplus) # collapsed panels and tooltips
 library(shinyWidgets) # switch
+library(shinyjs)
 library(ggplot2)
 library(deSolve)
 library(reshape2)

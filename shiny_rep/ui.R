@@ -7,6 +7,8 @@ ui <- navbarPage(
         # enable bsplus tooltips and popovers
         use_bs_tooltip(),
         use_bs_popover(),
+        # enable Shinyjs
+        useShinyjs(),
         ## CRM Model ####
         bs_accordion(id = "CRMcontents") %>%
             bs_append(

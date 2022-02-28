@@ -93,3 +93,170 @@ getRowMax <- function(aRow){
     newRow[maxPos] <- TRUE
     return(aRow * newRow)
 }
+
+getMoments <- function(simulaionMatrix, is.perCapita = FALSE){
+    
+    simul <- simulaionMatrix
+    
+    if (is.perCapita){
+        
+        S = sum(simul[1,])
+        
+        meanH <- colMeans(simul)
+        covH <- cov(simul)
+        m2 = 2*(1/S)*(1/(S-1))*t(apply(covH, 1, cumsum))
+        
+        diag(m2) <- (1/S)*diag(covH)
+        
+        return(list(m1 = (1/S)*meanH, m2 = (1/S)*covH, basis = simulaionMatrix))
+    }
+    
+    return(list(m1 = colMeans(simul), m2 = cov(simul), basis = simulaionMatrix))
+    
+    
+}
+
+
+generateMoments <- function(modelGenerateExp, n.instances, t.store, is.perCapita=FALSE){
+    modelMatrix <- eval(modelGenerateExp)$matrix
+    simul <- modelMatrix[,colnames(modelMatrix)!="time"]
+    summaryMatrix <- matrix(0, nrow = n.instances, ncol = ncol(simul))
+    for (i in 1:n.instances){
+        print(i)
+        modelMatrix <- eval(modelGenerateExp)$matrix
+        simul <- modelMatrix[,colnames(modelMatrix)!="time"]
+        summaryMatrix[i,] <- simul[t.store,]
+    }
+    return(getMoments(summaryMatrix, is.perCapita = is.perCapita))
+}
+
+
+getKL <- function(mA, mB){
+    mBinv = pinv(mB$m2)
+    detA = as.numeric(unlist(pdeterminant(mB$m2))[1])
+    detB = as.numeric(unlist(pdeterminant(mA$m2))[1])
+    return (max(0, (1/2)*( (detA - detB) - 
+                               length(mA$m1) + 
+                               sum(diag(mBinv%*%mA$m2)) + 
+                               (mB$m1 - mA$m1)%*%mBinv%*%matrix(mB$m1 - mA$m1))))
+}
+
+getPerturbT <- function(endTime, n.perturbs){
+    st <- SimulationTimes(t.end = endTime, t.store = n.perturbs + 1)
+    return (st$t.sys[st$t.index[2:length(st$t.index)]])
+}
+
+
+# plotting functions ####
+makePlot <- function(out.matrix, title = "abundance of species by time"){
+    df <- as.data.frame(out.matrix)
+    dft <-  melt(df, id="time")
+    names(dft)[2] = "species"
+    names(dft)[3] = "x.t"
+    lgd = ncol(df)<= 20
+    ggplot(dft, aes(time, x.t, col = species)) +
+        geom_line(show.legend = lgd, lwd=0.5) +
+        ggtitle(title) + 
+        theme_linedraw() +
+        theme(plot.title = element_text(hjust = 0.5, size = 14))
+}
+
+makePlotRes <- function(out.matrix, title = "quantity of compounds by time"){
+    df <- as.data.frame(out.matrix)
+    dft <-  melt(df, id="time")
+    names(dft)[2] = "resources"
+    names(dft)[3] = "S.t"
+    lgd = ncol(df)<= 20
+    ggplot(dft, aes(time, S.t, col = resources)) + 
+        geom_line(show.legend = lgd, lwd=0.5) + 
+        ggtitle(title) + 
+        theme_linedraw() + 
+        theme(plot.title = element_text(hjust = 0.5, size = 14))
+}
+
+makePiePlot <- function(multinomdist, label = 'Meta\ncommunity', title = "Metacommunity \nspecies abundance\n"){
+    df <- data.frame(group = seq(length(multinomdist)), probability = multinomdist)
+    fig <- ggplot(df, aes(x=group,y=1,fill=probability, )) + 
+        geom_tile(colour="#edfaf9",size=0.005) +
+        theme(axis.title = element_blank()) + 
+        scale_fill_gradient2(label, low = "white", high = "magenta3", midpoint = max(multinomdist)/8) +  
+        theme_void() +
+        coord_fixed(ratio = length(multinomdist)/4) +
+        ggtitle(title) # + theme_linedraw()
+    fig
+}
+
+makeHeatmap <-function(matrix.A, title = "Consumption/production matrix", midpoint_color = NULL, lowColor = "red", midColor = "white", highColor = "blue"){
+    df <- melt(t(matrix.A))
+    if (is.null(midpoint_color)) {
+        midpoint_color <- 0
+    }
+    names(df)<- c("x", "y", "strength")
+    df$y <- factor(df$y, levels=rev(unique(sort(df$y))))
+    fig <- ggplot(df, aes(x,y,fill=strength)) + geom_tile() + coord_equal() +
+        theme(axis.title = element_blank()) + 
+        scale_fill_gradient2('strength', low = lowColor, mid = midColor, high = highColor, midpoint = midpoint_color)+
+        theme_void() + ggtitle(title)
+    
+    if (ncol(matrix.A)<=10 & nrow(matrix.A)<=10){
+        fig <- fig + geom_text(aes(label = round(strength, 2)))
+    } else if (ncol(matrix.A)<=15 & nrow(matrix.A)<=15){
+        fig <- fig + geom_text(aes(label = round(strength, 1)))
+    } else {
+        fig <- fig
+    }
+    
+    fig <- fig + labs(x = "compounds", y = "species")+
+        theme_linedraw() + 
+        theme(plot.title = element_text(hjust = 0.5, size = 14))
+    
+    if (nrow(matrix.A) >= 20){
+        # too many species 
+        fig <- fig + theme(
+            axis.title.y=element_blank(),
+            axis.text.y=element_blank(),
+            axis.ticks.y=element_blank(),
+        )
+    }
+    if (ncol(matrix.A) >= 20){
+        # too many resources
+        fig <- fig + theme(
+            axis.title.x=element_blank(),
+            axis.text.x=element_blank(),
+            axis.ticks.x=element_blank()
+        )
+    }
+    fig
+}
+
+makeRegression <- function (fit) {
+    
+    ggplot(fit$model, aes_string(x = names(fit$model)[2], y = names(fit$model)[1])) + 
+        geom_point() +
+        stat_smooth(method = "lm", col = "red") +
+        labs(title = paste("Adj R2 = ",signif(summary(fit)$adj.r.squared, 2),
+                           "Intercept =",signif(fit$coef[[1]],2 ),
+                           " Slope =",signif(fit$coef[[2]], 2),
+                           " P =",signif(summary(fit)$coef[2,4], 2)),)
+}
+
+
+makeUMAP <- function(matrix, n_neighbors=10, min_dist=0.1, gradient=NULL){
+    custom.config = umap.defaults
+    custom.config$n_neighbors = n_neighbors
+    custom.config$min_dist = min_dist
+    
+    df <- as.data.frame(umap(matrix,config = custom.config)$layout)
+    df$gradient <- gradient
+    
+    if (is.null(gradient)){
+        df$gradient <- 1
+        
+    }
+    colnames(df) = c('UMAP_2', 'UMAP_1', 'gradient')
+    ggplot(df, aes(UMAP_2, UMAP_1, color=gradient)) + 
+        geom_point() + 
+        scale_color_gradient(low="blue", high="red")
+    
+}
+

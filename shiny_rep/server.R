@@ -34,85 +34,6 @@ text2chars <- function(text, len, prefix = NULL, expr = NULL){
     }
 }
 
-# plotting functions ####
-makePlot <- function(out.matrix, title = "abundance of species by time"){
-    df <- as.data.frame(out.matrix)
-    dft <-  melt(df, id="time")
-    names(dft)[2] = "species"
-    names(dft)[3] = "x.t"
-    lgd = ncol(df)<= 20
-    ggplot(dft, aes(time, x.t, col = species)) +
-        geom_line(show.legend = lgd, lwd=0.5) +
-        ggtitle(title) + 
-        theme_linedraw() +
-        theme(plot.title = element_text(hjust = 0.5, size = 14))
-}
-
-makePlotRes <- function(out.matrix, title = "quantity of compounds by time"){
-    df <- as.data.frame(out.matrix)
-    dft <-  melt(df, id="time")
-    names(dft)[2] = "resources"
-    names(dft)[3] = "S.t"
-    lgd = ncol(df)<= 20
-    ggplot(dft, aes(time, S.t, col = resources)) + 
-        geom_line(show.legend = lgd, lwd=0.5) + 
-        ggtitle(title) + 
-        theme_linedraw() + 
-        theme(plot.title = element_text(hjust = 0.5, size = 14))
-}
-
-makePiePlot <- function(multinomdist, label = 'Meta\ncommunity', title = "Metacommunity \nspecies abundance\n"){
-    df <- data.frame(group = seq(length(multinomdist)), probability = multinomdist)
-    fig <- ggplot(df, aes(x=group,y=1,fill=probability, )) + 
-        geom_tile(colour="#edfaf9",size=0.005) +
-        theme(axis.title = element_blank()) + 
-        scale_fill_gradient2(label, low = "white", high = "magenta3", midpoint = max(multinomdist)/8) +  
-        theme_void() +
-        coord_fixed(ratio = length(multinomdist)/4) +
-        ggtitle(title) # + theme_linedraw()
-    fig
-}
-
-makeHeatmap <-function(matrix.A, title = "Consumption/production matrix"){
-    df = melt(t(matrix.A))
-    names(df)<- c("x", "y", "strength")
-    df$y <- factor(df$y, levels=rev(unique(sort(df$y))))
-    fig <- ggplot(df, aes(x,y,fill=strength)) + geom_tile() + coord_equal() +
-        theme(axis.title = element_blank()) + 
-        scale_fill_gradient2('strength', low = "red", mid = "white", high = "blue", midpoint = 0)+
-        theme_void() + ggtitle(title)
-    
-    if (ncol(matrix.A)<=10 & nrow(matrix.A)<=10){
-        fig <- fig + geom_text(aes(label = round(strength, 2)))
-    } else if (ncol(matrix.A)<=15 & nrow(matrix.A)<=15){
-        fig <- fig + geom_text(aes(label = round(strength, 1)))
-    } else {
-        fig <- fig
-    }
-    
-    fig <- fig + labs(x = "compounds", y = "species")+
-        theme_linedraw() + 
-        theme(plot.title = element_text(hjust = 0.5, size = 14))
-    
-    if (nrow(matrix.A) >= 20){
-        # too many species 
-        fig <- fig + theme(
-            axis.title.y=element_blank(),
-            axis.text.y=element_blank(),
-            axis.ticks.y=element_blank(),
-        )
-    }
-    if (ncol(matrix.A) >= 20){
-        # too many resources
-        fig <- fig + theme(
-            axis.title.x=element_blank(),
-            axis.text.x=element_blank(),
-            axis.ticks.x=element_blank()
-        )
-    }
-    fig
-}
-
 # server ####
 server <- function(input, output, session) {
     # model1 simulate consumer resource model ####
@@ -299,7 +220,8 @@ server <- function(input, output, session) {
         updateTextInput(inputId = "growthRatesCRM", value = "2, 4.5, 2.6")
         updateTextInput(inputId = "x0CRM", value = "1, 2, 1")
         updateTextInput(inputId = "resourcesCustomCRM", value = "10, 0, 0, 0")
-        updateButton(session, "CRMEX4", disabled = !input$CRMEX4pre)
+        # updateButton(session, "CRMEX4", disabled = !input$CRMEX4pre)
+        shinyjs::enable("CRMEX4")
     })
     observeEvent(input$CRMEX4, {
         # auto update matrixECRM, then take changes after it.
@@ -309,8 +231,8 @@ server <- function(input, output, session) {
     observeEvent(input$CRMEX5pre, {
         updateSliderInput(inputId = "nSpeciesCRM", value = 10)
         updateSliderInput(inputId = "nResourcesCRM", value = 10)
-        updateButton(session, "CRMEX5", disabled = !input$CRMEX5pre)
-        
+        # updateButton(session, "CRMEX5", disabled = !input$CRMEX5pre)
+        shinyjs::enable("CRMEX5")
     })
     observeEvent(input$CRMEX5, {
         RV.crm$matrixECRM <- randomE(n.species = 10, n.resources = 10, mean.consumption = 3, mean.production = 1,
@@ -319,7 +241,8 @@ server <- function(input, output, session) {
     observeEvent(input$CRMEX6pre, {
         updateSliderInput(inputId = "nSpeciesCRM", value = 20)
         updateSliderInput(inputId = "nResourcesCRM", value = 20)
-        updateButton(session, "CRMEX6", disabled = !input$CRMEX6pre)
+        # updateButton(session, "CRMEX6", disabled = !input$CRMEX6pre)
+        shinyjs::enable("CRMEX6")
     })
     observeEvent(input$CRMEX6, {
         RV.crm$matrixECRM <- randomE(n.species = 20, n.resources = 20, mean.consumption = 3, mean.production = 2, maintenance = 0.0, trophic.levels = c(7, 13))
@@ -333,7 +256,8 @@ server <- function(input, output, session) {
         updateCheckboxInput(inputId = "stochasticCRM", value = FALSE)
         updateSliderInput(inputId = "migrationPCRM", value = 0)
         updateSliderInput(inputId = "dilutionRateCRM", value = 0)
-        updateButton(session, "CRMEX7", disabled = !input$CRMEX7pre)
+        # updateButton(session, "CRMEX7", disabled = !input$CRMEX7pre)
+        shinyjs::enable("CRMEX7")
     })
     observeEvent(input$CRMEX7, {
         #secretion of C
