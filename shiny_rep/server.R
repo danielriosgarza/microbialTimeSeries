@@ -117,215 +117,222 @@ makeHeatmap <-function(matrix.A, title = "Consumption/production matrix"){
 server <- function(input, output, session) {
     # model1 simulate consumer resource model ####
     ## basic ####
-    n.species <- reactive(input$nSpecies)
-    n.resources <- reactive(input$nResources)
-    names.species <- reactive(text2chars(input$namesSpecies, len = n.species(), prefix = "sp"))
-    names.resources <- reactive(text2chars(input$namesResources, len = n.resources(), prefix = "res"))
-    t.start <- reactive(input$tStart)
-    t.end <- reactive(input$tEnd)
-    observeEvent(input$tStart | input$tEnd, {
-        updateNumericInput(inputId = "tStart", max = input$tEnd)
-        updateNumericInput(inputId = "tEnd", min = input$tStart)
+    n.species.crm <- reactive(input$nSpeciesCRM)
+    n.resources.crm <- reactive(input$nResourcesCRM)
+    names.species.crm <- reactive(text2chars(input$namesSpeciesCRM, len = n.species.crm(), prefix = "sp"))
+    names.resources.crm <- reactive(text2chars(input$namesResourcesCRM, len = n.resources.crm(), prefix = "res"))
+    t.start.crm <- reactive(input$tStartCRM)
+    t.end.crm <- reactive(input$tEndCRM)
+    observeEvent(input$tStartCRM | input$tEndCRM, {
+        updateNumericInput(inputId = "tStartCRM", max = input$tEndCRM)
+        updateNumericInput(inputId = "tEndCRM", min = input$tStartCRM)
     })
     
-    t.step <- reactive(input$tStep)
-    t.store <- reactive(input$tStore)
-    observeEvent(input$tStart | input$tEnd | input$tStep | input$tStore, {
-        updateNumericInput(inputId = "tStep", max = (input$tEnd-input$tStart)/input$tStore)
-        updateNumericInput(inputId = "tStore", max = (input$tEnd-input$tStart)/input$tStep)
+    t.step.crm <- reactive(input$tStepCRM)
+    t.store.crm <- reactive(input$tStoreCRM)
+    observeEvent(input$tStartCRM | input$tEndCRM | input$tStepCRM | input$tStoreCRM, {
+        updateNumericInput(inputId = "tStepCRM", max = (input$tEndCRM-input$tStartCRM)/input$tStoreCRM)
+        updateNumericInput(inputId = "tStoreCRM", max = (input$tEndCRM-input$tStartCRM)/input$tStepCRM)
     })
     
     ## compounds stochiometry ####
-    res.conc <- reactive(input$resourcesConcentration)
-    res.even <- reactive(input$resourcesEvenness)
-    resources_dist <- reactive(rdirichlet(1, rep(1, n.resources())*res.even())*res.conc()*n.resources())
-    res.custom <- reactive(as.numeric(as.vector(text2char(input$resourcesCustom))))
-    resources <- reactive({
-        if (length(res.custom()) < n.resources()){
-            return(c(res.custom(), as.vector(resources_dist())[(length(res.custom())+1):n.resources()]))
+    res.conc.crm <- reactive(input$resourcesConcentrationCRM)
+    res.even.crm <- reactive(input$resourcesEvennessCRM)
+    resources_dist.crm <- reactive(rdirichlet(1, rep(1, n.resources.crm())*res.even.crm())*res.conc.crm()*n.resources.crm())
+    res.custom.crm <- reactive(as.numeric(as.vector(text2char(input$resourcesCustomCRM))))
+    resources.crm <- reactive({
+        if (length(res.custom.crm()) < n.resources.crm()){
+            return(c(res.custom.crm(), as.vector(resources_dist.crm())[(length(res.custom.crm())+1):n.resources.crm()]))
         } else {
-            return(head(res.custom(), n.resources()))
+            return(head(res.custom.crm(), n.resources.crm()))
         }
     })
-    output$resourcesOutput <- renderPrint(resources())
+    output$resourcesOutputCRM <- renderPrint(resources.crm())
     
     ## dilution ####
-    res.dilu <- reactive(as.numeric(as.vector(text2char(input$resourcesDilution))))
-    resources.dilution <- reactive({
-        if (length(res.dilu()) < n.resources()){
-            return(c(res.dilu(), resources()[(length(res.dilu())+1):n.resources()]))
+    res.dilu.crm <- reactive(as.numeric(as.vector(text2char(input$resourcesDilutionCRM))))
+    resources.dilution.crm <- reactive({
+        if (length(res.dilu.crm()) < n.resources.crm()){
+            return(c(res.dilu.crm(), resources.crm()[(length(res.dilu.crm())+1):n.resources.crm()]))
         } else {
-            return(head(res.dilu(), n.resources()))
+            return(head(res.dilu.crm(), n.resources.crm()))
         }
     })
-    output$resourcesDilutionOutput <- renderPrint(resources.dilution())
-    dilution.rate <- reactive(input$dilutionRate)
+    output$resourcesDilutionCRMOutput <- renderPrint(resources.dilution.crm())
+    dilution.rate.crm <- reactive(input$dilutionRateCRM)
     
-    output$resourcesPlot <- renderPlot(makePiePlot(resources(), label = 'concentration', title='compounds'))
-    mean.consumption <- reactive(input$meanConsumption)
-    mean.production <- reactive(input$meanProduction)
-    observeEvent(input$meanConsumption | input$meanProduction, {
-        updateSliderInput(inputId = "meanProduction", max = 1 - input$meanConsumption)
-        updateSliderInput(inputId = "meanConsumption", max = 1 - input$meanProduction)
+    output$resourcesCRMPlot <- renderPlot(makePiePlot(resources.crm(), label = 'concentration', title='compounds'))
+    mean.consumption.crm <- reactive(input$meanConsumptionCRM)
+    mean.production.crm <- reactive(input$meanProductionCRM)
+    observeEvent(input$meanConsumptionCRM | input$meanProductionCRM, {
+        updateSliderInput(inputId = "meanProductionCRM", max = 1 - input$meanConsumptionCRM)
+        updateSliderInput(inputId = "meanConsumptionCRM", max = 1 - input$meanProductionCRM)
     })
-    maintenance <- reactive(input$maintenance)
+    maintenance.crm <- reactive(input$maintenanceCRM)
     
-    ## editable matrixE ####
-    RV <- reactiveValues(matrixE = NULL, matrixMonodConstant = NULL)
+    ## editable matrixECRM and matrixMonodCRM ####
+    RV.crm <- reactiveValues(matrixECRM = NULL, matrixMonodCRM = NULL)
     observe({
-        roundE <- round(randomE(n.species(), 
-                                n.resources(), 
-                                names.species(), 
-                                names.resources(),
-                                mean.consumption = as.integer(mean.consumption() * n.resources()),
-                                mean.production = as.integer(mean.production() * n.resources()),
-                                maintenance = maintenance()
-        ), digits = 3)
-        RV$matrixE <- roundE
+        roundECRM <- round(
+            randomE(
+                n.species = n.species.crm(), 
+                n.resources = n.resources.crm(), 
+                names.species = names.species.crm(), 
+                names.resources = names.resources.crm(), 
+                mean.consumption = as.integer(mean.consumption.crm() * n.resources.crm()),
+                mean.production = as.integer(mean.production.crm() * n.resources.crm()),
+                maintenance = maintenance.crm()),
+            digits = 3)
+        RV.crm$matrixECRM <- roundECRM
     })
-    output$tableE <- renderDataTable(RV$matrixE, editable = 'cell', selection = 'none', server = TRUE, options = list(scrollX = TRUE))
-    output$CRMPlotE <- renderPlot(makeHeatmap(RV$matrixE, 'Consumption/production matrix'), res = 96)
+    output$tableECRM <- renderDataTable(RV.crm$matrixECRM, editable = 'cell', selection = 'none', server = TRUE, options = list(scrollX = TRUE))
+    output$CRMPlotE <- renderPlot(makeHeatmap(RV.crm$matrixECRM, 'Consumption/production matrix'), res = 96)
     
-    observeEvent(input$tableE_cell_edit, {
-        RV$matrixE <<- editData(RV$matrixE, input$tableE_cell_edit, 'tableE')
+    observeEvent(input$tableECRM_cell_edit, {
+        RV.crm$matrixECRM <<- editData(RV.crm$matrixECRM, input$tableECRM_cell_edit, 'tableECRM')
     })
     
     
     ## growth rates ####
-    x0 <- reactive(as.numeric(text2chars(input$x0, len = n.species(), expr = paste0("runif(n = ", n.species() ,", min = 0.1, max = 10)"))))
-    output$x0Output <- renderPrint(x0())
+    x0.crm <- reactive(as.numeric(text2chars(input$x0CRM, len = n.species.crm(), expr = paste0("runif(n = ", n.species.crm() ,", min = 0.1, max = 10)"))))
+    output$x0CRMOutput <- renderPrint(x0.crm())
     
     
-    alpha <- reactive(input$alpha)
-    beta <- reactive(input$beta)
-    # listening to the changes in n.species, alpha, and beta
-    observeEvent(input$nSpecies | input$alpha | input$beta, {
-        growth.rates <- reactive(as.numeric(text2chars(input$growthRates, len = n.species(), expr = paste0('round(rbeta(',n.species(), ',' ,alpha(), ',' , beta(),'), digits = 3)'))))
+    alpha.crm <- reactive(input$alphaCRM)
+    beta.crm <- reactive(input$betaCRM)
+    # listening to the changes in nSpeciesCRM, alphaCRM, and betaCRM
+    observeEvent(input$nSpeciesCRM | input$alphaCRM | input$betaCRM, {
+        growth.rates.crm <- reactive(as.numeric(text2chars(input$growthRatesCRM, len = n.species.crm(), expr = paste0('round(rbeta(',n.species.crm(), ',' ,alpha.crm(), ',' , beta.crm(),'), digits = 3)'))))
     })
-    observeEvent(input$nSpecies, {
-        x0 <- reactive(as.numeric(text2chars(input$x0, len = n.species(), expr = paste0("runif(n = ", n.species() ,", min = 0.1, max = 10)"))))
+    observeEvent(input$nSpeciesCRM, {
+        x0.crm <- reactive(as.numeric(text2chars(input$x0CRM, len = n.species.crm(), expr = paste0("runif(n = ", n.species.crm() ,", min = 0.1, max = 10)"))))
     })
     observeEvent(input$buttonBetaEven, {
-        updateSliderInput(inputId = "alpha", value = 1)
-        updateSliderInput(inputId = "beta", value = 1)
+        updateSliderInput(inputId = "alphaCRM", value = 1)
+        updateSliderInput(inputId = "betaCRM", value = 1)
     })
     observeEvent(input$buttonBetaRidge, {
-        updateSliderInput(inputId = "alpha", value = 4)
-        updateSliderInput(inputId = "beta", value = 4)
+        updateSliderInput(inputId = "alphaCRM", value = 4)
+        updateSliderInput(inputId = "betaCRM", value = 4)
     })
     observeEvent(input$buttonBetaValley, {
-        updateSliderInput(inputId = "alpha", value = 0.5)
-        updateSliderInput(inputId = "beta", value = 0.5)
+        updateSliderInput(inputId = "alphaCRM", value = 0.5)
+        updateSliderInput(inputId = "betaCRM", value = 0.5)
     })
     observeEvent(input$buttonBetaLeft, {
-        updateSliderInput(inputId = "alpha", value = 0.5)
-        updateSliderInput(inputId = "beta", value = 1)
+        updateSliderInput(inputId = "alphaCRM", value = 0.5)
+        updateSliderInput(inputId = "betaCRM", value = 1)
     })
     observeEvent(input$buttonBetaRight, {
-        updateSliderInput(inputId = "alpha", value = 1)
-        updateSliderInput(inputId = "beta", value = 0.5)
+        updateSliderInput(inputId = "alphaCRM", value = 1)
+        updateSliderInput(inputId = "betaCRM", value = 0.5)
     })
     observeEvent(input$buttonBetaLeftTriangle, {
-        updateSliderInput(inputId = "alpha", value = 1)
-        updateSliderInput(inputId = "beta", value = 2)
+        updateSliderInput(inputId = "alphaCRM", value = 1)
+        updateSliderInput(inputId = "betaCRM", value = 2)
     })
     observeEvent(input$buttonBetaRightTriangle, {
-        updateSliderInput(inputId = "alpha", value = 2)
-        updateSliderInput(inputId = "beta", value = 1)
+        updateSliderInput(inputId = "alphaCRM", value = 2)
+        updateSliderInput(inputId = "betaCRM", value = 1)
     })
     
-    growth.rates <- reactive(as.numeric(text2chars(input$growthRates, len = n.species(), expr = paste0('round(rbeta(',n.species(), ',' ,alpha(), ',' , beta(),'), digits = 3)'))))
-    output$growthRatesOutput <- renderPrint(growth.rates())
+    growth.rates.crm <- reactive(as.numeric(text2chars(input$growthRatesCRM, len = n.species.crm(), expr = paste0('round(rbeta(',n.species.crm(), ',' ,alpha.crm(), ',' , beta.crm(),'), digits = 3)'))))
+    output$growthRatesCRMOutput <- renderPrint(growth.rates.crm())
     
-    output$growthRatesDist <- renderPlot({
+    output$growthRatesCRMDist <- renderPlot({
         ggplot(data.frame(x = c(-4, 4)), aes(x = x)) + 
-            stat_function(fun = dbeta, args = list(shape1=alpha(), shape2=beta())) + 
+            stat_function(fun = dbeta, args = list(shape1=alpha.crm(), shape2=beta.crm())) + 
             xlim(0,1) + theme_linedraw()
     }, res = 96) 
     observe({
-        roundMonodConstant <- round(
-            matrix(rgamma(n = n.species()*n.resources(), shape = 50*max(resources()), rate = 1), nrow = n.species()), 
+        roundMonodCRM <- round(
+            matrix(
+                rgamma(
+                    n = n.species.crm()*n.resources.crm(), 
+                    shape = 50*max(resources.crm()), 
+                    rate = 1), 
+                nrow = n.species.crm()), 
             digits = 3)
-        RV$matrixMonodConstant <- roundMonodConstant
+        RV.crm$matrixMonodCRM <- roundMonodCRM
     })
-    output$tableMonodConstant <- renderDataTable(RV$matrixMonodConstant, editable = 'cell', selection = 'none', server = TRUE, options = list(scrollX = TRUE))
-    observeEvent(input$tableMonodConstant_cell_edit, {
-        RV$matrixMonodConstant <<- editData(RV$matrixMonodConstant, input$tableMonodConstant_cell_edit, 'tableE')
+    output$tableMonodCRM <- renderDataTable(RV.crm$matrixMonodCRM, editable = 'cell', selection = 'none', server = TRUE, options = list(scrollX = TRUE))
+    observeEvent(input$tableMonodCRM_cell_edit, {
+        RV.crm$matrixMonodCRM <<- editData(RV.crm$matrixMonodCRM, input$tableMonodCRM_cell_edit, 'tableMonodCRM')
     })
     ## pertubation ####
-    error.variance <- reactive(input$errorVariance)
-    norm <- reactive(input$norm)
-    stochastic <- reactive(input$stochastic)
-    sigma.drift <- reactive(input$sigmaDrift)
-    sigma.epoch <- reactive(input$sigmaEpoch)
-    sigma.external <- reactive(input$sigmaExternal)
-    sigma.migration <- reactive(input$sigmaMigration)
-    epoch.p <- reactive(input$epochP)
-    t.external_events <- reactive(as.numeric(text2char(input$tExternalEvents)))
-    output$tExternalEventsOutput <- renderPrint(t.external_events())
-    t.external_durations <- reactive(as.numeric(text2char(input$tExternalDurations)))
-    output$tExternalDurationsOutput <- renderPrint(t.external_durations())
-    migration.p <- reactive(input$migrationP)
-    metacommunity.probability <- reactive(as.numeric(text2chars(input$metacommunityProbability, len = n.species(), expr = paste0("rdirichlet(1, alpha = rep(1,", n.species(), "))"))))
-    output$metacommunityProbability <- renderPrint(metacommunity.probability())
+    error.variance.crm <- reactive(input$errorVarianceCRM)
+    norm.crm <- reactive(input$normCRM)
+    stochastic.crm <- reactive(input$stochasticCRM)
+    sigma.drift.crm <- reactive(input$sigmaDriftCRM)
+    sigma.epoch.crm <- reactive(input$sigmaEpochCRM)
+    sigma.external.crm <- reactive(input$sigmaExternalCRM)
+    sigma.migration.crm <- reactive(input$sigmaMigrationCRM)
+    epoch.p.crm <- reactive(input$epochPCRM)
+    t.external_events.crm <- reactive(as.numeric(text2char(input$tExternalEventsCRM)))
+    output$tExternalEventsCRMOutput <- renderPrint(t.external_events.crm())
+    t.external_durations.crm <- reactive(as.numeric(text2char(input$tExternalDurationsCRM)))
+    output$tExternalDurationsCRMOutput <- renderPrint(t.external_durations.crm())
+    migration.p.crm <- reactive(input$migrationPCRM)
+    metacommunity.probability.crm <- reactive(as.numeric(text2chars(input$metacommunityProbabilityCRM, len = n.species.crm(), expr = paste0("rdirichlet(1, alpha = rep(1,", n.species.crm(), "))"))))
+    output$metacommunityProbabilityCRM <- renderPrint(metacommunity.probability.crm())
     
     ## examples ####
     observeEvent(input$CRMEX1, {
-        updateSliderInput(inputId = "nSpecies", value = 5)
-        updateSliderInput(inputId = "nResources", value = 5)
+        updateSliderInput(inputId = "nSpeciesCRM", value = 5)
+        updateSliderInput(inputId = "nResourcesCRM", value = 5)
     })
     observeEvent(input$CRMEX2, {
-        updateNumericInput(inputId = "tEnd", value = 2000)
-        updateNumericInput(inputId = "tStore", value = 500)
-        updateSliderInput(inputId = "migrationP", value = 0)
-        updateCheckboxInput(inputId = "stochastic", value = FALSE)
-        updateSliderInput(inputId = "dilutionRate", value = 0.001)
+        updateNumericInput(inputId = "tEndCRM", value = 2000)
+        updateNumericInput(inputId = "tStoreCRM", value = 500)
+        updateSliderInput(inputId = "migrationPCRM", value = 0)
+        updateCheckboxInput(inputId = "stochasticCRM", value = FALSE)
+        updateSliderInput(inputId = "dilutionRateCRM", value = 0.001)
     })
     observeEvent(input$CRMEX3, {
-        updateSliderInput(inputId = "nSpecies", value = 1)
-        updateSliderInput(inputId = "nResources", value = 10)
-        updateSliderInput(inputId = "maintenance", value = 0.1)
+        updateSliderInput(inputId = "nSpeciesCRM", value = 1)
+        updateSliderInput(inputId = "nResourcesCRM", value = 10)
+        updateSliderInput(inputId = "maintenanceCRM", value = 0.1)
     })
     observeEvent(input$CRMEX4pre, {
-        updateSliderInput(inputId = "nSpecies", value = 3)
-        updateSliderInput(inputId = "nResources", value = 4)
-        updateTextInput(inputId = "growthRates", value = "2, 4.5, 2.6")
-        updateTextInput(inputId = "x0", value = "1, 2, 1")
-        updateTextInput(inputId = "resourcesCustom", value = "10, 0, 0, 0")
+        updateSliderInput(inputId = "nSpeciesCRM", value = 3)
+        updateSliderInput(inputId = "nResourcesCRM", value = 4)
+        updateTextInput(inputId = "growthRatesCRM", value = "2, 4.5, 2.6")
+        updateTextInput(inputId = "x0CRM", value = "1, 2, 1")
+        updateTextInput(inputId = "resourcesCustomCRM", value = "10, 0, 0, 0")
         updateButton(session, "CRMEX4", disabled = !input$CRMEX4pre)
     })
     observeEvent(input$CRMEX4, {
-        # auto update matrixE, then take changes after it.
+        # auto update matrixECRM, then take changes after it.
         matrixExample4 <- matrix(c(1, -3, 0, 0, 1, 0, -2, 0, 0, 0, 4, -3), nrow = 3, byrow = TRUE)*c(4.3/4, 2/4, 1/4)
-        RV$matrixE <- matrixExample4
+        RV.crm$matrixECRM <- matrixExample4
     })
     observeEvent(input$CRMEX5pre, {
-        updateSliderInput(inputId = "nSpecies", value = 10)
-        updateSliderInput(inputId = "nResources", value = 10)
+        updateSliderInput(inputId = "nSpeciesCRM", value = 10)
+        updateSliderInput(inputId = "nResourcesCRM", value = 10)
         updateButton(session, "CRMEX5", disabled = !input$CRMEX5pre)
         
     })
     observeEvent(input$CRMEX5, {
-        RV$matrixE <- randomE(n.species = 10, n.resources = 10, mean.consumption = 3, mean.production = 1,
+        RV.crm$matrixECRM <- randomE(n.species = 10, n.resources = 10, mean.consumption = 3, mean.production = 1,
                               maintenance = 0.5, trophic.preferences = list(c(5,3,1,1,1,1,1,1,1,1)))
     })
     observeEvent(input$CRMEX6pre, {
-        updateSliderInput(inputId = "nSpecies", value = 20)
-        updateSliderInput(inputId = "nResources", value = 20)
+        updateSliderInput(inputId = "nSpeciesCRM", value = 20)
+        updateSliderInput(inputId = "nResourcesCRM", value = 20)
         updateButton(session, "CRMEX6", disabled = !input$CRMEX6pre)
     })
     observeEvent(input$CRMEX6, {
-        RV$matrixE <- randomE(n.species = 20, n.resources = 20, mean.consumption = 3, mean.production = 2, maintenance = 0.0, trophic.levels = c(7, 13))
+        RV.crm$matrixECRM <- randomE(n.species = 20, n.resources = 20, mean.consumption = 3, mean.production = 2, maintenance = 0.0, trophic.levels = c(7, 13))
     })
     observeEvent(input$CRMEX7pre, {
-        updateSliderInput(inputId = "nSpecies", value = 4)
-        updateSliderInput(inputId = "nResources", value = 11)
-        updateTextInput(inputId = "namesSpecies", value = "A, B, C, D")
-        updateTextInput(inputId = "x0", value = "1, 1, 1, 1")
-        updateTextInput(inputId = "resourcesCustom", value = "1.5, 1.5, 1.5, 1.5, 1.5, 1.5, 1.5, 1.5, 1.5, 1.5, 1.5")
-        updateCheckboxInput(inputId = "stochastic", value = FALSE)
-        updateSliderInput(inputId = "migrationP", value = 0)
-        updateSliderInput(inputId = "dilutionRate", value = 0)
+        updateSliderInput(inputId = "nSpeciesCRM", value = 4)
+        updateSliderInput(inputId = "nResourcesCRM", value = 11)
+        updateTextInput(inputId = "namesSpeciesCRM", value = "A, B, C, D")
+        updateTextInput(inputId = "x0CRM", value = "1, 1, 1, 1")
+        updateTextInput(inputId = "resourcesCustomCRM", value = "1.5, 1.5, 1.5, 1.5, 1.5, 1.5, 1.5, 1.5, 1.5, 1.5, 1.5")
+        updateCheckboxInput(inputId = "stochasticCRM", value = FALSE)
+        updateSliderInput(inputId = "migrationPCRM", value = 0)
+        updateSliderInput(inputId = "dilutionRateCRM", value = 0)
         updateButton(session, "CRMEX7", disabled = !input$CRMEX7pre)
     })
     observeEvent(input$CRMEX7, {
@@ -353,38 +360,39 @@ server <- function(input, output, session) {
         row.names(em.B) = 'B'
         em.C <- randomE(n.species = 1, n.resources = 8, names.species = 'C', trophic.preferences = list(pref.C), mean.production = 0, mean.consumption = 3)
         em.C <- cbind(-sec.C, em.C)
-        RV$matrixE <- rbind(em.A, em.B, em.C, em.D)
+        RV.crm$matrixECRM <- rbind(em.A, em.B, em.C, em.D)
     })
     
+    ## runCRM ####
     runCRM <- reactive(
         simulateConsumerResource(
-            n.species = n.species(),
-            n.resources = n.resources(),
-            names.species = names.species(), 
-            names.resources = names.resources(), 
-            E = RV$matrixE,
-            x0 = x0(), 
-            resources = resources(), 
-            resources.dilution = resources.dilution(),
-            growth.rates = growth.rates(), 
-            monod.constant = RV$matrixMonodConstant, 
-            dilution.rate = dilution.rate(),
-            sigma.drift = sigma.drift(),
-            sigma.epoch = sigma.epoch(),
-            sigma.external = sigma.external(),
-            sigma.migration = sigma.migration(), 
-            epoch.p = epoch.p(), 
-            t.external_events = t.external_events(),
-            t.external_durations = t.external_durations(),
-            stochastic = stochastic(),
-            migration.p = migration.p(),
-            metacommunity.probability = metacommunity.probability(),
-            error.variance = error.variance(), 
-            norm = norm(), 
-            t.end = t.end(),
-            t.start = t.start(),
-            t.step = t.step(),
-            t.store = t.store()
+            n.species = n.species.crm(),
+            n.resources = n.resources.crm(),
+            names.species = names.species.crm(), 
+            names.resources = names.resources.crm(), 
+            E = RV.crm$matrixECRM,
+            x0 = x0.crm(), 
+            resources = resources.crm(), 
+            resources.dilution = resources.dilution.crm(),
+            growth.rates = growth.rates.crm(), 
+            monod.constant = RV.crm$matrixMonodCRM, 
+            dilution.rate = dilution.rate.crm(),
+            sigma.drift = sigma.drift.crm(),
+            sigma.epoch = sigma.epoch.crm(),
+            sigma.external = sigma.external.crm(),
+            sigma.migration = sigma.migration.crm(), 
+            epoch.p = epoch.p.crm(), 
+            t.external_events = t.external_events.crm(),
+            t.external_durations = t.external_durations.crm(),
+            stochastic = stochastic.crm(),
+            migration.p = migration.p.crm(),
+            metacommunity.probability = metacommunity.probability.crm(),
+            error.variance = error.variance.crm(), 
+            norm = norm.crm(), 
+            t.end = t.end.crm(),
+            t.start = t.start.crm(),
+            t.step = t.step.crm(),
+            t.store = t.store.crm()
         )
     )
     
@@ -402,7 +410,18 @@ server <- function(input, output, session) {
     parasitismGLV <- reactive(input$parasitismGLV)
     amensalismGLV <- reactive(input$amensalismGLV)
     competitionGLV <- reactive(input$competitionGLV)
-    interactionsGLV <- reactive(text2char(input$interactionsGLV))
+    
+    observeEvent(input$buttonInteractionsU, {
+        updateTextInput(inputId = "interactionsGLV", value = rbeta(n.speciesGLV()^2, 0.5, 0.5))
+    })
+    observeEvent(input$buttonInteractionsN, {
+        updateTextInput(inputId = "interactionsGLV", value = rbeta(n.speciesGLV()^2, 2, 2))
+    })
+    observeEvent(input$buttonInteractionsEven, {
+        updateTextInput(inputId = "interactionsGLV", value = runif(n.speciesGLV()^2, 0, 1))
+    })
+    
+    interactionsGLV <- reactive(as.numeric(text2char(input$interactionsGLV)))
     symmetricGLV <- reactive(input$symmetricGLV)
     listAGLV <- reactive(text2char(input$listAGLV)) # TODO: convert
     
@@ -419,8 +438,7 @@ server <- function(input, output, session) {
             amensalism = amensalismGLV(),
             competition = competitionGLV(),
             interactions = interactionsGLV(),
-            symmetric = symmetricGLV(),
-            listA = listAGLV()
+            symmetric = symmetricGLV()
         )
     })
     

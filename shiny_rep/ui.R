@@ -38,7 +38,7 @@ ui <- navbarPage(
                                     tabPanel(
                                         "Basic",
                                         sliderInput(
-                                            "nSpecies",
+                                            "nSpeciesCRM",
                                             "number of species", 
                                             value = 2, 
                                             min = 1, 
@@ -52,7 +52,7 @@ ui <- navbarPage(
                                             )
                                         ),
                                         sliderInput(
-                                            "nResources", 
+                                            "nResourcesCRM", 
                                             "number of compounds",
                                             value = 4, 
                                             min = 1, 
@@ -65,34 +65,35 @@ ui <- navbarPage(
                                                 container = "body"
                                             )
                                         ),
-                                        hr(),
-                                        checkboxInput(
-                                            "CustomCRM", 
-                                            strong("custom names of species/compounds or simulating time points"), 
-                                            value = FALSE
+                                        tags$hr(),
+                                        switchInput(
+                                            "CustomCRM",
+                                            strong("custom names/times in simulation"),
+                                            value = FALSE,
+                                            labelWidth = "100%"
                                         ),
                                         conditionalPanel(
                                             condition = "input.CustomCRM",
                                             helpText("Custom names separate by ',' or ';' (and spaces) will replace default names."),
-                                            textInput("namesSpecies", "names of species"),
-                                            textInput("namesResources", "names of compounds"),
+                                            textInput("namesSpeciesCRM", "names of species"),
+                                            textInput("namesResourcesCRM", "names of compounds"),
                                         ),
                                         conditionalPanel(
                                             condition = "input.CustomCRM",
-                                            hr(),
-                                            numericInput("tStart", "start time of the simulation", value = 0, min = 0, max = 10000, step = 100),
+                                            tags$hr(),
+                                            numericInput("tStartCRM", "start time of the simulation", value = 0, min = 0, max = 10000, step = 100),
                                         ),
-                                        numericInput("tEnd", "final time of the simulation", value = 1000, min = 100, max = 10000, step = 100),
+                                        numericInput("tEndCRM", "final time of the simulation", value = 1000, min = 100, max = 10000, step = 100),
                                         conditionalPanel(
                                             condition = "input.CustomCRM",
-                                            numericInput("tStep", "time step of the simulation", value = 0.1, min = 0.01, max = 10, step = 0.01),
-                                            numericInput("tStore", "stored time points of the simulation", value = 1000, min = 100, max = 10000, step = 100),
+                                            numericInput("tStepCRM", "time step of the simulation", value = 0.1, min = 0.01, max = 10, step = 0.01),
+                                            numericInput("tStoreCRM", "stored time points of the simulation", value = 1000, min = 100, max = 10000, step = 100),
                                         )), 
                                     ### Compounds ####
                                     tabPanel(
                                         "Compounds",
                                         sliderInput(
-                                            "resourcesConcentration", 
+                                            "resourcesConcentrationCRM", 
                                             "mean initial concentration of compounds", 
                                             min = 0, 
                                             max = 1000, 
@@ -107,7 +108,7 @@ ui <- navbarPage(
                                             )
                                         ),
                                         sliderInput(
-                                            "resourcesEvenness",
+                                            "resourcesEvennessCRM",
                                             "evenness of compounds",
                                             min = 0.1,
                                             max = 100,
@@ -122,8 +123,8 @@ ui <- navbarPage(
                                             )
                                         ),
                                         textInput(
-                                            "resourcesCustom", 
-                                            "initial concentration of compounds") %>%
+                                            "resourcesCustomCRM", 
+                                            "initial concentrations of compounds") %>%
                                         shinyInput_label_embed(
                                             shiny_iconlink() %>% 
                                             bs_embed_tooltip(
@@ -132,9 +133,9 @@ ui <- navbarPage(
                                                 container = "body"
                                             )
                                         ),
-                                        verbatimTextOutput("resourcesOutput"),
+                                        verbatimTextOutput("resourcesOutputCRM"),
                                         sliderInput(
-                                            "dilutionRate", 
+                                            "dilutionRateCRM", 
                                             "dilution rate",
                                             min = 0,
                                             max = 1, 
@@ -150,15 +151,24 @@ ui <- navbarPage(
                                         ),
                                         
                                         conditionalPanel(
-                                            condition = "input.dilutionRate > 0",
-                                            textInput("resourcesDilution", "resources dilution"),
-                                            verbatimTextOutput("resourcesDilutionOutput"),
+                                            condition = "input.dilutionRateCRM > 0",
+                                            textInput("resourcesDilutionCRM", "resources concentration in dilution")  %>%
+                                            shinyInput_label_embed(
+                                                shiny_iconlink() %>% 
+                                                bs_embed_tooltip(
+                                                    title =  "concentrations of resources in continuous flow, by default equal to initial concentrations of compounds", 
+                                                    placement = "right", 
+                                                    container = "body"
+                                                )
+                                            ),
+                                            
+                                            verbatimTextOutput("resourcesDilutionCRMOutput"),
                                         ),
                                         
-                                        plotOutput("resourcesPlot"),
+                                        plotOutput("resourcesCRMPlot"),
                                         
                                         sliderInput(
-                                            "meanConsumption", 
+                                            "meanConsumptionCRM", 
                                             "consumption weight", 
                                             value = 0.4,
                                             min = 0, 
@@ -172,7 +182,7 @@ ui <- navbarPage(
                                                 )
                                             ),
                                         sliderInput(
-                                            "meanProduction", 
+                                            "meanProductionCRM", 
                                             "production weight",
                                             value = 0.2,
                                             min = 0, 
@@ -185,11 +195,11 @@ ui <- navbarPage(
                                                 container = "body"
                                             )
                                         ),
-                                        sliderInput("maintenance", "maintenance weight", value = 0.5, min = 0, max = 1) %>%
+                                        sliderInput("maintenanceCRM", "maintenance weight", value = 0.5, min = 0, max = 1) %>%
                                         shinyInput_label_embed(
                                             shiny_iconlink() %>% 
                                             bs_embed_tooltip(
-                                                title =  "How much compounds were used to maintain the microbial community (not involved in further calculation of flux).", 
+                                                title =  "How much compounds were used to maintain the microbial community (not involved in flux of compounds).", 
                                                 placement = "right", 
                                                 container = "body"
                                             )
@@ -206,12 +216,12 @@ ui <- navbarPage(
                                                 ),
                                             )
                                         ),
-                                        dataTableOutput("tableE", width = "100%"),
+                                        dataTableOutput("tableECRM", width = "100%"),
                                     ),
                                     ### Growth rates ####
                                     tabPanel(
                                         "Growth rates",
-                                        textInput("x0", "initial abundances of species")  %>%
+                                        textInput("x0CRM", "initial abundances of species")  %>%
                                         shinyInput_label_embed(
                                             shiny_iconlink() %>% 
                                             bs_embed_tooltip(
@@ -220,8 +230,8 @@ ui <- navbarPage(
                                                 container = "body"
                                             )
                                         ),
-                                        verbatimTextOutput("x0Output"),
-                                        hr(),
+                                        verbatimTextOutput("x0CRMOutput"),
+                                        tags$hr(),
                                         tags$div(
                                             tags$label("Distribution of Growth Rates"),
                                         ),
@@ -276,7 +286,7 @@ ui <- navbarPage(
                                         ) %>% bs_embed_tooltip(title = "right-triangle distribution"),
                                         
                                         sliderInput(
-                                            "alpha",
+                                            "alphaCRM",
                                             "alpha",
                                             value = 1,
                                             min = 0,
@@ -292,7 +302,7 @@ ui <- navbarPage(
                                             )
                                         ),
                                         sliderInput(
-                                            "beta",
+                                            "betaCRM",
                                             "beta",
                                             value = 1,
                                             min = 0,
@@ -308,7 +318,7 @@ ui <- navbarPage(
                                             )
                                         ),
                                         textInput(
-                                            "growthRates", 
+                                            "growthRatesCRM", 
                                             "maximum growth rates of species"
                                         ) %>%
                                         shinyInput_label_embed(
@@ -319,57 +329,69 @@ ui <- navbarPage(
                                                 container = "body"
                                             )
                                         ),
-                                        verbatimTextOutput("growthRatesOutput"),
+                                        verbatimTextOutput("growthRatesCRMOutput"),
                                         
-                                        plotOutput("growthRatesDist"),
+                                        plotOutput("growthRatesCRMDist"),
                                         tags$label("Monod Constant"),
-                                        dataTableOutput("tableMonodConstant", width = "100%"),
+                                        dataTableOutput("tableMonodCRM", width = "100%"),
                                     ),
                                     ### Perturbations ####
-                                    tabPanel("Perturbations",
-                                             sliderInput(
-                                                 "errorVariance",
-                                                 "variance of measurement error",
-                                                 value = 0,
-                                                 min = 0,
-                                                 max = 10,
-                                                 step = 0.1)  %>%
-                                             shinyInput_label_embed(
-                                                 shiny_iconlink() %>% 
-                                                 bs_embed_tooltip(
-                                                     title =  "The variance of measurement error. By default it equals to 0, indicating that the result won't contain any measurement error.", 
-                                                     placement = "right", 
-                                                     container = "body"
-                                                 )
-                                             ),
-                                             checkboxInput("stochastic", "use stochasitic", value = TRUE),
-                                             conditionalPanel(
-                                                 condition = "input.stochastic",
-                                                 sliderInput("sigmaDrift", "strength of drift", value = 0, min = 0, max = 1, step = 0.001),
-                                                 sliderInput("sigmaEpoch", "strength of microbial epoch perturbation", value = 0.001, min = 0, max = 1, step = 0.001),
-                                                 sliderInput("sigmaExternal", "strength of external perturbations", value = 0.3, min = 0, max = 1, step = 0.001),
-                                                 sliderInput("sigmaMigration", "intensity of migration", value = 0.01, min = 0, max = 1, step = 0.001),
-                                                 sliderInput("epochP", "epoch.p", value = 0.001, min = 0, max = 1, step = 0.001),
-                                                 textInput("tExternalEvents", "starting time of external events"),
-                                                 verbatimTextOutput("tExternalEventsOutput"),
-                                                 textInput("tExternalDurations", "durations of external events"),
-                                                 verbatimTextOutput("tExternalDurationsOutput"),
-                                             ),
-                                             sliderInput("migrationP", "probability/frequency of migration from metacommunity", value = 0.01, min = 0, max = 1),
-                                             textInput(
-                                                 "metacommunityProbability",
-                                                 "metacommunity") %>%
-                                             shinyInput_label_embed(
-                                                 shiny_iconlink() %>% 
-                                                 bs_embed_tooltip(
-                                                     title =  "Normalized probability distribution of the likelihood that species from the metacommunity can enter the community during the simulation.", 
-                                                     placement = "right", 
-                                                     container = "body"
-                                                 )
-                                             ),
-                                             verbatimTextOutput("metacommunityProbability"),
-                                             checkboxInput("norm", strong("returns normalized abundances"), value = FALSE),
-                                             # actionButton("buttonSimulateCRM", "Run the model", class = "btn btn-primary")
+                                    tabPanel(
+                                        "Perturbations",
+                                        sliderInput(
+                                            "errorVarianceCRM",
+                                            "variance of measurement error",
+                                            value = 0,
+                                            min = 0,
+                                            max = 10,
+                                            step = 0.1)  %>%
+                                            shinyInput_label_embed(
+                                                shiny_iconlink() %>% 
+                                                    bs_embed_tooltip(
+                                                        title =  "The variance of measurement error. By default it equals to 0, indicating that the result won't contain any measurement error.", 
+                                                        placement = "right", 
+                                                        container = "body"
+                                                    )
+                                            ),
+                                        #checkboxInput("stochasticCRM", "use stochasitic", value = TRUE),
+                                        switchInput(
+                                            "stochasticCRM", 
+                                            strong("use stochasitic"), 
+                                            value = TRUE,
+                                            labelWidth = "100%"
+                                        ),
+                                        conditionalPanel(
+                                            condition = "input.stochasticCRM",
+                                            sliderInput("sigmaDriftCRM", "strength of drift", value = 0, min = 0, max = 1, step = 0.001),
+                                            sliderInput("sigmaEpochCRM", "strength of microbial epoch perturbation", value = 0.001, min = 0, max = 1, step = 0.001),
+                                            sliderInput("sigmaExternalCRM", "strength of external perturbations", value = 0.3, min = 0, max = 1, step = 0.001),
+                                            sliderInput("sigmaMigrationCRM", "intensity of migration", value = 0.01, min = 0, max = 1, step = 0.001),
+                                            sliderInput("epochPCRM", "probability of random periodic (epoch) changes", value = 0.001, min = 0, max = 1, step = 0.001),
+                                            textInput("tExternalEventsCRM", "starting time of external events"),
+                                            verbatimTextOutput("tExternalEventsCRMOutput"),
+                                            textInput("tExternalDurationsCRM", "durations of external events"),
+                                            verbatimTextOutput("tExternalDurationsCRMOutput"),
+                                        ),
+                                        sliderInput("migrationPCRM", "probability/frequency of migration from metacommunity", value = 0.01, min = 0, max = 1),
+                                        textInput(
+                                            "metacommunityProbabilityCRM",
+                                            "metacommunity") %>%
+                                            shinyInput_label_embed(
+                                                shiny_iconlink() %>% 
+                                                    bs_embed_tooltip(
+                                                        title =  "Normalized probability distribution of the likelihood that species from the metacommunity can enter the community during the simulation.", 
+                                                        placement = "right", 
+                                                        container = "body"
+                                                    )
+                                            ),
+                                        verbatimTextOutput("metacommunityProbabilityCRM"),
+                                        switchInput(
+                                            "normCRM", 
+                                            strong("returns normalized abundances"), 
+                                            value = FALSE,
+                                            labelWidth = "100%"
+                                        ),
+                                        # actionButton("buttonSimulateCRM", "Run the model", class = "btn btn-primary")
                                     ),
                                 ),
                             )
@@ -379,7 +401,7 @@ ui <- navbarPage(
                             width = 7, 
                             #### example buttons ####
                             fluidRow(
-                                style = "padding-right: 15px;",
+                                style = "padding-left: 15px; padding-right: 15px;",
                                 tags$div(
                                     class = "panel panel-default",
                                     tags$div(
@@ -478,7 +500,7 @@ ui <- navbarPage(
                             #### result plots ####
                             tags$br(),
                             fluidRow(
-                                style = "padding-right: 15px;",
+                                style = "padding-left: 15px; padding-right: 15px;",
                                 tags$div(
                                     class = "panel panel-default",
                                     tags$div(
@@ -544,7 +566,7 @@ ui <- navbarPage(
                     fluidRow(
                         column(
                             width = 12,
-                            withMathJax(includeMarkdown("crm.md")),
+                            withMathJax(includeMarkdown("crm.Rmd")),
                         ),
                     )
             ) %>% 
@@ -598,23 +620,113 @@ ui <- navbarPage(
                                     ),
                                     ### Basic ####
                                     tabPanel(
-                                        "Basic",
-                                        "basic tab"
-                                    ),
-                                    ### Compounds ####
-                                    tabPanel(
-                                        "Compounds",
-                                        "compounds tab"
+                                        "Interspecies interactions",
+                                        tags$h4("1. Generate interspecies interactions"),
+                                        
+                                        sliderInput(
+                                            "n.speciesGLV",
+                                            "number of species",
+                                            value = 2,
+                                            min = 2,
+                                            max = 20),
+                                        switchInput(
+                                            "advancedRandomA",
+                                            strong("show advanced parameters"),
+                                            labelWidth = "100%"
+                                        ),
+                                        conditionalPanel(
+                                            condition = "input.advancedRandomA",
+                                            helpText("Custom names separate by ',' or ';' (and spaces) will replace default names."),
+                                            textInput("names.speciesGLV", "names of species"),
+                                            sliderInput("diagonalGLV", "diagonal values of matrix A", value = -0.5, min = -2, max = 0, step = 0.1),
+                                            sliderInput("connectanceGLV", "connectance of matrix A", value = 0.2, min = 0, max = 1),
+                                            sliderInput("scaleGLV", "scale of matrix A", value = 0.1, min = 0, max = 1),
+                                            tags$hr(),
+                                            numericInput("mutualismGLV", "relative proportion of mutualism in matrix A", value = 1, min = 0, max = 10,step = 0.05),
+                                            numericInput("commensalismGLV", "relative proportion of commensalism in matrix A", value = 1, min = 0, max = 10,step = 0.05),
+                                            numericInput("parasitismGLV", "relative proportion of parasitism in matrix A", value = 1, min = 0, max = 10,step = 0.05),
+                                            numericInput("amensalismGLV", "relative proportion of amensalism in matrix A", value = 1, min = 0, max = 10,step = 0.05),
+                                            numericInput("competitionGLV", "relative proportion of competition in matrix A", value = 1, min = 0, max = 10,step = 0.05),
+                                            
+                                            textInput("interactionsGLV", "user-defined interactions between species"),
+                                            bs_button(
+                                                label = "˅", 
+                                                button_type = "primary", 
+                                                id = "buttonInteractionsU", 
+                                                style = "width:30%",
+                                                class = "btn-default action-button shiny-bound-input"
+                                            ) %>% bs_embed_tooltip(title = "rbeta(n, shape1 = 0.5, shape2 = 0.5)"),
+                                            bs_button(
+                                                label = "^", 
+                                                button_type = "primary", 
+                                                id = "buttonInteractionsN", 
+                                                style = "width:30%",
+                                                class = "btn-default action-button shiny-bound-input"
+                                            ) %>% bs_embed_tooltip(title = "rbeta(n, shape1 = 2, shape2 = 2)"),
+                                            bs_button(
+                                                label = "-",
+                                                button_type = "primary",
+                                                id = "buttonInteractionsEven",
+                                                style = "width:30%",
+                                                class = "btn-default action-button shiny-bound-input"
+                                            ) %>% bs_embed_tooltip(title = "runif(n, min = 0, max = 1)"),
+                                            tags$hr(),
+                                            switchInput(
+                                                "symmetricGLV",
+                                                strong("matrix A"),
+                                                labelWidth = "100%",
+                                                onLabel = "symmetric",
+                                                offLabel = "non-symmetric"
+                                            ),
+                                            # textInput("listAGLV", "a list of previous generated matrix"),
+                                        ),
+                                        actionButton("buttonRandomA", "generate random matrix A of interspecies interactions", class = "btn btn-primary"),
+                                        
+                                        tags$hr(),
+                                        
                                     ),
                                     ### Growth rates ####
                                     tabPanel(
                                         "Growth rates",
-                                        "growth rates tab"
+                                        tags$h4("2. Set initial status and growth rates of species"),
+                                        textInput("x0GLV", "initial abundances of species"),
+                                        textInput("growth.ratesGLV", "maximum growth rates of species"),
                                     ),
                                     ### Perturbations ####
                                     tabPanel(
                                         "Perturbations",
-                                        "pertubations tab"
+                                        tags$h4("3. Calculate generalized Lotka-Volterra (GLV) Model"),
+                                        switchInput(
+                                            "stochasticGLV", 
+                                            strong("use stochasticity"), 
+                                            value = TRUE,
+                                            labelWidth = "100%"),
+                                        conditionalPanel(
+                                            condition = "input.stochasticGLV",
+                                            numericInput("sigma.driftGLV", "sigma.driftGLV", value = 0.001, min = 0, max = 1, step = 0.001),
+                                            numericInput("sigma.epochGLV", "sigma.epochGLV", value = 0.1, min = 0, max = 1, step = 0.001),
+                                            numericInput("sigma.externalGLV", "sigma.externalGLV", value = 0.3, min = 0, max = 1, step = 0.001),
+                                            numericInput("epoch.pGLV", "epoch.pGLV", value = 0.001, min = 0, max = 1, step = 0.001),
+                                            textInput("t.external_eventsGLV", "timepoints of external events"),
+                                            textInput("t.external_durationsGLV", "time durations of external events"),
+                                            
+                                        ),
+                                        numericInput("sigma.migrationGLV", "sigma.migrationGLV", value = 0.01, min = 0, max = 1, step = 0.001),
+                                        numericInput("migration.pGLV", "migration.p", value = 0.01, min = 0, max = 1, step = 0.001),
+                                        textInput("metacommunity.probabilityGLV", "metacommunity.probability"),
+                                        sliderInput("error.varianceGLV", "variance of measurement error", value = 0, min = 0, max = 10, step = 0.1),
+                                        switchInput(
+                                            "normGLV", 
+                                            strong("returns normalized abundances"), 
+                                            value = FALSE,
+                                            labelWidth = "100%"),
+                                        numericInput("t.endGLV", "final time of the simulation", value = 1000, min = 100, max = 10000),
+                                        
+                                        
+                                        
+                                        
+                                        actionButton("buttonSimulateGLV", "Run the GLV Model", class = "btn btn-primary"),
+                                        
                                     ),
                                 ),
                             )
@@ -623,6 +735,9 @@ ui <- navbarPage(
                         column(
                             width = 7,
                             fluidRow("display panel"),
+                            tags$br(),
+                            tableOutput("TableA"),
+                            plotOutput("GLVSpecies"),
                         ),
                     ) 
                 
@@ -633,62 +748,12 @@ ui <- navbarPage(
                 content = fluidRow(
                     
                     
-                    
                     sidebarLayout(
                         sidebarPanel(
-                            tags$h2("input controls"),
-                            tags$h4("1. Generate interspecies interactions"),
                             
-                            sliderInput("n.speciesGLV", "number of species", value = 2, min = 2, max = 20),
-                            checkboxInput("advancedRandomA", strong("show advanced parameters"), value = FALSE),
-                            conditionalPanel(
-                                condition = "input.advancedRandomA",
-                                textInput("names.speciesGLV", "names of species"),
-                                sliderInput("diagonalGLV", "diagonal values of matrix A", value = -0.5, min = -2, max = 0, step = 0.1),
-                                sliderInput("connectanceGLV", "connectance of matrix A", value = 0.2, min = 0, max = 1),
-                                sliderInput("scaleGLV", "scale of matrix A", value = 0.1, min = 0, max = 1),
-                                numericInput("mutualismGLV", "relative proportion of mutualism in matrix A", value = 1, min = 0, max = 10,step = 0.05),
-                                numericInput("commensalismGLV", "relative proportion of commensalism in matrix A", value = 1, min = 0, max = 10,step = 0.05),
-                                numericInput("parasitismGLV", "relative proportion of parasitism in matrix A", value = 1, min = 0, max = 10,step = 0.05),
-                                numericInput("amensalismGLV", "relative proportion of amensalism in matrix A", value = 1, min = 0, max = 10,step = 0.05),
-                                numericInput("competitionGLV", "relative proportion of competition in matrix A", value = 1, min = 0, max = 10,step = 0.05),
-                                textInput("interactionsGLV", "interactions between species"),
-                                checkboxInput("symmetricGLV", strong("whether matrix A is symmetric"), value = FALSE),
-                                textInput("listAGLV", "a list of previous generated matrix"),
-                            ),
-                            actionButton("buttonRandomA", "generate random matrix A of interspecies interactions", class = "btn btn-primary"),
-                            
-                            tags$h4("2. Calculate generalized Lotka-Volterra (GLV) Model"),
-                            checkboxInput("advancedGLV", strong("show advanced parameters"), value = FALSE),
-                            conditionalPanel(
-                                condition = "input.advancedGLV",
-                                textInput("x0GLV", "initial abundances of species"),
-                                textInput("growth.ratesGLV", "maximum growth rates of species"),
-                                checkboxInput("stochasticGLV", "apply stochasticity in the simulation", value = TRUE),
-                                conditionalPanel(
-                                    condition = "input.stochasticGLV",
-                                    numericInput("sigma.driftGLV", "sigma.driftGLV", value = 0.001, min = 0, max = 1, step = 0.001),
-                                    numericInput("sigma.epochGLV", "sigma.epochGLV", value = 0.1, min = 0, max = 1, step = 0.001),
-                                    numericInput("sigma.externalGLV", "sigma.externalGLV", value = 0.3, min = 0, max = 1, step = 0.001),
-                                    numericInput("epoch.pGLV", "epoch.pGLV", value = 0.001, min = 0, max = 1, step = 0.001),
-                                    
-                                ),
-                                numericInput("sigma.migrationGLV", "sigma.migrationGLV", value = 0.01, min = 0, max = 1, step = 0.001),
-                                textInput("t.external_eventsGLV", "timepoints of external events"),
-                                textInput("t.external_durationsGLV", "time durations of external events"),
-                                numericInput("migration.pGLV", "migration.p", value = 0.01, min = 0, max = 1, step = 0.001),
-                                textInput("metacommunity.probabilityGLV", "metacommunity.probability"),
-                                sliderInput("error.varianceGLV", "variance of measurement error", value = 0, min = 0, max = 10, step = 0.1),
-                                checkboxInput("normGLV", strong("returns normalized abundances"), value = FALSE),
-                                numericInput("t.endGLV", "final time of the simulation", value = 1000, min = 100, max = 10000),
-                            ),
-                            actionButton("buttonSimulateGLV", "Run the GLV Model", class = "btn btn-primary"),
                         ),
                         mainPanel(
-                            tags$br(),
-                            tags$h2("output"),
-                            tableOutput("TableA"),
-                            plotOutput("GLVSpecies"),
+                            
                         )
                     )
                 )
@@ -707,4 +772,18 @@ ui <- navbarPage(
                 content = "Panel of refs."
             )
     ),
+    # tab3 Hubbell Model ####
+    tabPanel(
+        title = "Hubbell Model (with death rates)",
+        titlePanel("Hubbell Model (with death rates)"),
+        ## Hubbell Model ####
+        
+    ),
+    
+    # tab4 Logistic Model (with stochasticity) ####
+    tabPanel(
+        title = "Logistic Model (with stochasticity)",
+        titlePanel("Logistic Model (with stochasticity)"),
+        ## Logistic Model ####
+    )
 )

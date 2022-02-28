@@ -13,7 +13,7 @@ knitr::opts_chunk$set(echo = TRUE)
 
 Function to simulate McArthur's consumer-resource model and its extensions for microbiomes. The model describe the dynamics of microbes and substrates in a community where the ecological interactions are explicitly encoded via the consumption and production of metabolites.
 
-#### **Model Description**
+### **Model Description**
 
 Each microbial species from a community of $n$ different species has preferences for a specific subset of the $k$ different substrates that are available to the community. Their growth rates depend on the availability of these resources, through the following differential equation:
 
@@ -37,7 +37,7 @@ There are many possibilities for structuring $E$ according to specific assumptio
 
 ### **Examples**
 
-##### Example1: Default parameters
+#### **Example1: Default parameters**
 
 To illustrate the basic parameters, we begin simulating five species consuming or producing five different substrates. Some of the examples below are compatible with the Shiny app, click on the numbered example button on the top of the app screen to explore them.
 
@@ -59,7 +59,7 @@ makePlotRes(CRMsimul$resources) #resources plot
 
 ```
 
-##### Example2: exploring additional parameters
+#### **Example2: exploring additional parameters**
 
 MiaSim provides a helper function to generate the matrix $E$.
 
@@ -89,13 +89,13 @@ makePlotRes(CRMsimul$resources) #resources plot
 
 ```
 
-##### More about the $E$ matrix
+#### More about the $E$ matrix
 
 The $E$ matrix contains the energy yield for the production of biomass and the secretion of metabolic by-products. In practice, there are alternative formulations to define the flux between substrate consumption and production.
 
 When generating the random $E$ matrix using the function `randomE` there is a parameter called `maintenance` where the user may constraint the fraction of the flux that is not returned as a byproduct. This parameter can be interpreted as a fraction of the fluxes that are channeled into the organism's maintenance.
 
-##### Example 3: maintenance
+#### **Example 3: maintenance**
 
 ```{r}
 
@@ -107,13 +107,13 @@ print(abs(sum(E*(E<0)))) #produced
 
 ```
 
-##### Using stoichiometric relatioships for the secretion of metabolic by-products
+#### Using stoichiometric relatioships for the secretion of metabolic by-products
 
 MiaSim is flexible for other relationships between the consumption of growth compounds and the secretion of byproducts since the user may provide their own $E$ matrix to the `simulateConsumerResource` function.
 
 One approach is to tie the consumption and production of resources to the stoichiometry of biological reactions (see [Marsland III, et al. 2019](https://journals.plos.org/ploscompbiol/article?id=10.1371/journal.pcbi.1006793)) .
 
-##### Example 4: anaerobic food web
+#### **Example 4: anaerobic food web**
 
 For instance, consider a community consisting of three microbes:
 
@@ -146,7 +146,7 @@ makePlot(CRMsimul$matrix) #species plot
 makePlot(CRMsimul$resources) #resources plot
 ```
 
-##### Example 5: Preferred substrates
+#### **Example 5: Preferred substrates**
 
 In general, substrates are not equally preferred by the microbes in a community, miaSim provides the possibility of generating the random $E$ matrix with a bias towards some preferred resource. This leads to the enrichment of the microbial preferences towards more "valuable" resources. This can be done by specifying the `trophic.preferences` parameter in the `randomE` function:
 
@@ -159,7 +159,7 @@ makeHeatmap(E)
 
 ```
 
-##### Example 6: hierarchical trophic preferences
+#### **Example 6: hierarchical trophic preferences**
 
 In a complex community, feeding might be structured in a hierarchical way through trophic groups. Each group would prefer certain substrates and secrete by-products that are then preferred by the next subgroup. Evidence of such multilevel organization has been shown for the human gut microbiome ([Wong et al. 2019](https://journals.plos.org/ploscompbiol/article?id=10.1371/journal.pcbi.1007524)).
 
@@ -181,7 +181,7 @@ makeHeatmap(levels)
 
 ```
 
-##### Example 7: Nested tropic levels
+#### **Example 7: Nested tropic levels**
 
 The default implementation of MiaSim supports only the definition of linear levels.
 
@@ -266,14 +266,14 @@ makePlot(CRMsimul$matrix) #species plot
 makePlot(CRMsimul$resources) #resources plot
 ```
 
-##### More advanced example
+#### More advanced example
 
 The models we have so far simulated in a single instance, generating one simulated time series. There might be occasions when one is interested in studying the outcome of multiple simulations. One example could be exploring if a set of parameters influence the diversity of the steady-state communities. Or studying if a different set of parameters are give rise to communities that are different enough fundamentally different separate ourm
 
-##### Adding Noise and simulating measurement error
+#### Adding Noise and simulating measurement error
 
 ##### 
 
-##### Exploring the relationship between diversity and environmental noise
+#### Exploring the relationship between diversity and environmental noise
 
 ## .
