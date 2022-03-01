@@ -345,8 +345,8 @@ ui <- navbarPage(
                                             "variance of measurement error",
                                             value = 0,
                                             min = 0,
-                                            max = 10,
-                                            step = 0.1)  %>%
+                                            max = 1,
+                                            step = 0.01)  %>%
                                             shinyInput_label_embed(
                                                 shiny_iconlink() %>% 
                                                     bs_embed_tooltip(
@@ -364,17 +364,43 @@ ui <- navbarPage(
                                         ),
                                         conditionalPanel(
                                             condition = "input.stochasticCRM",
-                                            sliderInput("sigmaDriftCRM", "strength of drift", value = 0, min = 0, max = 1, step = 0.001),
-                                            sliderInput("sigmaEpochCRM", "strength of microbial epoch perturbation", value = 0.001, min = 0, max = 1, step = 0.001),
+                                            sliderInput("sigmaDriftCRM", "strength of drift", value = 0, min = 0, max = 1, step = 0.001)  %>%
+                                            shinyInput_label_embed(
+                                                shiny_iconlink() %>% 
+                                                bs_embed_tooltip(
+                                                    title =  "drift happens on each step of simulation", 
+                                                    placement = "right", 
+                                                    container = "body"
+                                                )
+                                            ),
+                                            sliderInput("epochPCRM", "probability of random periodic (epoch) changes", value = 0.001, min = 0, max = 1, step = 0.001) %>%
+                                                shinyInput_label_embed(
+                                                    shiny_iconlink() %>% 
+                                                        bs_embed_tooltip(
+                                                            title =  "microbial epoch perturbations happens by chance", 
+                                                            placement = "right", 
+                                                            container = "body"
+                                                        )
+                                                ),
+                                            conditionalPanel(
+                                                condition = "input.epochPCRM >0",
+                                                sliderInput("sigmaEpochCRM", "strength of microbial epoch perturbation", value = 0.001, min = 0, max = 1, step = 0.001), 
+                                                
+                                            ),
                                             sliderInput("sigmaExternalCRM", "strength of external perturbations", value = 0.3, min = 0, max = 1, step = 0.001),
-                                            sliderInput("sigmaMigrationCRM", "intensity of migration", value = 0.01, min = 0, max = 1, step = 0.001),
-                                            sliderInput("epochPCRM", "probability of random periodic (epoch) changes", value = 0.001, min = 0, max = 1, step = 0.001),
-                                            textInput("tExternalEventsCRM", "starting time of external events"),
-                                            verbatimTextOutput("tExternalEventsCRMOutput"),
-                                            textInput("tExternalDurationsCRM", "durations of external events"),
-                                            verbatimTextOutput("tExternalDurationsCRMOutput"),
+                                            conditionalPanel(
+                                                condition = "input.sigmaExternalCRM >0",
+                                                textInput("tExternalEventsCRM", "starting time of external events"),
+                                                verbatimTextOutput("tExternalEventsCRMOutput"),
+                                                textInput("tExternalDurationsCRM", "durations of external events"),
+                                                verbatimTextOutput("tExternalDurationsCRMOutput"),
+                                            ),
                                         ),
                                         sliderInput("migrationPCRM", "probability/frequency of migration from metacommunity", value = 0.01, min = 0, max = 1),
+                                        conditionalPanel(
+                                            condition = "input.migrationPCRM >0",
+                                            sliderInput("sigmaMigrationCRM", "intensity of migration", value = 0.01, min = 0, max = 1, step = 0.001),
+                                        ),
                                         textInput(
                                             "metacommunityProbabilityCRM",
                                             "metacommunity") %>%
