@@ -65,6 +65,13 @@ for (n.species in c(13, 3, 4)){
     }
 }
 
+p.fig2.result.df <- ggplot(result.df, aes(x = n.resources, y = value, group = n.resources)) +
+    geom_boxplot() + 
+    facet_grid(. ~ factor(n.species, levels = c(13, 3, 4))) +
+    theme_bw() +
+    scale_x_continuous(trans = "log2")
+p.fig2.result.df
+
 p.result.df <- ggplot(result.df, aes(x = n.resources, y = value, group = n.resources)) + 
     geom_boxplot() + 
     facet_grid(factor(n.species, levels = c(13, 3,4)) ~ factor(theta, levels = c(1, 0.75,0.5))) +

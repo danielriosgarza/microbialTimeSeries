@@ -1,0 +1,119 @@
+---
+title: "Mid-term Presentation - Yu Gao"
+output: html_notebook
+---
+
+# demonstration of Shiny app
+
+```{r}
+shiny::runApp()
+```
+
+
+# source all files
+```{r}
+installIfNeeded<-function(...) {
+    libs<-unlist(list(...))
+    req<-unlist(lapply(libs,require,character.only=TRUE))
+    need<-libs[req==FALSE]
+    if(length(need)>0){ 
+        install.packages(need)
+        lapply(need,require,character.only=TRUE)
+    }
+}
+
+installIfNeeded("ggplot2", "deSolve", "reshape2", "Matrix", 
+                "mvtnorm", "pracma", "gtools", "maotai", "umap")
+
+
+Rfiles = gsub(" ", "", paste("../R/", list.files("../R")))
+sapply(Rfiles, source)
+```
+
+# CRM trophic-related examples
+```{r}
+# example with trophic levels
+n.species <- 10
+n.resources <- 15
+ExampleEfficiencyMatrix <- randomE(n.species = 10, n.resources = 15,
+                                   trophic.levels = c(6,3,1),
+                                   trophic.preferences = list(c(rep(1,5), rep(-1, 5), rep(0, 5)), 
+                                                              c(rep(0,5), rep(1, 5), rep(-1, 5)), 
+                                                              c(rep(0,10), rep(1, 5))))
+makeHeatmap(ExampleEfficiencyMatrix)
+# ExampleResources <- rep(100, n.resources)
+ExampleResources <- c(rep(500, 5), rep(200, 5), rep(50, 5))
+ExampleConsumerResource <- simulateConsumerResource(n.species = n.species, 
+                                                    n.resources = n.resources, names.species = letters[1:n.species], 
+                                                    names.resources = paste0("res",LETTERS[1:n.resources]), E = ExampleEfficiencyMatrix, 
+                                                    x0 = rep(0.001, n.species), resources = ExampleResources, 
+                                                    growth.rates = rep(1, n.species),
+                                                    # error.variance = 0.001,
+                                                    t.end = 5000, t.step = 1)
+makePlot(ExampleConsumerResource$matrix)
+makePlotRes(ExampleConsumerResource$resources)
+
+```
+
+```{r}
+# example with trophic priority
+n.species <- 4
+n.resources <- 6
+ExampleE <- randomE(n.species = n.species, n.resources = n.resources, mean.consumption = n.resources, mean.production = 0)
+ExampleTrophicPriority <- t(apply(matrix(sample(n.species * n.resources), nrow = n.species), 1, order))
+ExampleTrophicPriority
+# make sure that for non-consumables resources for each species, 
+# the priority is 0 (smaller than any given priority) 
+ExampleTrophicPriority <- (ExampleE > 0) * ExampleTrophicPriority
+ExampleConsumerResource <- simulateConsumerResource(n.species = n.species, 
+                                                    n.resources = n.resources, 
+                                                    E = ExampleE, 
+                                                    trophic.priority = ExampleTrophicPriority,
+                                                    t.end = 2000
+                                                    )
+makePlot(ExampleConsumerResource$matrix)
+makePlotRes(ExampleConsumerResource$resources)
+```
+# GLV matrix of interactions with groups
+```{r}
+dense_A <- randomA(n.species = 10, 
+    scale = 1, 
+    diagonal = -1.0, 
+    connectance = 0.9)
+makeHeatmap(dense_A, title = "dense", lowColor = 'blue', highColor = 'red')
+
+sparse_A <- randomA(n.species = 10, 
+    diagonal = -1.0,
+    connectance = 0.09)
+makeHeatmap(sparse_A, title = "sparse", lowColor = 'blue', highColor = 'red')
+
+user_interactions <- rbeta(n = 10^2, .5,.5)
+user_A <- randomA(n.species = 10, interactions = user_interactions)
+makeHeatmap(user_A, title = "user", lowColor = 'blue', highColor = 'red')
+
+competitive_A <- randomA(n.species = 10, 
+    mutualism = 0, 
+    commensalism = 0, 
+    parasitism = 0, 
+    amensalism = 0, 
+    competition = 1, 
+    connectance = 1, 
+    scale=1)
+makeHeatmap(competitive_A, title = "competitive", lowColor = 'blue', highColor = 'red')
+
+parasitism_A <- randomA(n.species = 10, 
+    mutualism = 0,
+    commensalism = 0,
+    parasitism = 1,
+    amensalism = 0,
+    competition = 0,
+    connectance = 1,
+    scale = 1,
+    symmetric=TRUE)
+makeHeatmap(parasitism_A, title = "parasitism", lowColor = 'blue', highColor = 'red')
+
+list_A <- list(dense_A, sparse_A, competitive_A, parasitism_A)
+groupA <- randomA(n.species = 40, listA = list_A, scale = 0.5)
+makeHeatmap(groupA, title = "group", lowColor = 'blue', highColor = 'red')
+```
+

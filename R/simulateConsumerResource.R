@@ -124,7 +124,7 @@
 #'                                                     names.resources = paste0("res",LETTERS[1:n.resources]), E = ExampleEfficiencyMatrix, 
 #'                                                     x0 = rep(0.001, n.species), resources = ExampleResources, 
 #'                                                     growth.rates = rep(1, n.species),
-#'                                                     error.variance = 0.001,
+#'                                                     # error.variance = 0.001,
 #'                                                     t.end = 5000, t.step = 1)
 #' makePlot(ExampleConsumerResource$matrix)
 #' makePlotRes(ExampleConsumerResource$resources)
