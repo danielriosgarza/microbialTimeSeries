@@ -172,7 +172,9 @@ server <- function(input, output, session) {
                     n = n.species.crm()*n.resources.crm(), 
                     shape = 50*max(resources.crm()), 
                     rate = 1), 
-                nrow = n.species.crm()), 
+                nrow = n.species.crm(),
+                dimnames = list(names.species.crm(), names.resources.crm())
+                ), 
             digits = 3)
         RV.crm$matrixMonodCRM <- roundMonodCRM
     })
