@@ -106,7 +106,7 @@ server <- function(input, output, session) {
             digits = 3)
         RV.crm$matrixECRM <- roundECRM
     })
-    output$tableECRM <- renderDataTable(RV.crm$matrixECRM, editable = 'cell', selection = 'none', server = TRUE, options = list(scrollX = TRUE))
+    output$tableECRM <- renderDataTable(RV.crm$matrixECRM, editable = 'all', selection = 'none', server = TRUE, options = list(scrollX = TRUE))
     output$CRMPlotE <- renderPlot(makeHeatmap(RV.crm$matrixECRM, 'Consumption/production matrix'), res = 96)
     
     observeEvent(input$tableECRM_cell_edit, {
@@ -176,7 +176,7 @@ server <- function(input, output, session) {
             digits = 3)
         RV.crm$matrixMonodCRM <- roundMonodCRM
     })
-    output$tableMonodCRM <- renderDataTable(RV.crm$matrixMonodCRM, editable = 'cell', selection = 'none', server = TRUE, options = list(scrollX = TRUE))
+    output$tableMonodCRM <- renderDataTable(RV.crm$matrixMonodCRM, editable = 'all', selection = 'none', server = TRUE, options = list(scrollX = TRUE))
     observeEvent(input$tableMonodCRM_cell_edit, {
         RV.crm$matrixMonodCRM <<- editData(RV.crm$matrixMonodCRM, input$tableMonodCRM_cell_edit, 'tableMonodCRM')
     })
