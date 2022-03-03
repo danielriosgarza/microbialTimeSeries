@@ -90,7 +90,8 @@ ui <- navbarPage(
                                             condition = "input.CustomCRM",
                                             numericInput("tStepCRM", "time step of the simulation", value = 0.1, min = 0.01, max = 10, step = 0.01),
                                             numericInput("tStoreCRM", "stored time points of the simulation", value = 1000, min = 100, max = 10000, step = 100),
-                                        )), 
+                                        ),
+                                    ), 
                                     ### Compounds ####
                                     tabPanel(
                                         "Compounds",
@@ -355,7 +356,6 @@ ui <- navbarPage(
                                                         container = "body"
                                                     )
                                             ),
-                                        #checkboxInput("stochasticCRM", "use stochasitic", value = TRUE),
                                         switchInput(
                                             "stochasticCRM", 
                                             strong("use stochasitic"), 
@@ -373,6 +373,7 @@ ui <- navbarPage(
                                                     container = "body"
                                                 )
                                             ),
+                                            tags$hr(),
                                             sliderInput("epochPCRM", "probability of random periodic (epoch) changes", value = 0.001, min = 0, max = 1, step = 0.001) %>%
                                                 shinyInput_label_embed(
                                                     shiny_iconlink() %>% 
@@ -387,6 +388,7 @@ ui <- navbarPage(
                                                 sliderInput("sigmaEpochCRM", "strength of microbial epoch perturbation", value = 0.001, min = 0, max = 1, step = 0.001), 
                                                 
                                             ),
+                                            tags$hr(),
                                             sliderInput("sigmaExternalCRM", "strength of external perturbations", value = 0.3, min = 0, max = 1, step = 0.001),
                                             conditionalPanel(
                                                 condition = "input.sigmaExternalCRM >0",
@@ -396,6 +398,7 @@ ui <- navbarPage(
                                                 verbatimTextOutput("tExternalDurationsCRMOutput"),
                                             ),
                                         ),
+                                        tags$hr(),
                                         sliderInput("migrationPCRM", "probability/frequency of migration from metacommunity", value = 0.01, min = 0, max = 1),
                                         conditionalPanel(
                                             condition = "input.migrationPCRM >0",
@@ -413,6 +416,7 @@ ui <- navbarPage(
                                                     )
                                             ),
                                         verbatimTextOutput("metacommunityProbabilityCRM"),
+                                        tags$hr(),
                                         switchInput(
                                             "normCRM", 
                                             strong("returns normalized abundances"), 
@@ -424,7 +428,7 @@ ui <- navbarPage(
                                 ),
                             )
                         ),
-                        ### DisplayPanel(Right) ####
+                        ### Display Panel ####
                         column(
                             width = 7, 
                             #### example buttons ####
@@ -629,30 +633,11 @@ ui <- navbarPage(
                             width = 5,
                             wellPanel(
                                 tabsetPanel(
-                                    header = tags$style(
-                                        HTML(
-                                            "
-                                                /* add a border for tabpanes */
-                                                .tabbable > .tab-content > .tab-pane {
-                                                    border-left: 1px solid #ddd;
-                                                    border-right: 1px solid #ddd;
-                                                    border-bottom: 1px solid #ddd;
-                                                    border-radius: 0px 0px 5px 5px;
-                                                    padding: 10px;
-                                                }
-                                                .nav-tabs {
-                                                    margin-bottom: 0;
-                                                }
-                                            "
-                                        )
-                                    ),
-                                    ### Basic ####
+                                    ### Interspecies interactions ####
                                     tabPanel(
                                         "Interspecies interactions",
-                                        tags$h4("1. Generate interspecies interactions"),
-                                        
                                         sliderInput(
-                                            "n.speciesGLV",
+                                            "nSpeciesGLV",
                                             "number of species",
                                             value = 2,
                                             min = 2,
@@ -665,10 +650,10 @@ ui <- navbarPage(
                                         conditionalPanel(
                                             condition = "input.advancedRandomA",
                                             helpText("Custom names separate by ',' or ';' (and spaces) will replace default names."),
-                                            textInput("names.speciesGLV", "names of species"),
+                                            textInput("namesSpeciesGLV", "names of species"),
                                             sliderInput("diagonalGLV", "diagonal values of matrix A", value = -0.5, min = -2, max = 0, step = 0.1),
                                             sliderInput("connectanceGLV", "connectance of matrix A", value = 0.2, min = 0, max = 1),
-                                            sliderInput("scaleGLV", "scale of matrix A", value = 0.1, min = 0, max = 1),
+                                            sliderInput("scaleGLV", "scale of off-diagonal values", value = 0.1, min = 0, max = 1),
                                             tags$hr(),
                                             numericInput("mutualismGLV", "relative proportion of mutualism in matrix A", value = 1, min = 0, max = 10,step = 0.05),
                                             numericInput("commensalismGLV", "relative proportion of commensalism in matrix A", value = 1, min = 0, max = 10,step = 0.05),
@@ -676,7 +661,16 @@ ui <- navbarPage(
                                             numericInput("amensalismGLV", "relative proportion of amensalism in matrix A", value = 1, min = 0, max = 10,step = 0.05),
                                             numericInput("competitionGLV", "relative proportion of competition in matrix A", value = 1, min = 0, max = 10,step = 0.05),
                                             
-                                            textInput("interactionsGLV", "user-defined interactions between species"),
+                                            textInput("interactionsCustomGLV", "user-defined interactions between species") %>%
+                                            shinyInput_label_embed(
+                                                shiny_iconlink() %>% 
+                                                bs_embed_tooltip(
+                                                    title =  "if the given interactions between species are not enough, random values will be added", 
+                                                    placement = "right", 
+                                                    container = "body"
+                                                )
+                                            ),
+                                            verbatimTextOutput("interactionsOutputGLV"),
                                             bs_button(
                                                 label = "˅", 
                                                 button_type = "primary", 
@@ -698,6 +692,7 @@ ui <- navbarPage(
                                                 style = "width:30%",
                                                 class = "btn-default action-button shiny-bound-input"
                                             ) %>% bs_embed_tooltip(title = "runif(n, min = 0, max = 1)"),
+                                            
                                             tags$hr(),
                                             switchInput(
                                                 "symmetricGLV",
@@ -708,64 +703,189 @@ ui <- navbarPage(
                                             ),
                                             # textInput("listAGLV", "a list of previous generated matrix"),
                                         ),
-                                        actionButton("buttonRandomA", "generate random matrix A of interspecies interactions", class = "btn btn-primary"),
-                                        
-                                        tags$hr(),
-                                        
+                                        # actionButton("buttonRandomA", "generate random matrix A of interspecies interactions", class = "btn btn-primary"),
+                                        conditionalPanel(
+                                            condition = "input.advancedRandomA",
+                                            tags$hr(),
+                                            numericInput("tStartGLV", "start time of the simulation", value = 0, min = 0, max = 10000, step = 100),
+                                        ),
+                                        numericInput("tEndGLV", "final time of the simulation", value = 1000, min = 100, max = 10000, step = 100),
+                                        conditionalPanel(
+                                            condition = "input.advancedRandomA",
+                                            numericInput("tStepGLV", "time step of the simulation", value = 0.1, min = 0.01, max = 10, step = 0.01),
+                                            numericInput("tStoreGLV", "stored time points of the simulation", value = 1000, min = 100, max = 10000, step = 100),
+                                        ),
                                     ),
                                     ### Growth rates ####
                                     tabPanel(
                                         "Growth rates",
-                                        tags$h4("2. Set initial status and growth rates of species"),
                                         textInput("x0GLV", "initial abundances of species"),
-                                        textInput("growth.ratesGLV", "maximum growth rates of species"),
+                                        verbatimTextOutput("x0GLVOutput"),
+                                        textInput("growthRatesGLV", "maximum growth rates of species"),
+                                        verbatimTextOutput("growthRatesGLVOutput"),
                                     ),
                                     ### Perturbations ####
                                     tabPanel(
                                         "Perturbations",
-                                        tags$h4("3. Calculate generalized Lotka-Volterra (GLV) Model"),
+                                        sliderInput(
+                                            "errorVarianceGLV", 
+                                            "variance of measurement error", 
+                                            value = 0, 
+                                            min = 0, 
+                                            max = 10, 
+                                            step = 0.1) %>%
+                                        shinyInput_label_embed(
+                                            shiny_iconlink() %>% 
+                                                bs_embed_tooltip(
+                                                    title =  "The variance of measurement error. By default it equals to 0, indicating that the result won't contain any measurement error.", 
+                                                    placement = "right", 
+                                                    container = "body"
+                                                )
+                                        ),
+                                        
                                         switchInput(
                                             "stochasticGLV", 
                                             strong("use stochasticity"), 
                                             value = TRUE,
                                             labelWidth = "100%"),
+                                        
                                         conditionalPanel(
                                             condition = "input.stochasticGLV",
-                                            numericInput("sigma.driftGLV", "sigma.driftGLV", value = 0.001, min = 0, max = 1, step = 0.001),
-                                            numericInput("sigma.epochGLV", "sigma.epochGLV", value = 0.1, min = 0, max = 1, step = 0.001),
-                                            numericInput("sigma.externalGLV", "sigma.externalGLV", value = 0.3, min = 0, max = 1, step = 0.001),
-                                            numericInput("epoch.pGLV", "epoch.pGLV", value = 0.001, min = 0, max = 1, step = 0.001),
-                                            textInput("t.external_eventsGLV", "timepoints of external events"),
-                                            textInput("t.external_durationsGLV", "time durations of external events"),
+                                            sliderInput(
+                                                "sigmaDriftGLV", 
+                                                "strength of drift", 
+                                                value = 0.001,
+                                                min = 0, 
+                                                max = 1, 
+                                                step = 0.001
+                                            ) %>%
+                                            shinyInput_label_embed(
+                                                shiny_iconlink() %>% 
+                                                    bs_embed_tooltip(
+                                                        title =  "drift happens on each step of simulation", 
+                                                        placement = "right", 
+                                                        container = "body"
+                                                    )
+                                            ),
+                                            tags$hr(),
                                             
+                                            sliderInput(
+                                                "epochPGLV", 
+                                                "probability of random periodic (epoch) changes", 
+                                                value = 0.001,
+                                                min = 0, 
+                                                max = 1, 
+                                                step = 0.001
+                                            ) %>%
+                                            shinyInput_label_embed(
+                                                shiny_iconlink() %>% 
+                                                    bs_embed_tooltip(
+                                                        title =  "microbial epoch perturbations happens by chance", 
+                                                        placement = "right", 
+                                                        container = "body"
+                                                    )
+                                            ),
+                                            conditionalPanel(
+                                                condition = "input.epochPGLV > 0",
+                                                sliderInput("sigmaEpochGLV", "strength of microbial epoch perturbation", value = 0.001, min = 0, max = 1, step = 0.001),
+                                            ),
+                                            tags$hr(),
+                                            sliderInput("sigmaExternalGLV", "strength of external perturbations", value = 0.3, min = 0, max = 1, step = 0.001),
+                                            conditionalPanel(
+                                                condition = "input.sigmaExternalGLV > 0",
+                                                textInput("tExternalEventsGLV", "timepoints of external events"),
+                                                verbatimTextOutput("tExternalEventsGLVOutput"),
+                                                textInput("tExternalDurationsGLV", "time durations of external events"),  
+                                                verbatimTextOutput("tExternalDurationsGLVOutput"),
+                                            ),
+                                            tags$hr()
                                         ),
-                                        numericInput("sigma.migrationGLV", "sigma.migrationGLV", value = 0.01, min = 0, max = 1, step = 0.001),
-                                        numericInput("migration.pGLV", "migration.p", value = 0.01, min = 0, max = 1, step = 0.001),
-                                        textInput("metacommunity.probabilityGLV", "metacommunity.probability"),
-                                        sliderInput("error.varianceGLV", "variance of measurement error", value = 0, min = 0, max = 10, step = 0.1),
+                                        sliderInput("migrationPGLV", "probability/frequency of migration from metacommunity", value = 0.01, min = 0, max = 1, step = 0.01),
+                                        conditionalPanel(
+                                            condition = "input.migrationPGLV >0",
+                                            sliderInput("sigmaMigrationGLV", "intensity of migration", value = 0.01, min = 0, max = 1, step = 0.001),
+                                        ),
+                                        textInput(
+                                            "metacommunityProbabilityGLV", 
+                                            "metacommunity"
+                                        ) %>%
+                                        shinyInput_label_embed(
+                                            shiny_iconlink() %>% 
+                                                bs_embed_tooltip(
+                                                    title =  "Normalized probability distribution of the likelihood that species from the metacommunity can enter the community during the simulation.", 
+                                                    placement = "right", 
+                                                    container = "body"
+                                                )
+                                        ),
+                                        verbatimTextOutput("metacommunityProbabilityGLV"),
+                                        tags$hr(),
                                         switchInput(
                                             "normGLV", 
                                             strong("returns normalized abundances"), 
                                             value = FALSE,
-                                            labelWidth = "100%"),
-                                        numericInput("t.endGLV", "final time of the simulation", value = 1000, min = 100, max = 10000),
-                                        
-                                        
-                                        
-                                        
-                                        actionButton("buttonSimulateGLV", "Run the GLV Model", class = "btn btn-primary"),
+                                            labelWidth = "100%"
+                                        ),
                                         
                                     ),
                                 ),
+                                tags$hr(),
+                                tags$h4(
+                                    "Press the following button to run the model",
+                                    tags$div(
+                                        class = "pull-right",
+                                        shiny_iconlink() %>% 
+                                            bs_embed_tooltip(
+                                                title =  "GLV model was not designed responsive to reduce the calculation", 
+                                                placement = "left", 
+                                                container = "body"
+                                            ),
+                                    ),
+                                ),
+                                actionButton("buttonSimulateGLV", "Run the GLV Model", class = "btn btn-primary", width = "100%"),
                             )
                         ),
-                        ### DisplayPanel(Right) ####
+                        ### Display Panel ####
                         column(
                             width = 7,
-                            fluidRow("display panel"),
+                            
+                            #### Matrix A ####
+                            fluidRow(
+                                style = "padding-left: 15px; padding-right: 15px;",
+                                tags$div(
+                                    class = "panel panel-default",
+                                    tags$div(
+                                        class = "panel-heading",
+                                        tags$h3(
+                                            class = "panel-title",
+                                            "Matrix of interspecies interactions",
+                                        ),
+                                    ),
+                                    tags$div(
+                                        class = "panel-body",
+                                        dataTableOutput("TableAGLV", width = "100%"),
+                                        plotOutput("GLVPlotA", height = "600px"),
+                                    ),
+                                ),
+                            ),
+                            #### result plots ####
                             tags$br(),
-                            tableOutput("TableA"),
-                            plotOutput("GLVSpecies"),
+                            fluidRow(
+                                style = "padding-left: 15px; padding-right: 15px;",
+                                tags$div(
+                                    class = "panel panel-default",
+                                    tags$div(
+                                        class = "panel-heading",
+                                        tags$h3(
+                                            class = "panel-title",
+                                            "Species Change",
+                                        ),
+                                    ),
+                                    tags$div(
+                                        class = "panel-body",
+                                        plotOutput("GLVSpecies"),
+                                    ),
+                                ),
+                            ),
                         ),
                     ) 
                 
@@ -773,18 +893,13 @@ ui <- navbarPage(
             bs_append(
                 ## Description ####
                 title = "Description",
-                content = fluidRow(
-                    
-                    
-                    sidebarLayout(
-                        sidebarPanel(
-                            
+                content = 
+                    fluidRow(
+                        column(
+                            width = 12,
+                            withMathJax(includeMarkdown("glv.Rmd")),
                         ),
-                        mainPanel(
-                            
-                        )
                     )
-                )
             ) %>% 
             bs_append(
                 ## Inputs ####

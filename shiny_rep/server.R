@@ -102,8 +102,10 @@ server <- function(input, output, session) {
                 names.resources = names.resources.crm(), 
                 mean.consumption = as.integer(mean.consumption.crm() * n.resources.crm()),
                 mean.production = as.integer(mean.production.crm() * n.resources.crm()),
-                maintenance = maintenance.crm()),
-            digits = 3)
+                maintenance = maintenance.crm()
+            ),
+            digits = 3
+        )
         RV.crm$matrixECRM <- roundECRM
     })
     output$tableECRM <- renderDataTable(RV.crm$matrixECRM, editable = 'all', selection = 'none', server = TRUE, options = list(scrollX = TRUE))
@@ -182,7 +184,7 @@ server <- function(input, output, session) {
     observeEvent(input$tableMonodCRM_cell_edit, {
         RV.crm$matrixMonodCRM <<- editData(RV.crm$matrixMonodCRM, input$tableMonodCRM_cell_edit, 'tableMonodCRM')
     })
-    ## pertubation ####
+    ## perturbation ####
     error.variance.crm <- reactive(input$errorVarianceCRM)
     norm.crm <- reactive(input$normCRM)
     stochastic.crm <- reactive(input$stochasticCRM)
@@ -222,6 +224,8 @@ server <- function(input, output, session) {
         updateTextInput(inputId = "growthRatesCRM", value = "2, 4.5, 2.6")
         updateTextInput(inputId = "x0CRM", value = "1, 2, 1")
         updateTextInput(inputId = "resourcesCustomCRM", value = "10, 0, 0, 0")
+        updateTextInput(inputId = "namesSpeciesCRM", value = "homoacetogenic, homofermentative, butyrateProducer")
+        updateTextInput(inputId = "namesResourcesCRM", value = "glucose, acetate, lactate, butyrate")
         # updateButton(session, "CRMEX4", disabled = !input$CRMEX4pre)
         shinyjs::enable("CRMEX4")
     })
@@ -326,86 +330,131 @@ server <- function(input, output, session) {
     output$CRMResources <- renderPlot(makePlotRes(runCRM()$resources, "quantity of compounds by time"),  res = 96)
     
     # model2 simulate generalized Lotka-Volterra Model ####
-    n.speciesGLV <- reactive(input$n.speciesGLV)
-    names.speciesGLV <- reactive(text2char(input$names.speciesGLV))
-    diagonalGLV <- reactive(input$diagonalGLV)
-    connectanceGLV <- reactive(input$connectanceGLV)
-    scaleGLV <- reactive(input$scaleGLV)
-    mutualismGLV <- reactive(input$mutualismGLV)
-    commensalismGLV <- reactive(input$commensalismGLV)
-    parasitismGLV <- reactive(input$parasitismGLV)
-    amensalismGLV <- reactive(input$amensalismGLV)
-    competitionGLV <- reactive(input$competitionGLV)
+    ## interspecies interactions ####
+    n.species.glv <- reactive(input$nSpeciesGLV)
+    names.species.glv <- reactive(text2chars(input$namesSpeciesGLV, len = n.species.glv(), prefix = "sp"))
+    diagonal.glv <- reactive(input$diagonalGLV)
+    connectance.glv <- reactive(input$connectanceGLV)
+    scale.glv <- reactive(input$scaleGLV)
+    
+    mutualism.glv <- reactive(input$mutualismGLV)
+    commensalism.glv <- reactive(input$commensalismGLV)
+    parasitism.glv <- reactive(input$parasitismGLV)
+    amensalism.glv <- reactive(input$amensalismGLV)
+    competition.glv <- reactive(input$competitionGLV)
     
     observeEvent(input$buttonInteractionsU, {
-        updateTextInput(inputId = "interactionsGLV", value = rbeta(n.speciesGLV()^2, 0.5, 0.5))
+        updateTextInput(inputId = "interactionsCustomGLV", value = round(rbeta(n.species.glv()^2, 0.5, 0.5), digits = 3))
     })
     observeEvent(input$buttonInteractionsN, {
-        updateTextInput(inputId = "interactionsGLV", value = rbeta(n.speciesGLV()^2, 2, 2))
+        updateTextInput(inputId = "interactionsCustomGLV", value = round(rbeta(n.species.glv()^2, 2, 2), digits = 3))
     })
     observeEvent(input$buttonInteractionsEven, {
-        updateTextInput(inputId = "interactionsGLV", value = runif(n.speciesGLV()^2, 0, 1))
+        updateTextInput(inputId = "interactionsCustomGLV", value = round(runif(n.species.glv()^2, 0, 1), digits = 3))
     })
+    interactions_dist.glv <- reactive(round(runif(n.species.glv()^2, 0, 1), digits = 3))
+    inter.custom.glv <- reactive(as.numeric(as.vector(text2char(input$interactionsCustomGLV))))
+    interactions.glv <- reactive({
+        if (length(inter.custom.glv()) < n.species.glv()^2){
+            return(
+                c(
+                    inter.custom.glv(), 
+                    as.vector(
+                        interactions_dist.glv()[(length(inter.custom.glv())+1):(n.species.glv()^2)]
+                    )
+                )
+            )
+        } else {
+            return(head(inter.custom.glv(), n.species.glv()^2))
+        }
+    })
+    output$interactionsOutputGLV <- renderPrint(interactions.glv())
+    symmetric.glv <- reactive(input$symmetricGLV)
+    listA.glv <- reactive(text2char(input$listAGLV)) # TODO: convert listA
     
-    interactionsGLV <- reactive(as.numeric(text2char(input$interactionsGLV)))
-    symmetricGLV <- reactive(input$symmetricGLV)
-    listAGLV <- reactive(text2char(input$listAGLV)) # TODO: convert
+    RV.glv <- reactiveValues(matrixAGLV = NULL)
+    # replace generateA() by RV.glv$matrixAGLV
     
-    generateA <- eventReactive(input$buttonRandomA, {
-        randomA(
-            n.species = n.speciesGLV(),
-            names.species = names.speciesGLV(), 
-            diagonal = diagonalGLV(),
-            connectance = connectanceGLV(),
-            scale = scaleGLV(),
-            mutualism = mutualismGLV(),
-            commensalism = commensalismGLV(),
-            parasitism = parasitismGLV(),
-            amensalism = amensalismGLV(),
-            competition = competitionGLV(),
-            interactions = interactionsGLV(),
-            symmetric = symmetricGLV()
+    #### editable matrixA ####
+    observe({
+        roundACRM <- round(
+            randomA(
+                n.species = n.species.glv(),
+                names.species = names.species.glv(), 
+                diagonal = diagonal.glv(),
+                connectance = connectance.glv(),
+                scale = scale.glv(),
+                mutualism = mutualism.glv(),
+                commensalism = commensalism.glv(),
+                parasitism = parasitism.glv(),
+                amensalism = amensalism.glv(),
+                competition = competition.glv(),
+                interactions = interactions.glv(),
+                symmetric = symmetric.glv()
+            ),
+            digits = 3
         )
+        RV.glv$matrixAGLV <- roundACRM
+    })
+    output$TableAGLV <- renderDataTable(RV.glv$matrixAGLV, editable = 'all', selection = 'none', server = TRUE, options = list(scrollX = TRUE))
+    output$GLVPlotA <- renderPlot(makeHeatmap(RV.glv$matrixAGLV, "interspecies interaction matrix"), res = 96)
+    
+    observeEvent(input$tableAGLV_cell_edit, {
+        RV.glv$matrixAGLV <<- editData(RV.glv$matrixAGLV, input$tableAGLV_cell_edit, 'tableAGLV')
     })
     
-    output$TableA <- renderTable(generateA())
+    ## growth rates ####
+    x0.glv <- reactive(as.numeric(text2chars(input$x0GLV, len = n.species.glv(), expr = paste0("runif(n =", n.species.glv(), ", min = 0, max = 1)"))))
+    output$x0GLVOutput <- renderPrint(x0.glv())
+    growth.rates.glv <- reactive(as.numeric(text2chars(input$growthRatesGLV, len = n.species.glv(), expr = paste0("runif(n =", n.species.glv(), ", min = 0, max = 1)"))))
+    output$growthRatesGLVOutput <- renderPrint(growth.rates.glv())
+    ## perturbations ####
+    stochastic.glv <- reactive(input$stochasticGLV)
+    sigma.drift.glv <- reactive(input$sigmaDriftGLV)
+    sigma.epoch.glv <- reactive(input$sigmaEpochGLV)
+    sigma.external.glv <- reactive(input$sigmaExternalGLV)
+    epoch.p.glv <- reactive(input$epochPGLV)
+    sigma.migration.glv <- reactive(input$sigmaMigrationGLV)
+    t.external_events.glv <- reactive(as.numeric(text2char(input$tExternalEventsGLV)))
+    output$tExternalEventsGLVOutput <- renderPrint(t.external_events.glv())
+    t.external_durations.glv <- reactive(as.numeric(text2char(input$tExternalDurationsGLV)))
+    output$tExternalDurationsGLVOutput <- renderPrint(t.external_durations.glv())
+    migration.p.glv <- reactive(input$migrationPGLV)
+    metacommunity.probability.glv <- reactive(as.numeric(text2chars(input$metacommunityProbabilityGLV, len = n.species.crm(), expr = paste0("rdirichlet(1, alpha = rep(1,", n.species.crm(), "))"))))
+    output$metacommunityProbabilityGLV <- renderPrint(metacommunity.probability.glv())
     
-    x0GLV <- reactive(text2char(input$x0GLV))
-    growth.ratesGLV <- reactive(text2char(input$growth.ratesGLV))
-    stochasticGLV <- reactive(input$stochasticGLV)
-    sigma.driftGLV <- reactive(input$sigma.driftGLV)
-    sigma.epochGLV <- reactive(input$sigma.epochGLV)
-    sigma.externalGLV <- reactive(input$sigma.externalGLV)
-    epoch.pGLV <- reactive(input$epoch.pGLV)
-    sigma.migrationGLV <- reactive(input$sigma.migrationGLV)
-    t.external_eventsGLV <- reactive(as.numeric(text2char(input$t.external_eventsGLV)))
-    t.external_durationsGLV <- reactive(as.numeric(text2char(input$t.external_durationsGLV)))
-    migration.pGLV <- reactive(input$migration.pGLV)
-    metacommunity.probabilityGLV <- reactive(text2char(input$metacommunity.probabilityGLV))
-    error.varianceGLV <- reactive(input$error.varianceGLV)
-    normGLV <- reactive(input$normGLV)
-    t.endGLV <- reactive(input$t.endGLV)
+    error.variance.glv <- reactive(input$errorVarianceGLV)
+    norm.glv <- reactive(input$normGLV)
+    t.end.glv <- reactive(input$tEndGLV)
     
+    ## examples ####
+    # TODO: add examples here
+    
+    
+    ## runGLV ####
+    
+    # use button or not?
     runGLV <- eventReactive(input$buttonSimulateGLV, {
+    # runGLV <- reactive({
         simulateGLV(
-            n.species = n.speciesGLV(),
-            names.species = names.speciesGLV(), 
-            A = generateA(),
-            x0 = x0GLV(), 
-            growth.rates = growth.ratesGLV(), 
-            sigma.drift = sigma.driftGLV(),
-            sigma.epoch = sigma.epochGLV(),
-            sigma.external = sigma.externalGLV(),
-            sigma.migration = sigma.migrationGLV(),
-            epoch.p = epoch.pGLV(),
-            t.external_events = t.external_eventsGLV(),
-            t.external_durations = t.external_durationsGLV(),
-            stochastic = stochasticGLV(),
-            migration.p = migration.pGLV(),
-            metacommunity.probability = metacommunity.probabilityGLV(),
-            error.variance = error.varianceGLV(),
-            norm = normGLV(), 
-            t.end = t.endGLV()
+            n.species = n.species.glv(),
+            names.species = names.species.glv(), 
+            A = RV.glv$matrixAGLV,
+            x0 = x0.glv(), 
+            growth.rates = growth.rates.glv(), 
+            sigma.drift = sigma.drift.glv(),
+            sigma.epoch = sigma.epoch.glv(),
+            sigma.external = sigma.external.glv(),
+            sigma.migration = sigma.migration.glv(),
+            epoch.p = epoch.p.glv(),
+            t.external_events = t.external_events.glv(),
+            t.external_durations = t.external_durations.glv(),
+            stochastic = stochastic.glv(),
+            migration.p = migration.p.glv(),
+            metacommunity.probability = metacommunity.probability.glv(),
+            error.variance = error.variance.glv(),
+            norm = norm.glv(), 
+            t.end = t.end.glv()
         )
     })
     
