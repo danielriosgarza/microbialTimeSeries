@@ -2,7 +2,7 @@
 #'
 #' Neutral species abundances simulation according to the Hubbell model.
 #'
-#' @param community.initial Numeric: initial species composition
+#' @param x0 Numeric: initial species composition
 #' @param names.species Character: names of species. If NULL,
 #' `paste0("sp", seq_len(n.species))` is used.
 #' (default: \code{names.species = NULL})
@@ -82,7 +82,7 @@
 #' vol. 26,7 (2011).
 #
 #' @export
-simulateHubbellRates <- function(community.initial, 
+simulateHubbellRates <- function(x0, 
     names.species = NULL,
     migration.p = 0.01, 
     metacommunity.probability = NULL,
@@ -93,7 +93,7 @@ simulateHubbellRates <- function(community.initial,
     t.end=1000,...){
     
     # set the default values
-    n.species <- length(community.initial)
+    n.species <- length(x0)
     if (is.null(names.species)) {
         names.species <- paste0("sp", seq_len(n.species))
     }
@@ -113,13 +113,13 @@ simulateHubbellRates <- function(community.initial,
     t.store <- length(t.dyn$t.index)
     
     birth.p <- 1 - migration.p
-    community <- community.initial
+    community <- x0
     
     propensities <- sum(community)*(c(migration.p, 1-migration.p))
     event.probabilities <- propensities/(sum(propensities))
     
     out.matrix <- matrix(0, nrow=length(t.dyn$t.index), ncol = n.species)
-    out.matrix[1,] = community.initial
+    out.matrix[1,] = x0
     
     stored_time = t.dyn$t.sys[t.dyn$t.index]
     current_t <- stored_time[1]
@@ -174,7 +174,7 @@ simulateHubbellRates <- function(community.initial,
     #SE <- SummarizedExperiment(assays = list(counts = out.matrix))
     out.list <- list(matrix = out.matrix, 
         community = community, 
-        community.initial = community.initial,
+        x0 = x0,
         metacommunity.probability = metacommunity.probability,
         error.variance = error.variance)
     return(out.list)

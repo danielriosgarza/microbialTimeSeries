@@ -14,9 +14,9 @@
 #' i.e. proportion of non-zero off-diagonal terms.
 #' Should be in the [0,1] interval.
 #' (default: \code{connectance = 0.2})
-#' @param scale Numeric: scale of the off-diagonal elements compared to the 
+#' @param scale.offDiagonal Numeric: scale of the off-diagonal elements compared to the 
 #' diagonal. 
-#' (default: \code{scale = 0.1})
+#' (default: \code{scale.offDiagonal = 0.1})
 #' @param mutualism Numeric: relative proportion of interactions terms 
 #' consistent with mutualism (positive <-> positive)
 #' (default: \code{mutualism = 1})
@@ -53,7 +53,7 @@
 #' @examples
 #' 
 #' dense_A <- randomA(n.species = 10, 
-#'     scale = 1, 
+#'     scale.offDiagonal = 1, 
 #'     diagonal = -1.0, 
 #'     connectance = 0.9)
 #' makeHeatmap(dense_A, lowColor = 'blue', highColor = 'red')
@@ -74,7 +74,7 @@
 #'     amensalism = 0, 
 #'     competition = 1, 
 #'     connectance = 1, 
-#'     scale=1)
+#'     scale.offDiagonal=1)
 #' makeHeatmap(competitive_A, lowColor = 'blue', highColor = 'red')
 #' 
 #' parasitism_A <- randomA(n.species = 10, 
@@ -84,7 +84,7 @@
 #'     amensalism = 0,
 #'     competition = 0,
 #'     connectance = 1,
-#'     scale = 1,
+#'     scale.offDiagonal = 1,
 #'     symmetric=TRUE)
 #' makeHeatmap(parasitism_A, lowColor = 'blue', highColor = 'red')
 #' 
@@ -104,7 +104,7 @@ randomA <- function(n.species,
     names.species = NULL,
     diagonal = -0.5, 
     connectance = 0.2, 
-    scale = 0.1,
+    scale.offDiagonal = 0.1,
     mutualism = 1,
     commensalism = 1,
     parasitism = 1,
@@ -154,7 +154,7 @@ randomA <- function(n.species,
         I[lower.tri(I)] <- t(I)[lower.tri(I)]
     }
 
-    A <- I*abs(A)*(scale*min(abs(diagonal)))
+    A <- I*abs(A)*(scale.offDiagonal*min(abs(diagonal)))
     diag(A) <- diagonal
     colnames(A) <- rownames(A) <- names.species
     
