@@ -1,73 +1,13 @@
 ---
-title: "Consumer Resource Model - parameters"
-author: "Daniel Garza"
-date: "1/22/2022"
+title: "generalized Lotka-Volterra Model - parameters"
+author: "Yu Gao"
+date: "3/11/2022"
 output: html_document
 ---
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
 ```
-
-### randomE
-
-**`n.species`** : `Integer`
-
-number of species in community
-
-**`n.resources`** : `integer`
-
-number of compounds that are either consumed or produced by the community members
-
-**`names.species`** : `character vector`
-
-names of species to use during the simulation. If not provided, species are named as *sp1, sp2, ...*
-
-must have same length as `n.species`
-
-**`names.resources`** : `character vector`
-
-names of compounds to use during the simulation. If not provided, compounds are named as *res1, res2, ...*
-
-must have same length as `n.resources`
-
-**`mean.consumption`** : `numeric`
-
-Average number of compounds that are required for the growth of each species. This is determined by sampling from a Poisson distribution with $\lambda$ = `mean.consumption`.
-
-The default values is one fourth of `n.resources`
-
-**`mean.production`** : `numeric`
-
-Average number of compounds that are released as by-product from the growth of each species. This is determined by sampling from a Poisson distribution with $\lambda$ = `mean.production`.
-
-The default values is one sixth of `n.resources`
-
-**`maintenance`** : `numeric`
-
-fraction of the consumption fluxes that are channeled into the organism's growth and maintenance, which constrains the sum of fluxes of the metabolic by-products.
-
-default is 0.5 (see example 3 for more detail).
-
-**`trophic.levels`** : `integer`
-
-Hierarchical allocation of species into trophic groups. The input should be a list of integers allocating the total `n.species` into groups (see example 6).
-
-For example, a community with 10 species can have a distribution of `c(3,4,3)`, meaning the secretion products of the three first species are preferred by the next four, while the secretion products of these four are preferred by the last three.
-
-**`trophic.preferences`** : `list`
-
-A list of trophic preferences for each level. Each element in this list should have a same length of `n.resources` , indicating the strength of consumption(positive) or production(negative) of resources in each trophic level. NULL indicates that in this trophic level, there's no preferred materials as nutrient or product.
-
-(see example 5 and 7).
-
-For example, a community with 10 species and 15 resources can have a `trophic.preferences` like `list(c(rep(1,5), rep(-1,5), rep(0,5), NULL, NULL)` for 3 trophic levels (`length(trophic.levels) = 3` ), indicating that the first (top) trophic level prefers to use first 5 resources and to produce the 6th-10th, and leaving the last 5 resources untouched.
-
-must have same length as `trophic.levels` . If a shorter `trophic.preferences` was given, `NULL` s will be automatically added at tail.
-
-**`exact`**: `boolean`
-
-whether the number of resources to consume and to produce (`mean.consumption` and `mean.production`) should equal to the given value for each species. By default is `FALSE` : `mean.consumption` and `mean.production` only control the expected average value.
 
 ### simulateConsumerResource
 

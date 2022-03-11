@@ -1,5 +1,5 @@
 ui <- navbarPage(
-    title ="microSimShiny",
+    title ="miaSimShiny",
     # tab1 Consumer-Resource Model ####
     tabPanel(
         title = "Consumer-Resource Model",
@@ -641,7 +641,7 @@ ui <- navbarPage(
                                             "number of species",
                                             value = 2,
                                             min = 2,
-                                            max = 20),
+                                            max = 50),
                                         switchInput(
                                             "advancedRandomA",
                                             strong("show advanced parameters"),
@@ -847,8 +847,66 @@ ui <- navbarPage(
                         ### Display Panel ####
                         column(
                             width = 7,
+                            #### example buttons ####
+                            fluidRow(
+                                style = "padding-left: 15px; padding-right: 15px;",
+                                tags$div(
+                                    class = "panel panel-default",
+                                    tags$div(
+                                        class = "panel-heading",
+                                        tags$h3(
+                                            class = "panel-title",
+                                            "Examples",
+                                            tags$div(
+                                                class = "pull-right",
+                                                shiny_iconlink() %>% 
+                                                    bs_embed_tooltip(
+                                                        title =  'Don\'t forget to click on the "Run the GLV model" button on the left', 
+                                                        placement = "left", 
+                                                        container = "body"
+                                                    ),
+                                            ),
+                                        ),
+                                    ),
+                                    tags$div(
+                                        class = "panel-body",
+                                        strong('Please click on the "Run the GLV model" button afterwards'),
+                                        tags$br(),
+                                        bs_button(
+                                            label = "Ex.1", 
+                                            button_type = "primary", 
+                                            id = "GLVEX1", 
+                                            style = "width:24%",
+                                            class = "btn-default action-button shiny-bound-input"
+                                        ),
+                                        bs_button(
+                                            label = "Ex.2", 
+                                            button_type = "primary", 
+                                            id = "GLVEX2", 
+                                            style = "width:24%",
+                                            class = "btn-default action-button shiny-bound-input"
+                                        ),
+                                        bs_button(
+                                            label = "Ex.3", 
+                                            button_type = "primary", 
+                                            id = "GLVEX3", 
+                                            style = "width:24%",
+                                            class = "btn-default action-button shiny-bound-input"
+                                        ),
+                                        bs_button(
+                                            label = "Ex.4", 
+                                            button_type = "primary", 
+                                            id = "GLVEX4", 
+                                            style = "width:24%",
+                                            class = "btn-default action-button shiny-bound-input"
+                                        ),
+                                    ),
+                                ),
+                            ),
+                            
                             
                             #### Matrix A ####
+                            tags$br(),
                             fluidRow(
                                 style = "padding-left: 15px; padding-right: 15px;",
                                 tags$div(
@@ -906,7 +964,9 @@ ui <- navbarPage(
                 title = "Inputs",
                 content = 
                     fluidRow(
-                        "Inputs of GLV model"
+                        column(width = 12,
+                               withMathJax(includeMarkdown("glv_parms.Rmd")),
+                        ),
                     )
             ) %>% 
             bs_append(

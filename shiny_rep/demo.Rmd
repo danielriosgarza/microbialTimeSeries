@@ -116,4 +116,3 @@ list_A <- list(dense_A, sparse_A, competitive_A, parasitism_A)
 groupA <- randomA(n.species = 40, listA = list_A, scale = 0.5)
 makeHeatmap(groupA, title = "group", lowColor = 'blue', highColor = 'red')
 ```
-

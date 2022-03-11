@@ -428,8 +428,36 @@ server <- function(input, output, session) {
     t.end.glv <- reactive(input$tEndGLV)
     
     ## examples ####
-    # TODO: add examples here
-    
+    observeEvent(input$GLVEX1, {
+        updateSliderInput(inputId = "nSpeciesGLV", value = 5)
+    })
+    observeEvent(input$GLVEX2, {
+        updateSliderInput(inputId = "nSpeciesGLV", value = 4)
+        updateSliderInput(inputId = "diagonalGLV", value = -1)
+        updateSliderInput(inputId = "connectanceGLV", value = 0.5)
+        updateSliderInput(inputId = "scaleGLV", value = 0.5)
+        updateSwitchInput(inputId = "symmetricGLV", value = TRUE)
+        updateSwitchInput(inputId = "stochasticGLV", value = FALSE)
+    })
+    observeEvent(input$GLVEX3, {
+        updateSliderInput(inputId = "nSpeciesGLV", value = 4)
+        updateSliderInput(inputId = "diagonalGLV", value = -1)
+        updateSliderInput(inputId = "connectanceGLV", value = 0.5)
+        updateSliderInput(inputId = "scaleGLV", value = 0.5)
+        updateSwitchInput(inputId = "symmetricGLV", value = TRUE)
+        updateSwitchInput(inputId = "stochasticGLV", value = FALSE)
+        updateSliderInput(inputId = "migrationPCRM", value = 0)
+    })
+    observeEvent(input$GLVEX4, {
+        updateSliderInput(inputId = "nSpeciesGLV", value = 4)
+        updateSliderInput(inputId = "diagonalGLV", value = -1)
+        updateSliderInput(inputId = "connectanceGLV", value = 0.5)
+        updateSliderInput(inputId = "scaleGLV", value = 0.5)
+        updateSwitchInput(inputId = "symmetricGLV", value = TRUE)
+        updateSwitchInput(inputId = "stochasticGLV", value = FALSE)
+        updateSliderInput(inputId = "migrationPCRM", value = 0)
+        updateSliderInput(inputId = "errorVarianceGLV", value = 0.001)
+    })
     
     ## runGLV ####
     

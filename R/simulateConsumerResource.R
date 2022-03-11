@@ -93,8 +93,8 @@
 #' # example with user-defined values (names.species, names.resources, E, x0, 
 #' # resources, growth.rates, error.variance, t.end, t.step)
 #' n.resources <- 6
-#' ExampleE <- randomE(n.species = 4, n.resources = n.resources, mean.con = 3, 
-#'     mean.prod = 1, maintenance = 0.4)
+#' ExampleE <- randomE(n.species = 4, n.resources = n.resources, 
+#'     mean.consumption = 3, mean.production = 1, maintenance = 0.4)
 #' ExampleResources <- rep(100, n.resources)
 #' ExampleConsumerResource <- simulateConsumerResource(n.species = 4, 
 #'     n.resources = 6, names.species = letters[1:4], 

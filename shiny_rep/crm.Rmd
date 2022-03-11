@@ -11,7 +11,7 @@ knitr::opts_chunk$set(echo = TRUE)
 
 ## simulateConsumerResource
 
-Function to simulate McArthur's consumer-resource model and its extensions for microbiomes. The model describe the dynamics of microbes and substrates in a community where the ecological interactions are explicitly encoded via the consumption and production of metabolites.
+Function to simulate MacArthur's consumer-resource model and its extensions for microbiomes. The model describe the dynamics of microbes and substrates in a community where the ecological interactions are explicitly encoded via the consumption and production of metabolites.
 
 ### **Model Description**
 
@@ -37,11 +37,13 @@ There are many possibilities for structuring $E$ according to specific assumptio
 
 ### **Examples**
 
+All examples below are compatible with the Shiny app. Feel free to click on the numbered example button on the top of the app screen to explore them.
+
+If not provided by the user, all parameters have default values except for the the number of species and the number of resources, which need to be provided. Check the list of parameters below for a complete description of the parameters and their defaults.
+
 #### **Example1: Default parameters**
 
-To illustrate the basic parameters, we begin simulating five species consuming or producing five different substrates. Some of the examples below are compatible with the Shiny app, click on the numbered example button on the top of the app screen to explore them.
-
-If not provided by the user, all parameters have default values except for the the number of species and the number of resources, which need to be provided. Check the list of parameters below for a complete description of the parameters and their defaults
+To illustrate the basic parameters, we begin simulating five species consuming or producing five different substrates.
 
 ```{r}
 
@@ -187,7 +189,7 @@ The default implementation of MiaSim supports only the definition of linear leve
 
 One can easily add nested relationships using the `trophic.preferences` parameter. For instance, consider the interactions depicted in the following cartoon where arrows represent the direction of the secretion/consumption flux of metabolic by-products between species.
 
-![interaction cartoon](https://raw.githubusercontent.com/danielriosgarza/microbialTimeSeries/reviewed/files/images/interactionCartoon.png)
+![interaction cartoon](https://raw.githubusercontent.com/danielriosgarza/microbialTimeSeries/reviewed/files/images/interactionCartoon.png "interaction cartoon"){width="600"}
 
 To simulate a model with similar topology. We begin by setting the basic parameters:
 
