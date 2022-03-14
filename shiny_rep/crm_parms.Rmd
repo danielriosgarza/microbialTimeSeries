@@ -99,7 +99,7 @@ must have same length as `n.resources`
 
 **`E`** : `numeric matrix`
 
-matrix of efficiency. A matrix defining the efficiency of resource-to-biomass conversion (positive values) and the relative conversion of metabolic by-products (negative values). It is recommended to be generated using the function `randomA`
+matrix of efficiency. A matrix defining the efficiency of resource-to-biomass conversion (positive values) and the relative conversion of metabolic by-products (negative values). It is recommended to be generated using the function `randomE`
 
 must have dimension as `(n.species, n.resources)`
 

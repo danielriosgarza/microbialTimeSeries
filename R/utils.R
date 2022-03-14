@@ -48,6 +48,66 @@ eventTimes <- function(t.events = NULL, t.duration = NULL,
     return(t.result)
 }
 
+feedTimes <- function(
+    t.feed = NULL, 
+    t.feed.interval = NULL, 
+    t.feed.initial.intervals = NULL, 
+    t.start = 0, 
+    t.end = 1000, 
+    t.step = 0.1, 
+    t.store = 1000){
+    # fast return if null
+    if (is.null(t.feed)) return (numeric(0))
+    
+    t.dyn <- SimulationTimes(
+        t.start = t.start, 
+        t.end = t.end, 
+        t.step = t.step, 
+        t.store = t.store)
+    
+    t.result <- c()
+    if (is.null(t.feed.interval) & is.null(t.feed.initial.intervals)){
+        # input each feed time one by one
+        for (i in seq(length(t.feed))){
+            t.index <- as.integer((t.feed[i]-t.start)/t.step) + 1
+            t.index <- t.index[t.index > 0]
+            p1 <- t.dyn$t.sys[t.index]
+            t.result <- c(t.result, p1)
+        }
+    } else {
+        # generating feed time automatically according to intervals.
+        if (!is.null(t.feed.interval) & is.null(t.feed.initial.intervals)) {
+            # generating time points using t.feed and t.feed.interval
+            # feedTimes(t.feed = 300, t.feed.interval = 50)
+            # expect 300, 350, 400, 450, ...
+            if (length(t.feed) > 1) {
+                warning("t.feed longer than 1, you might want to set feeding times manually without t.feed.initial.intervals or t.feed.interval",)
+            }
+            if (t.feed.interval <= t.step) stop("t.feed.interval must be larger than t.step")
+            t.result <- unlist(lapply(t.feed, seq, to = t.end, by = t.feed.interval))
+            
+        } else if (is.null(t.feed.interval) & !is.null(t.feed.initial.intervals)){
+            # generating time points using t.feed and t.feed.initial.intervals
+            # feedTimes(t.feed = c(300, 600), t.feed.initial.intervals = seq(from = 10, to = 40, by=10))
+            # expect 300, 310, 330, 360, 400, 600, 610, 630, 660, 700
+            t.feed.initial.intervals <- t.feed.initial.intervals[t.feed.initial.intervals >= 0]
+            t.result <- t.feed
+            for(i in seq(length(t.feed.initial.intervals))){
+                t.result <- c(t.result, t.feed + sum(t.feed.initial.intervals[1:i]))
+            }
+        } else if (!is.null(t.feed.interval) & !is.null(t.feed.initial.intervals)) {
+            ## TODO: generate time series combining both t.feed.initial.intervals and t.feed.interval
+            stop("please specify how to generate t.feed: 
+                 with t.feed.interval or t.feed.initial intervals")
+        }
+    }
+    t.result <- t.result[t.result < t.end]
+    t.result <- t.result[!is.na(t.result)]
+    t.result <- unique(t.result)
+    t.result <- t.result[order(t.result)]
+    return(t.result)
+}
+
 applyInterctionType <- function(I, pair, interType){
     if (rbinom(1,1,0.5)){
         pair <- rev(pair)

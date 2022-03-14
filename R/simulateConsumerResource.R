@@ -146,6 +146,32 @@
 #'                                                     )
 #' makePlot(ExampleConsumerResource$matrix)
 #' makePlotRes(ExampleConsumerResource$resources)
+#' 
+#' # examples with resource feeding
+#' n.species <- 4
+#' n.resources <- 6
+#' resources.feeding <- c(10, 20, 30, 40, 50, 60)
+#' ExampleConsumerResource <- simulateConsumerResource(n.species = n.species, 
+#'                                                     n.resources = n.resources, 
+#'                                                     t.feed = c(100, 400, 600, 700),
+#'                                                     resources.feeding = resources.feeding)
+#' makePlot(ExampleConsumerResource$matrix)
+#' makePlotRes(ExampleConsumerResource$resources)
+#' ExampleConsumerResource <- simulateConsumerResource(n.species = n.species, 
+#'                                                     n.resources = n.resources, 
+#'                                                     t.feed = 400,
+#'                                                     t.feed.interval = 120,
+#'                                                     resources.feeding = resources.feeding)
+#' makePlot(ExampleConsumerResource$matrix)
+#' makePlotRes(ExampleConsumerResource$resources)
+#' ExampleConsumerResource <- simulateConsumerResource(n.species = n.species, 
+#'                                                     n.resources = n.resources, 
+#'                                                     t.feed = c(300, 700),
+#'                                                     t.feed.initial.intervals = c(10, 20, 40, 80),
+#'                                                     resources.feeding = resources.feeding)
+#' makePlot(ExampleConsumerResource$matrix)
+#' makePlotRes(ExampleConsumerResource$resources)
+#' 
 #' @docType methods
 #' @aliases simulateConsumerResource-numeric
 #' 
@@ -176,6 +202,10 @@ simulateConsumerResource <- function(n.species, n.resources,
     norm = FALSE,
     t.end = 1000,
     trophic.priority = NULL,
+    t.feed = NULL,
+    t.feed.interval = NULL,
+    t.feed.initial.intervals = NULL,
+    resources.feeding = NULL,
     ...){
     
     t.dyn <- SimulationTimes(t.end = t.end,...)
@@ -187,6 +217,13 @@ simulateConsumerResource <- function(n.species, n.resources,
         t.end = t.end,
         ... = ...)
     
+    # calculate the time points influenced by the feedings
+    tFeed = feedTimes(
+        t.feed = t.feed, 
+        t.feed.interval = t.feed.interval,
+        t.feed.initial.intervals = t.feed.initial.intervals,
+        t.end = t.end,
+        ...)
     
     # define the consumer-resource model
     
@@ -202,6 +239,9 @@ simulateConsumerResource <- function(n.species, n.resources,
             resources.dilution <- params[['resources.dilution']]
             dilution.rate <- params[['dilution.rate']]
             trophic.priority <- params[['trophic.priority']]
+            
+            tFeed <- params[['tFeed']]
+            resources.feeding <- params[['resources.feeding']]
             
             if(!is.null(trophic.priority)){
                 if (!identical(dim(E), dim(trophic.priority))){
@@ -229,7 +269,6 @@ simulateConsumerResource <- function(n.species, n.resources,
             consumption <- -resources*(t(1/B*(E>0))%*%x0)
             
             production <- -t(E*(E<0)) %*% growth
-            
             
             #consumption <- (t(growth) %*% ((E>0)/B))*resources
             #production <- -(t(growth) %*% (E*(E<0)/B))*resources
@@ -269,6 +308,9 @@ simulateConsumerResource <- function(n.species, n.resources,
     if (is.null(metacommunity.probability)) {
         metacommunity.probability <- rdirichlet(1, alpha = rep(1,n.species))
     }
+    if (is.null(resources.feeding)) {
+        resources.feeding <- resources
+    }
     
     #normalize metacommunity.probability
     metacommunity.probability <- metacommunity.probability/
@@ -298,6 +340,7 @@ simulateConsumerResource <- function(n.species, n.resources,
                                      sd=parameters$sigma.external)
                 external.rN <- parameters$stochastic*external.rN
             }
+            
             drift.rN <- rnorm(parameters$n.species, sd=parameters$sigma.drift)
             drift.rN <- parameters$stochastic*drift.rN
             
@@ -308,6 +351,12 @@ simulateConsumerResource <- function(n.species, n.resources,
             consumer <- consumer*(1+drift.rN)*(1+epoch.rN)*(1+external.rN)+ migration.rN
             resource <- y[grepl('resource', names(y))]
 
+
+            # perturb in resources
+            if (t %in% tFeed){
+                resource <- resource + resources.feeding
+            }
+            
             return(c(consumer, resource))})
     }
     
@@ -324,7 +373,8 @@ simulateConsumerResource <- function(n.species, n.resources,
                        sigma.migration = sigma.migration, 
                        resources.dilution = resources.dilution,
                        dilution.rate = dilution.rate,
-                       trophic.priority = trophic.priority)
+                       trophic.priority = trophic.priority, tFeed = tFeed, 
+                       resources.feeding = resources.feeding)
     
     out <- as.data.frame(ode(y = state.init, times = t.dyn$t.sys,
                              func = consumerResourceModel, parms = parameters, 

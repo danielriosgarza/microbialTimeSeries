@@ -17,10 +17,6 @@ knitr::opts_chunk$set(echo = TRUE)
 
 number of species in community
 
-**`n.resources`** : `integer`
-
-number of compounds that are either consumed or produced by the community members
-
 #### customize
 
 **`names.species`** : `character vector`
@@ -29,19 +25,13 @@ names of species to use during the simulation. If not provided, species are name
 
 must have same length as `n.species`
 
-**`names.resources`** : `character vector`
+#### Matrix of interaction
 
-names of compounds to use during the simulation. If not provided, compounds are named as *res1, res2, ...*
+**`A`** : `numeric matrix`
 
-must have same length as `n.resources`
+matrix of interspecies interaction A matrix defining the positive and negative interactions between n.species. It is recommended to be generated using the function `randomA`.
 
-#### Matrix of biotic-abiotic conversion
-
-**`E`** : `numeric matrix`
-
-matrix of efficiency. A matrix defining the efficiency of resource-to-biomass conversion (positive values) and the relative conversion of metabolic by-products (negative values). It is recommended to be generated using the function `randomA`
-
-must have dimension as `(n.species, n.resources)`
+must have dimension as `(n.species, n.species)`
 
 #### initial state
 
@@ -51,25 +41,13 @@ initial abundances of species. If not provided, then a draw from uniform distrib
 
 must have same length as `n.species`
 
-**`resources`** : `numeric`
-
-initial concentrations of compounds to use during the simulation. If not provided, then a draw from uniform distribution from 1 to 100 is used as the initial concentration of resources.
-
-must have same length as `n.resources`
-
 #### growth of microorganisms
 
 **`growth.rates`** : `numeric`
 
-maximum growth rates of species. In this consumer-resource model, this variable is the $\mu$ in aforementioned equation. If not provided, then 1 is used for all species.
+growth rates of species. In this generalized Lotka-Volterra model, this variable is the $\mathbf{b}$ in aforementioned equation defining the change rate of abundance. If not provided, then a random draw from a uniform distribution from 0 to  1 will be used for each species.
 
 must have same length as `n.species`
-
-**`monod constant`** : `numeric matrix`
-
-matrix of monod constant. A matrix defining the $k_{i,j}$ in the Monod equation. The default value is a draw from a gamma distribution with 50 times of maximum initial concentration as alpha and 1 as beta.
-
-must have dimension as `(n.species, n.resources)`
 
 #### stochasticity
 
@@ -142,16 +120,6 @@ This value must be non-negative.
 **`norm`** : `boolean`
 
 whether the returned result should be normalized (return relative abundances for species in the community). By default is `FALSE` .
-
-#### trophic priority
-
-**`trophic priority`** : `matrix`
-
-a matrix defining the orders of resources to be consumed by each species. For each row(species), the resource corresponding to largest value in this row will be first consumed (if not run out), and other resources, even their corresponding value in the matrix of efficiency `E` is positive (means consuming), would not be consumed unless all resources with higher priority are run out. By default this feature is not enabled, and all resources with a positive E value for one species will be consumed simultaneously.
-
-If enabled, please be attention to avoid the situation that several species consumes less than their production in total. Otherwise this will lead to the explosion in the simulation.
-
-must have same dimension as matrix of efficiency `E` .
 
 #### time control
 
