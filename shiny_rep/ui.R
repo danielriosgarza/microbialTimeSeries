@@ -480,91 +480,80 @@ ui <- navbarPage(
                                     ),
                                     tags$div(
                                         class = "panel-body",
-                                        bs_button(
-                                            label = "Ex.1", 
-                                            button_type = "primary", 
-                                            id = "CRMEX1", 
+                                        actionButton(
+                                            inputId = "CRMEX1",
+                                            label = "Ex.1",
                                             style = "width:12%",
-                                            class = "btn-default action-button shiny-bound-input"
+                                            class = "btn-primary"
                                         ),
-                                        bs_button(
-                                            label = "Ex.2", 
-                                            button_type = "primary", 
-                                            id = "CRMEX2", 
+                                        actionButton(
+                                            inputId = "CRMEX2",
+                                            label = "Ex.2",
                                             style = "width:12%",
-                                            class = "btn-default action-button shiny-bound-input"
+                                            class = "btn-primary"
                                         ),
-                                        bs_button(
-                                            label = "Ex.3", 
-                                            button_type = "primary", 
-                                            id = "CRMEX3", 
+                                        actionButton(
+                                            inputId = "CRMEX3",
+                                            label = "Ex.3",
                                             style = "width:12%",
-                                            class = "btn-default action-button shiny-bound-input"
+                                            class = "btn-primary"
                                         ),
-                                        bs_button(
-                                            label = "Pre.4", 
-                                            button_type = "info", 
-                                            id = "CRMEX4pre", 
+                                        actionButton(
+                                            inputId = "CRMEX4pre",
+                                            label = "Pre.4",
                                             style = "width:7%",
-                                            class = "btn-default action-button shiny-bound-input"
+                                            class = "btn-info"
                                         ),
-                                        bs_button(
-                                            label = "Ex.4", 
-                                            button_type = "primary", 
-                                            id = "CRMEX4", 
+                                        actionButton(
+                                            inputId = "CRMEX4",
+                                            label = "Ex.4",
                                             style = "width:7%",
-                                            disabled = "disabled",
-                                            class = "btn-default action-button shiny-bound-input"
-                                        ) %>% bs_embed_tooltip(title = "Please run the Pre.4 First"),
-                                        bs_button(
-                                            label = "Pre.5", 
-                                            button_type = "info", 
-                                            id = "CRMEX5pre", 
+                                            class = "btn-primary",
+                                            disabled = "disabled"
+                                        ) %>% bs_embed_tooltip(title = "Please run the Pre.4 First") ,
+                                        actionButton(
+                                            inputId = "CRMEX5pre",
+                                            label = "Pre.5",
                                             style = "width:7%",
-                                            class = "btn-default action-button shiny-bound-input"
+                                            class = "btn-info"
                                         ),
-                                        bs_button(
-                                            label = "Ex.5", 
-                                            button_type = "primary", 
-                                            id = "CRMEX5", 
+                                        actionButton(
+                                            inputId = "CRMEX5",
+                                            label = "Ex.5",
                                             style = "width:7%",
-                                            disabled = "disabled",
-                                            class = "btn-default action-button shiny-bound-input"
-                                        ) %>% bs_embed_tooltip(title = "Please run the Pre.5 First"),
-                                        bs_button(
-                                            label = "Pre.6", 
-                                            button_type = "info", 
-                                            id = "CRMEX6pre", 
+                                            class = "btn-primary",
+                                            disabled = "disabled"
+                                        ) %>% bs_embed_tooltip(title = "Please run the Pre.5 First") ,
+                                        actionButton(
+                                            inputId = "CRMEX6pre",
+                                            label = "Pre.6",
                                             style = "width:7%",
-                                            class = "btn-default action-button shiny-bound-input"
+                                            class = "btn-info"
                                         ),
-                                        bs_button(
-                                            label = "Ex.6", 
-                                            button_type = "primary", 
-                                            id = "CRMEX6", 
+                                        actionButton(
+                                            inputId = "CRMEX6",
+                                            label = "Ex.6",
                                             style = "width:7%",
-                                            disabled = "disabled",
-                                            class = "btn-default action-button shiny-bound-input"
-                                        ) %>% bs_embed_tooltip(title = "Please run the Pre.6 First"),
-                                        bs_button(
-                                            label = "Pre.7", 
-                                            button_type = "info", 
-                                            id = "CRMEX7pre", 
+                                            class = "btn-primary",
+                                            disabled = "disabled"
+                                        ) %>% bs_embed_tooltip(title = "Please run the Pre.6 First") ,
+                                        actionButton(
+                                            inputId = "CRMEX7pre",
+                                            label = "Pre.7",
                                             style = "width:7%",
-                                            class = "btn-default action-button shiny-bound-input"
+                                            class = "btn-info"
                                         ),
-                                        bs_button(
-                                            label = "Ex.7", 
-                                            button_type = "primary", 
-                                            id = "CRMEX7", 
+                                        actionButton(
+                                            inputId = "CRMEX7",
+                                            label = "Ex.7",
                                             style = "width:7%",
-                                            disabled = "disabled",
-                                            class = "btn-default action-button shiny-bound-input"
-                                        ) %>% bs_embed_tooltip(title = "Please run the Pre.7 First"),
+                                            class = "btn-primary",
+                                            disabled = "disabled"
+                                        ) %>% bs_embed_tooltip(title = "Please run the Pre.7 First") ,
                                     ),
                                 ),
                             ),
-                            #### result plots ####
+                            #### Species Change ####
                             tags$br(),
                             fluidRow(
                                 style = "padding-left: 15px; padding-right: 15px;",
@@ -582,6 +571,7 @@ ui <- navbarPage(
                                         plotOutput("CRMSpecies"),
                                     ),
                                 ),
+                                #### Compounds Change ####
                                 tags$br(),
                                 tags$div(
                                     class = "panel panel-default",
@@ -598,6 +588,7 @@ ui <- navbarPage(
                                         
                                     ),
                                 ),
+                                #### Volume Change (conditional) ####
                                 conditionalPanel(
                                     condition = "input.inflowRateCRM != input.outflowRateCRM",
                                     tags$br(),
@@ -617,6 +608,7 @@ ui <- navbarPage(
                                     ),
                                 ),
                                 
+                                #### Matrix of Efficiency ####
                                 tags$br(),
                                 tags$div(
                                     class = "panel panel-default",
@@ -624,7 +616,7 @@ ui <- navbarPage(
                                         class = "panel-heading",
                                         tags$h3(
                                             class = "panel-title",
-                                            "Matrix Efficiency",
+                                            "Matrix of Efficiency",
                                             tags$div(
                                                 class = "pull-right",
                                                 shiny_iconlink() %>% 
@@ -926,33 +918,29 @@ ui <- navbarPage(
                                         class = "panel-body",
                                         strong('Please click on the "Run the GLV model" button afterwards'),
                                         tags$br(),
-                                        bs_button(
-                                            label = "Ex.1", 
-                                            button_type = "primary", 
-                                            id = "GLVEX1", 
+                                        actionButton(
+                                            inputId = "GLVEX1",
+                                            label = "Ex.1",
                                             style = "width:24%",
-                                            class = "btn-default action-button shiny-bound-input"
+                                            class = "btn-primary"
                                         ),
-                                        bs_button(
-                                            label = "Ex.2", 
-                                            button_type = "primary", 
-                                            id = "GLVEX2", 
+                                        actionButton(
+                                            inputId = "GLVEX2",
+                                            label = "Ex.2",
                                             style = "width:24%",
-                                            class = "btn-default action-button shiny-bound-input"
+                                            class = "btn-primary"
                                         ),
-                                        bs_button(
-                                            label = "Ex.3", 
-                                            button_type = "primary", 
-                                            id = "GLVEX3", 
+                                        actionButton(
+                                            inputId = "GLVEX3",
+                                            label = "Ex.3",
                                             style = "width:24%",
-                                            class = "btn-default action-button shiny-bound-input"
+                                            class = "btn-primary"
                                         ),
-                                        bs_button(
-                                            label = "Ex.4", 
-                                            button_type = "primary", 
-                                            id = "GLVEX4", 
+                                        actionButton(
+                                            inputId = "GLVEX4",
+                                            label = "Ex.4",
                                             style = "width:24%",
-                                            class = "btn-default action-button shiny-bound-input"
+                                            class = "btn-primary"
                                         ),
                                     ),
                                 ),
@@ -979,7 +967,7 @@ ui <- navbarPage(
                                     ),
                                 ),
                             ),
-                            #### result plots ####
+                            #### Species Change ####
                             tags$br(),
                             fluidRow(
                                 style = "padding-left: 15px; padding-right: 15px;",
@@ -1100,8 +1088,8 @@ ui <- navbarPage(
                                             "variance of measurement error", 
                                             value = 0, 
                                             min = 0, 
-                                            max = 1, 
-                                            step = 0.01) %>%
+                                            max = 100, 
+                                            step = 0.1) %>%
                                         shinyInput_label_embed(
                                             shiny_iconlink() %>% 
                                                 bs_embed_tooltip(
@@ -1174,7 +1162,7 @@ ui <- navbarPage(
                                                 class = "pull-right",
                                                 shiny_iconlink() %>% 
                                                     bs_embed_tooltip(
-                                                        title =  'Don\'t forget to click on the "Run the GLV model" button on the left', 
+                                                        title =  'Don\'t forget to click on the "Run the Hubbell model" button on the left', 
                                                         placement = "left", 
                                                         container = "body"
                                                     ),
@@ -1185,40 +1173,37 @@ ui <- navbarPage(
                                         class = "panel-body",
                                         strong('Please click on the "Run the Hubbell model" button afterwards'),
                                         tags$br(),
-                                        bs_button(
-                                            label = "Ex.1", 
-                                            button_type = "primary", 
-                                            id = "HUBEX1", 
+                                        actionButton(
+                                            inputId = "HUBEX1",
+                                            label = "Ex.1",
                                             style = "width:24%",
-                                            class = "btn-default action-button shiny-bound-input"
+                                            class = "btn-primary"
                                         ),
-                                        bs_button(
-                                            label = "Ex.2", 
-                                            button_type = "primary", 
-                                            id = "HUBEX2", 
+                                        actionButton(
+                                            inputId = "HUBEX2",
+                                            label = "Ex.2",
                                             style = "width:24%",
-                                            class = "btn-default action-button shiny-bound-input"
+                                            class = "btn-primary"
                                         ),
-                                        bs_button(
-                                            label = "Ex.3", 
-                                            button_type = "primary", 
-                                            id = "HUBEX3", 
+                                        actionButton(
+                                            inputId = "HUBEX3",
+                                            label = "Ex.3",
                                             style = "width:24%",
-                                            class = "btn-default action-button shiny-bound-input"
+                                            class = "btn-primary"
                                         ),
-                                        bs_button(
-                                            label = "Ex.4", 
-                                            button_type = "primary", 
-                                            id = "HUBEX4", 
+                                        actionButton(
+                                            inputId = "HUBEX4",
+                                            label = "Ex.4",
                                             style = "width:24%",
-                                            class = "btn-default action-button shiny-bound-input"
+                                            class = "btn-primary"
                                         ),
+                                        
                                     ),
                                 ),
                             ),
                             
                             
-                            #### result plots ####
+                            #### Species Change ####
                             tags$br(),
                             fluidRow(
                                 style = "padding-left: 15px; padding-right: 15px;",
@@ -1239,6 +1224,33 @@ ui <- navbarPage(
                             ),
                         )
                     )
+            )  %>%
+            bs_append(
+                ## Description ####
+                title = "Description",
+                content = 
+                    fluidRow(
+                        column(
+                            width = 12,
+                            # withMathJax(includeMarkdown("hub.Rmd")),
+                        ),
+                    )
+            ) %>% 
+            bs_append(
+                ## Inputs ####
+                title = "Inputs",
+                content = 
+                    fluidRow(
+                        column(
+                            width = 12,
+                            # withMathJax(includeMarkdown("hub_parms.Rmd")),
+                        ),
+                    )
+            ) %>%
+            bs_append(
+                ## References ####
+                title = "References",
+                content = "Panel of refs."
             )
     ),
     

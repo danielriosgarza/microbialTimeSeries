@@ -56,7 +56,7 @@ server <- function(input, output, session) {
         updateNumericInput(inputId = "tStoreCRM", max = (input$tEndCRM-input$tStartCRM)/input$tStepCRM)
     })
     
-    ## compounds stochiometry ####
+    ## compounds ####
     res.conc.crm <- reactive(input$resourcesConcentrationCRM)
     res.even.crm <- reactive(input$resourcesEvennessCRM)
     resources_dist.crm <- reactive(rdirichlet(1, rep(1, n.resources.crm())*res.even.crm())*res.conc.crm()*n.resources.crm())
@@ -70,7 +70,7 @@ server <- function(input, output, session) {
     })
     output$resourcesOutputCRM <- renderPrint(resources.crm())
     
-    ## dilution ####
+    ### dilution/influx and outflux ####
     inflow.rate.crm <- reactive(input$inflowRateCRM)
     outflow.rate.crm <- reactive(input$outflowRateCRM)
     volume.crm <- reactive(input$volumeCRM)
@@ -93,7 +93,7 @@ server <- function(input, output, session) {
     })
     maintenance.crm <- reactive(input$maintenanceCRM)
     
-    ## editable matrixECRM and matrixMonodCRM ####
+    ### editable matrixECRM and matrixMonodCRM ####
     RV.crm <- reactiveValues(matrixECRM = NULL, matrixMonodCRM = NULL)
     observe({
         roundECRM <- round(
@@ -203,7 +203,7 @@ server <- function(input, output, session) {
     metacommunity.probability.crm <- reactive(as.numeric(text2chars(input$metacommunityProbabilityCRM, len = n.species.crm(), expr = paste0("rdirichlet(1, alpha = rep(1,", n.species.crm(), "))"))))
     output$metacommunityProbabilityCRM <- renderPrint(metacommunity.probability.crm())
     
-    ## examples ####
+    ## examples CRM ####
     observeEvent(input$CRMEX1, {
         updateSliderInput(inputId = "nSpeciesCRM", value = 5)
         updateSliderInput(inputId = "nResourcesCRM", value = 5)
@@ -435,7 +435,7 @@ server <- function(input, output, session) {
     t.step.glv <- reactive(input$tStepGLV)
     t.store.glv <- reactive(input$tStoreGLV)
     
-    ## examples ####
+    ## examples GLV ####
     observeEvent(input$GLVEX1, {
         updateSliderInput(inputId = "nSpeciesGLV", value = 5)
     })
@@ -530,6 +530,28 @@ server <- function(input, output, session) {
     output$metacommunityProbabilityHUB <- renderPrint(metacommunity.probability.hub())
     
     norm.hub <- reactive(input$normHUB)
+    
+    ## examples HUB ####
+    observeEvent(input$HUBEX1, {
+        updateSliderInput(inputId = "nSpeciesHUB", value = 5)
+    })
+    observeEvent(input$HUBEX2, {
+        updateSliderInput(inputId = "nSpeciesHUB", value = 5)
+        updateSliderInput(inputId = "migrationPHUB", value = 0)
+    })
+    observeEvent(input$HUBEX3, {
+        updateSliderInput(inputId = "nSpeciesHUB", value = 5)
+        updateSliderInput(inputId = "migrationPHUB", value = 1)
+        updateTextInput(inputId = "tEndHUB", value = 20)
+        updateTextInput(inputId = "tStoreHUB", value = 200)
+    })
+    observeEvent(input$HUBEX4, {
+        updateSliderInput(inputId = "nSpeciesHUB", value = 5)
+        updateSliderInput(inputId = "migrationPHUB", value = 1)
+        updateTextInput(inputId = "tEndHUB", value = 20)
+        updateTextInput(inputId = "tStoreHUB", value = 200)
+        updateSliderInput(inputId = "errorVarianceHUB", value = 100)
+    })
     
     ## runHUB ####
     runHUB <- eventReactive(input$buttonSimulateHUB, {
