@@ -137,39 +137,10 @@ ui <- navbarPage(
                                             )
                                         ),
                                         verbatimTextOutput("resourcesOutputCRM"),
-                                        sliderInput(
-                                            "dilutionRateCRM", 
-                                            "dilution rate",
-                                            min = 0,
-                                            max = 1, 
-                                            value = 0,
-                                            step = 0.001) %>%
-                                        shinyInput_label_embed(
-                                            shiny_iconlink() %>% 
-                                            bs_embed_tooltip(
-                                                title =  "rate of nutrient exchange as in a Chemostat bioreactor. Flow rate / culture volume", 
-                                                placement = "right", 
-                                                container = "body"
-                                            )
-                                        ),
-                                        
-                                        conditionalPanel(
-                                            condition = "input.dilutionRateCRM > 0",
-                                            textInput("resourcesDilutionCRM", "resources concentration in dilution")  %>%
-                                            shinyInput_label_embed(
-                                                shiny_iconlink() %>% 
-                                                bs_embed_tooltip(
-                                                    title =  "concentrations of resources in continuous flow, by default equal to initial concentrations of compounds", 
-                                                    placement = "right", 
-                                                    container = "body"
-                                                )
-                                            ),
-                                            
-                                            verbatimTextOutput("resourcesDilutionCRMOutput"),
-                                        ),
                                         
                                         plotOutput("resourcesCRMPlot"),
                                         
+                                        tags$hr(),
                                         sliderInput(
                                             "meanConsumptionCRM", 
                                             "consumption weight", 
@@ -207,6 +178,70 @@ ui <- navbarPage(
                                                 container = "body"
                                             )
                                         ),
+                                        
+                                        sliderInput(
+                                            "inflowRateCRM", 
+                                            "inflow rate",
+                                            min = 0,
+                                            max = 10, 
+                                            value = 0,
+                                            step = 0.1) %>%
+                                            shinyInput_label_embed(
+                                                shiny_iconlink() %>% 
+                                                    bs_embed_tooltip(
+                                                        title =  "inflow rate of additional nutrients to the cultivator. volume per unit time", 
+                                                        placement = "right", 
+                                                        container = "body"
+                                                    )
+                                            ),
+                                        
+                                        conditionalPanel(
+                                            condition = "input.inflowRateCRM > 0",
+                                            textInput("resourcesDilutionCRM", "resources concentration in dilution")  %>%
+                                                shinyInput_label_embed(
+                                                    shiny_iconlink() %>% 
+                                                        bs_embed_tooltip(
+                                                            title =  "concentrations of resources in continuous flow, by default equal to initial concentrations of compounds", 
+                                                            placement = "right", 
+                                                            container = "body"
+                                                        )
+                                                ),
+                                            verbatimTextOutput("resourcesDilutionCRMOutput"),
+                                            
+                                            sliderInput(
+                                                "outflowRateCRM", 
+                                                "outflow rate",
+                                                min = 0,
+                                                max = 10, 
+                                                value = 0,
+                                                step = 0.1) %>%
+                                                shinyInput_label_embed(
+                                                    shiny_iconlink() %>% 
+                                                        bs_embed_tooltip(
+                                                            title =  "outflow rate from the bioreactor. volume per unit time", 
+                                                            placement = "right", 
+                                                            container = "body"
+                                                        )
+                                                ),
+                                            
+                                            sliderInput(
+                                                "volumeCRM",
+                                                "volume of the reactor",
+                                                min = 100,
+                                                max = 10000,
+                                                value = 1000,
+                                                step = 100)  %>%
+                                                shinyInput_label_embed(
+                                                    shiny_iconlink() %>% 
+                                                        bs_embed_tooltip(
+                                                            title =  "volume of the reactor", 
+                                                            placement = "right", 
+                                                            container = "body"
+                                                        )
+                                                ),
+                                        ),
+                                        
+                                        tags$hr(),
                                         tags$div(
                                             tags$label("Compounds Stochiometry"),
                                             tags$div(
@@ -563,6 +598,25 @@ ui <- navbarPage(
                                         
                                     ),
                                 ),
+                                conditionalPanel(
+                                    condition = "input.inflowRateCRM != input.outflowRateCRM",
+                                    tags$br(),
+                                    tags$div(
+                                        class = "panel panel-default",
+                                        tags$div(
+                                            class = "panel-heading",
+                                            tags$h3(
+                                                class = "panel-title",
+                                                "Volume Change",
+                                            ),
+                                        ),
+                                        tags$div(
+                                            class = "panel-body",
+                                            plotOutput("CRMVolume"),
+                                        ),
+                                    ),
+                                ),
+                                
                                 tags$br(),
                                 tags$div(
                                     class = "panel panel-default",

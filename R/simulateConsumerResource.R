@@ -101,7 +101,7 @@
 #'     names.resources = paste0("res",LETTERS[1:6]), E = ExampleE, 
 #'     x0 = rep(0.001, 4), resources = ExampleResources, 
 #'     growth.rates <- runif(4),
-#'     error.variance = 1,
+#'     error.variance = 0.01,
 #'     t.end = 5000, t.step = 1)
 #' makePlot(ExampleConsumerResource$matrix)
 #' makePlot(ExampleConsumerResource$resources)
@@ -147,31 +147,6 @@
 #' makePlot(ExampleConsumerResource$matrix)
 #' makePlotRes(ExampleConsumerResource$resources)
 #' 
-#' # examples with resource feeding
-#' n.species <- 4
-#' n.resources <- 6
-#' resources.feeding <- c(10, 20, 30, 40, 50, 60)
-#' ExampleConsumerResource <- simulateConsumerResource(n.species = n.species, 
-#'                                                     n.resources = n.resources, 
-#'                                                     t.feed = c(100, 400, 600, 700),
-#'                                                     resources.feeding = resources.feeding)
-#' makePlot(ExampleConsumerResource$matrix)
-#' makePlotRes(ExampleConsumerResource$resources)
-#' ExampleConsumerResource <- simulateConsumerResource(n.species = n.species, 
-#'                                                     n.resources = n.resources, 
-#'                                                     t.feed = 400,
-#'                                                     t.feed.interval = 120,
-#'                                                     resources.feeding = resources.feeding)
-#' makePlot(ExampleConsumerResource$matrix)
-#' makePlotRes(ExampleConsumerResource$resources)
-#' ExampleConsumerResource <- simulateConsumerResource(n.species = n.species, 
-#'                                                     n.resources = n.resources, 
-#'                                                     t.feed = c(300, 700),
-#'                                                     t.feed.initial.intervals = c(10, 20, 40, 80),
-#'                                                     resources.feeding = resources.feeding)
-#' makePlot(ExampleConsumerResource$matrix)
-#' makePlotRes(ExampleConsumerResource$resources)
-#' 
 #' @docType methods
 #' @aliases simulateConsumerResource-numeric
 #' 
@@ -187,7 +162,6 @@ simulateConsumerResource <- function(n.species, n.resources,
     resources.dilution = NULL,
     growth.rates = NULL,
     monod.constant = NULL,
-    dilution.rate = 0,
     sigma.drift = 0.001,
     sigma.epoch = 0.1,
     sigma.external = 0.3,
@@ -202,10 +176,9 @@ simulateConsumerResource <- function(n.species, n.resources,
     norm = FALSE,
     t.end = 1000,
     trophic.priority = NULL,
-    t.feed = NULL,
-    t.feed.interval = NULL,
-    t.feed.initial.intervals = NULL,
-    resources.feeding = NULL,
+    inflow.rate = 0,
+    outflow.rate = 0,
+    volume = 1000,
     ...){
     
     t.dyn <- SimulationTimes(t.end = t.end,...)
@@ -217,14 +190,6 @@ simulateConsumerResource <- function(n.species, n.resources,
         t.end = t.end,
         ... = ...)
     
-    # calculate the time points influenced by the feedings
-    tFeed = feedTimes(
-        t.feed = t.feed, 
-        t.feed.interval = t.feed.interval,
-        t.feed.initial.intervals = t.feed.initial.intervals,
-        t.end = t.end,
-        ...)
-    
     # define the consumer-resource model
     
     consumerResourceModel <- function(t, state, params){
@@ -232,16 +197,19 @@ simulateConsumerResource <- function(n.species, n.resources,
             
             x0 <- pmax(0, state[startsWith(names(state), "consumer")])
             resources <- pmax(0, state[startsWith(names(state), "resource")])
+            volume <- pmax(0, state[startsWith(names(state), "volume")])
+            
             growth.rates <- params[['growth.rates']]
             E <- params[['E']]
             monod.constant <- params[['monod.constant']]
             
             resources.dilution <- params[['resources.dilution']]
-            dilution.rate <- params[['dilution.rate']]
-            trophic.priority <- params[['trophic.priority']]
+            inflow.rate <- params[['inflow.rate']]
+            outflow.rate <- params[['outflow.rate']]
+            volume <- params[['volume']]
+            dilution.rate <- inflow.rate/volume
             
-            tFeed <- params[['tFeed']]
-            resources.feeding <- params[['resources.feeding']]
+            trophic.priority <- params[['trophic.priority']]
             
             if(!is.null(trophic.priority)){
                 if (!identical(dim(E), dim(trophic.priority))){
@@ -270,11 +238,10 @@ simulateConsumerResource <- function(n.species, n.resources,
             
             production <- -t(E*(E<0)) %*% growth
             
-            #consumption <- (t(growth) %*% ((E>0)/B))*resources
-            #production <- -(t(growth) %*% (E*(E<0)/B))*resources
             dResources <- consumption + production - dilution.rate*(resources - resources.dilution)
             dConsumers <- growth.rates*growth - dilution.rate*x0
-            dxdt <- list(c(dConsumers, dResources))
+            dVolume <- inflow.rate - outflow.rate
+            dxdt <- list(c(dConsumers, dResources, dVolume))
             return(dxdt)
         })
     }
@@ -308,9 +275,7 @@ simulateConsumerResource <- function(n.species, n.resources,
     if (is.null(metacommunity.probability)) {
         metacommunity.probability <- rdirichlet(1, alpha = rep(1,n.species))
     }
-    if (is.null(resources.feeding)) {
-        resources.feeding <- resources
-    }
+
     
     #normalize metacommunity.probability
     metacommunity.probability <- metacommunity.probability/
@@ -344,26 +309,21 @@ simulateConsumerResource <- function(n.species, n.resources,
             drift.rN <- rnorm(parameters$n.species, sd=parameters$sigma.drift)
             drift.rN <- parameters$stochastic*drift.rN
             
-            
             #perturbation is applied to the current population
             consumer <- pmax(y[grepl('consumer', names(y))], 0)
             
             consumer <- consumer*(1+drift.rN)*(1+epoch.rN)*(1+external.rN)+ migration.rN
             resource <- y[grepl('resource', names(y))]
-
-
-            # perturb in resources
-            if (t %in% tFeed){
-                resource <- resource + resources.feeding
-            }
             
-            return(c(consumer, resource))})
+            volume <- y[grepl('volume', names(y))]
+            return(c(consumer, resource, volume))})
     }
     
     
-    state.init <- c(x0, resources)
+    state.init <- c(x0, resources, volume)
     names(state.init) <- c(paste0("consumer", seq(length(x0))),
-                           paste0("resource", seq(length(resources))))
+                           paste0("resource", seq(length(resources))),
+                           "volume")
     
     parameters <- list(growth.rates = growth.rates, E = E, monod.constant = monod.constant,  
                        n.species = n.species, sigma.drift = sigma.drift, stochastic = stochastic,
@@ -372,9 +332,11 @@ simulateConsumerResource <- function(n.species, n.resources,
                        migration.p = migration.p, metacommunity.probability = metacommunity.probability,
                        sigma.migration = sigma.migration, 
                        resources.dilution = resources.dilution,
-                       dilution.rate = dilution.rate,
-                       trophic.priority = trophic.priority, tFeed = tFeed, 
-                       resources.feeding = resources.feeding)
+                       trophic.priority = trophic.priority, 
+                       inflow.rate = inflow.rate,
+                       outflow.rate = outflow.rate,
+                       volume = volume
+                       )
     
     out <- as.data.frame(ode(y = state.init, times = t.dyn$t.sys,
                              func = consumerResourceModel, parms = parameters, 
@@ -383,12 +345,16 @@ simulateConsumerResource <- function(n.species, n.resources,
     
     species.index <- grepl('consumer', names(out))
     resource.index <- grepl('resource', names(out))
+    volume.index <- grepl('volume', names(out))
     
     out.species.matrix <- as.matrix(out[,species.index])
     out.species.matrix <- as.matrix(out.species.matrix[t.dyn$t.index,])
     
     out.resource.matrix <- as.matrix(out[,resource.index])
     out.resource.matrix <- as.matrix(out.resource.matrix[t.dyn$t.index,])
+    
+    out.volume.matrix <- as.matrix(out[,volume.index])
+    out.volume.matrix <- as.matrix(out.volume.matrix[t.dyn$t.index,])
     
     if(error.variance > 0){
         measurement.error <- rgamma(length(out.species.matrix), 1/error.variance, 1/error.variance)
@@ -402,14 +368,21 @@ simulateConsumerResource <- function(n.species, n.resources,
     
     colnames(out.species.matrix) <- names.species
     colnames(out.resource.matrix) <- names.resources
+    colnames(out.volume.matrix) <- c("volume")
     
-    out.species.matrix <- cbind(out.species.matrix, 
+    out.species.matrix <- cbind(
+        out.species.matrix, 
         time = t.dyn$t.sys[t.dyn$t.index])
-    out.resource.matrix <- cbind(out.resource.matrix, 
+    out.resource.matrix <- cbind(
+        out.resource.matrix, 
+        time = t.dyn$t.sys[t.dyn$t.index])
+    out.volume.matrix <- cbind(
+        out.volume.matrix,
         time = t.dyn$t.sys[t.dyn$t.index])
     
     out.list <- list(matrix = out.species.matrix, 
         resources = out.resource.matrix,
+        volume = out.volume.matrix,
         E.Mat = E,
         monod.constant = monod.constant,
         error.variance = error.variance)

@@ -71,6 +71,9 @@ server <- function(input, output, session) {
     output$resourcesOutputCRM <- renderPrint(resources.crm())
     
     ## dilution ####
+    inflow.rate.crm <- reactive(input$inflowRateCRM)
+    outflow.rate.crm <- reactive(input$outflowRateCRM)
+    volume.crm <- reactive(input$volumeCRM)
     res.dilu.crm <- reactive(as.numeric(as.vector(text2char(input$resourcesDilutionCRM))))
     resources.dilution.crm <- reactive({
         if (length(res.dilu.crm()) < n.resources.crm()){
@@ -80,8 +83,7 @@ server <- function(input, output, session) {
         }
     })
     output$resourcesDilutionCRMOutput <- renderPrint(resources.dilution.crm())
-    dilution.rate.crm <- reactive(input$dilutionRateCRM)
-    
+
     output$resourcesCRMPlot <- renderPlot(makePiePlot(resources.crm(), label = 'concentration', title='compounds'))
     mean.consumption.crm <- reactive(input$meanConsumptionCRM)
     mean.production.crm <- reactive(input$meanProductionCRM)
@@ -304,9 +306,11 @@ server <- function(input, output, session) {
             x0 = x0.crm(), 
             resources = resources.crm(), 
             resources.dilution = resources.dilution.crm(),
+            inflow.rate = inflow.rate.crm(),
+            outflow.rate = outflow.rate.crm(),
+            volume = volume.crm(),
             growth.rates = growth.rates.crm(), 
             monod.constant = RV.crm$matrixMonodCRM, 
-            dilution.rate = dilution.rate.crm(),
             sigma.drift = sigma.drift.crm(),
             sigma.epoch = sigma.epoch.crm(),
             sigma.external = sigma.external.crm(),
@@ -318,9 +322,9 @@ server <- function(input, output, session) {
             migration.p = migration.p.crm(),
             metacommunity.probability = metacommunity.probability.crm(),
             error.variance = error.variance.crm(), 
-            norm = norm.crm(), 
-            t.end = t.end.crm(),
+            norm = norm.crm(),
             t.start = t.start.crm(),
+            t.end = t.end.crm(),
             t.step = t.step.crm(),
             t.store = t.store.crm()
         )
@@ -328,6 +332,7 @@ server <- function(input, output, session) {
     
     output$CRMSpecies <- renderPlot(makePlot(runCRM()$matrix, "abundance of species by time"), res = 96)
     output$CRMResources <- renderPlot(makePlotRes(runCRM()$resources, "quantity of compounds by time"),  res = 96)
+    output$CRMVolume <- renderPlot(makePlot(runCRM()$volume, "volume changes of the reactor by time"), res = 96)
     
     # model2 simulate generalized Lotka-Volterra Model ####
     ## interspecies interactions ####
