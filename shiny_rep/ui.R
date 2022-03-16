@@ -709,11 +709,11 @@ ui <- navbarPage(
                                             tags$hr(),
                                             numericInput("tStartGLV", "start time of the simulation", value = 0, min = 0, max = 10000, step = 100),
                                         ),
-                                        numericInput("tEndGLV", "final time of the simulation", value = 1000, min = 100, max = 10000, step = 100),
+                                        numericInput("tEndGLV", "final time of the simulation", value = 100, min = 100, max = 10000, step = 100),
                                         conditionalPanel(
                                             condition = "input.advancedRandomA",
                                             numericInput("tStepGLV", "time step of the simulation", value = 0.1, min = 0.01, max = 10, step = 0.01),
-                                            numericInput("tStoreGLV", "stored time points of the simulation", value = 1000, min = 100, max = 10000, step = 100),
+                                            numericInput("tStoreGLV", "stored time points of the simulation", value = 200, min = 100, max = 10000, step = 100),
                                         ),
                                     ),
                                     ### Growth rates ####
@@ -977,10 +977,215 @@ ui <- navbarPage(
     ),
     # tab3 Hubbell Model ####
     tabPanel(
-        title = "Hubbell Model (with death rates)",
-        titlePanel("Hubbell Model (with death rates)"),
+        title = "Hubbell Model (with growth rates)",
+        titlePanel("Hubbell Model (with growth rates)"),
         ## Hubbell Model ####
-        
+        bs_accordion(id = "HUBcontents") %>%
+            bs_append(
+                title = "Model",
+                content = 
+                    fluidRow(
+                        column(
+                            width = 5,
+                            wellPanel(
+                                tabsetPanel(
+                                    ### Hubbell initial states ####
+                                    tabPanel(
+                                        "Basic",
+                                        sliderInput(
+                                            "nSpeciesHUB", 
+                                            "number of species",
+                                            value = 5,
+                                            min = 2,
+                                            max = 50),
+                                        textInput(
+                                            "x0HUB", 
+                                            "initial species composition (counts of individuals)",
+                                            value = "",
+                                        ) %>%
+                                        shinyInput_label_embed(
+                                            shiny_iconlink() %>% 
+                                                bs_embed_tooltip(
+                                                    title =  "separated by comma or semicolon (and space), indicating the number of species, too. If not enough, 100 will be added.", 
+                                                    placement = "right", 
+                                                    container = "body"
+                                                )
+                                        ),
+                                        verbatimTextOutput("x0HUBOutput"),
+                                        switchInput(
+                                            "CustomHUB",
+                                            strong("custom names/growth rates/times in simulation"),
+                                            value = FALSE,
+                                            labelWidth = "100%"
+                                        ),
+                                        conditionalPanel(
+                                            condition = "input.CustomHUB",
+                                            tags$hr(),
+                                            textInput("namesSpeciesHUB", "names of species"),
+                                            tags$hr(),
+                                            textInput("growthRatesHUB", "growth rates of species"),
+                                            verbatimTextOutput("growthRatesHUBOutput"),
+                                            tags$hr(),
+                                            numericInput("tStartHUB", "start time of the simulation", value = 0, min = 0, max = 10000, step = 100),
+                                        ),
+                                        numericInput("tEndHUB", "final time of the simulation", value = 100, min = 100, max = 10000, step = 100),
+                                        conditionalPanel(
+                                            condition = "input.CustomHUB",
+                                            numericInput("tStepHUB", "time step of the simulation", value = 0.1, min = 0.01, max = 10, step = 0.01),
+                                            numericInput("tStoreHUB", "stored time points of the simulation", value = 1000, min = 100, max = 10000, step = 100),
+                                        ),
+                                        
+                                        
+                                    ),
+                                    
+                                    ### Perturbations ####
+                                    tabPanel(
+                                        "Perturbations",
+                                        sliderInput(
+                                            "errorVarianceHUB", 
+                                            "variance of measurement error", 
+                                            value = 0, 
+                                            min = 0, 
+                                            max = 1, 
+                                            step = 0.01) %>%
+                                        shinyInput_label_embed(
+                                            shiny_iconlink() %>% 
+                                                bs_embed_tooltip(
+                                                    title =  "The variance of measurement error. By default it equals to 0, indicating that the result won't contain any measurement error.", 
+                                                    placement = "right", 
+                                                    container = "body"
+                                                )
+                                        ),
+                                        
+                                        tags$hr(),
+                                        sliderInput("kEventsHUB", "number of events to simulate before updating the sampling distributions", value = 1, min = 1, max = 10),
+                                        
+                                        tags$hr(),
+                                        sliderInput("migrationPHUB", "probability/frequency of migration from metacommunity", value = 0.01, min = 0, max = 1),
+                                        conditionalPanel(
+                                            condition = "input.migrationPHUB >0",
+                                            sliderInput("sigmaMigrationHUB", "intensity of migration", value = 0.01, min = 0, max = 1, step = 0.001),
+                                        ),
+                                        textInput(
+                                            "metacommunityProbabilityHUB",
+                                            "metacommunity") %>%
+                                            shinyInput_label_embed(
+                                                shiny_iconlink() %>% 
+                                                    bs_embed_tooltip(
+                                                        title =  "Normalized probability distribution of the likelihood that species from the metacommunity can enter the community during the simulation.", 
+                                                        placement = "right", 
+                                                        container = "body"
+                                                    )
+                                            ),
+                                        verbatimTextOutput("metacommunityProbabilityHUB"),
+                                        tags$hr(),
+                                        switchInput(
+                                            "normHUB", 
+                                            strong("returns normalized abundances"), 
+                                            value = FALSE,
+                                            labelWidth = "100%"
+                                        ),
+                                    ),
+                                ),
+                                tags$hr(),
+                                tags$h4(
+                                    "Press the following button to run the model",
+                                    tags$div(
+                                        class = "pull-right",
+                                        shiny_iconlink() %>% 
+                                            bs_embed_tooltip(
+                                                title =  "Hubbell neutral model was not designed responsive to reduce the calculation", 
+                                                placement = "left", 
+                                                container = "body"
+                                            ),
+                                    ),
+                                ),
+                                actionButton("buttonSimulateHUB", "Run the Hubbell Model", class = "btn btn-primary", width = "100%"),
+                            )
+                        ),
+                        ### Display Panel ####
+                        column(
+                            width = 7,
+                            #### example buttons ####
+                            fluidRow(
+                                style = "padding-left: 15px; padding-right: 15px;",
+                                tags$div(
+                                    class = "panel panel-default",
+                                    tags$div(
+                                        class = "panel-heading",
+                                        tags$h3(
+                                            class = "panel-title",
+                                            "Examples",
+                                            tags$div(
+                                                class = "pull-right",
+                                                shiny_iconlink() %>% 
+                                                    bs_embed_tooltip(
+                                                        title =  'Don\'t forget to click on the "Run the GLV model" button on the left', 
+                                                        placement = "left", 
+                                                        container = "body"
+                                                    ),
+                                            ),
+                                        ),
+                                    ),
+                                    tags$div(
+                                        class = "panel-body",
+                                        strong('Please click on the "Run the Hubbell model" button afterwards'),
+                                        tags$br(),
+                                        bs_button(
+                                            label = "Ex.1", 
+                                            button_type = "primary", 
+                                            id = "HUBEX1", 
+                                            style = "width:24%",
+                                            class = "btn-default action-button shiny-bound-input"
+                                        ),
+                                        bs_button(
+                                            label = "Ex.2", 
+                                            button_type = "primary", 
+                                            id = "HUBEX2", 
+                                            style = "width:24%",
+                                            class = "btn-default action-button shiny-bound-input"
+                                        ),
+                                        bs_button(
+                                            label = "Ex.3", 
+                                            button_type = "primary", 
+                                            id = "HUBEX3", 
+                                            style = "width:24%",
+                                            class = "btn-default action-button shiny-bound-input"
+                                        ),
+                                        bs_button(
+                                            label = "Ex.4", 
+                                            button_type = "primary", 
+                                            id = "HUBEX4", 
+                                            style = "width:24%",
+                                            class = "btn-default action-button shiny-bound-input"
+                                        ),
+                                    ),
+                                ),
+                            ),
+                            
+                            
+                            #### result plots ####
+                            tags$br(),
+                            fluidRow(
+                                style = "padding-left: 15px; padding-right: 15px;",
+                                tags$div(
+                                    class = "panel panel-default",
+                                    tags$div(
+                                        class = "panel-heading",
+                                        tags$h3(
+                                            class = "panel-title",
+                                            "Species Change",
+                                        ),
+                                    ),
+                                    tags$div(
+                                        class = "panel-body",
+                                        plotOutput("HUBSpecies"),
+                                    ),
+                                ),
+                            ),
+                        )
+                    )
+            )
     ),
     
     # tab4 Logistic Model (with stochasticity) ####

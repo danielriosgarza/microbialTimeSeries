@@ -425,7 +425,10 @@ server <- function(input, output, session) {
     
     error.variance.glv <- reactive(input$errorVarianceGLV)
     norm.glv <- reactive(input$normGLV)
+    t.start.glv <- reactive(input$tStartGLV)
     t.end.glv <- reactive(input$tEndGLV)
+    t.step.glv <- reactive(input$tStepGLV)
+    t.store.glv <- reactive(input$tStoreGLV)
     
     ## examples ####
     observeEvent(input$GLVEX1, {
@@ -482,10 +485,64 @@ server <- function(input, output, session) {
             metacommunity.probability = metacommunity.probability.glv(),
             error.variance = error.variance.glv(),
             norm = norm.glv(), 
-            t.end = t.end.glv()
+            t.start = t.start.glv(),
+            t.end = t.end.glv(),
+            t.step = t.step.glv(),
+            t.store = t.store.glv()
         )
     })
-    
     output$GLVSpecies <- renderPlot(makePlot(runGLV()$matrix))
+    
+    # model3 simulate Hubbell neutral model with growth rates ####
+    ## basic ####
+    n.species.hub <- reactive(input$nSpeciesHUB)
+    x0.hub <- reactive(as.numeric(text2chars(input$x0HUB, len = n.species.hub(), expr = paste0("rep(100, ", n.species.hub() ,")"))))
+    output$x0HUBOutput <- renderPrint(x0.hub())
+    names.species.hub <- reactive(text2chars(input$namesSpeciesHUB, len = n.species.hub(), prefix = "sp"))
+    growth.rates.hub <- reactive(as.numeric(text2chars(input$growthRatesHUB, len = n.species.hub(), expr = paste0('rep(1, ',n.species.hub(), ')'))))
+    output$growthRatesHUBOutput <- renderPrint(growth.rates.hub())
+    
+    t.start.hub <- reactive(input$tStartHUB)
+    t.end.hub <- reactive(input$tEndHUB)
+    observeEvent(input$tStartHUB | input$tEndHUB, {
+        updateNumericInput(inputId = "tStartHUB", max = input$tEndHUB)
+        updateNumericInput(inputId = "tEndHUB", min = input$tStartHUB)
+    })
+    
+    t.step.hub <- reactive(input$tStepHUB)
+    t.store.hub <- reactive(input$tStoreHUB)
+    observeEvent(input$tStartHUB | input$tEndHUB | input$tStepHUB | input$tStoreHUB, {
+        updateNumericInput(inputId = "tStepHUB", max = (input$tEndHUB-input$tStartHUB)/input$tStoreHUB)
+        updateNumericInput(inputId = "tStoreHUB", max = (input$tEndHUB-input$tStartHUB)/input$tStepHUB)
+    })
+    
+    ## perturbations ####
+    error.variance.hub <- reactive(input$errorVarianceHUB)
+    k.events.hub <- reactive(input$kEventsHUB)
+    migration.p.hub <- reactive(input$migrationPHUB)
+    sigma.migration.hub <- reactive(input$sigmaMigrationHUB)
+    metacommunity.probability.hub <- reactive(as.numeric(text2chars(input$metacommunityProbabilityHUB, len = n.species.hub(), expr = paste0("rdirichlet(1, alpha = rep(1,", n.species.hub(), "))"))))
+    output$metacommunityProbabilityHUB <- renderPrint(metacommunity.probability.hub())
+    
+    norm.hub <- reactive(input$normHUB)
+    
+    ## runHUB ####
+    runHUB <- eventReactive(input$buttonSimulateHUB, {
+        simulateHubbellRates(
+            x0 = x0.hub(),
+            names.species = names.species.hub(),
+            migration.p = migration.p.hub(),
+            metacommunity.probability = metacommunity.probability.hub(),
+            k.events = k.events.hub(),
+            growth.rates = growth.rates.hub(),
+            error.variance = error.variance.hub(),
+            norm = norm.hub(),
+            t.start = t.start.hub(),
+            t.end = t.end.hub(),
+            t.step = t.step.hub(),
+            t.store = t.store.hub()
+        )
+    })
+    output$HUBSpecies <- renderPlot(makePlot(runHUB()$matrix, "abundance of species by time"), res = 96)
     
 }

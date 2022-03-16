@@ -120,21 +120,29 @@ glvExample5 <- function(n.species, alpha) {
     # fluctuationFraction <- sum(maxValues / minValues > 1E4) / n.species
     fluctuationFraction <- sum(maxValues / finalValues > 1E4) / n.species
     print(paste("Fluctuation fraction =", fluctuationFraction))
+    return(list(A = ExampleA, GLV = ExampleGLV, survivalFraction, fluctuationFraction))
 }
 ```
 
 ```{r}
 # replicate the fig1a
-glvExample5(n.species = 4, alpha = 0.3)
-glvExample5(n.species = 20, alpha = 0.3)
-glvExample5(n.species = 50, alpha = 0.3)
+EX5.1 <- glvExample5(n.species = 4, alpha = 0.3)
+makePlot(EX5.1$GLV$matrix) + scale_y_log10(limits = c(1E-8, 1))
+EX5.2 <- glvExample5(n.species = 20, alpha = 0.3)
+makePlot(EX5.2$GLV$matrix) + scale_y_log10(limits = c(1E-8, 1))
+EX5.3 <- glvExample5(n.species = 50, alpha = 0.3)
+makePlot(EX5.3$GLV$matrix) + scale_y_log10(limits = c(1E-8, 1))
+
 ```
 
 ```{r}
 # replicate the fig1b
-glvExample5(n.species = 50, alpha = 0.08)
-glvExample5(n.species = 50, alpha = 0.16)
-glvExample5(n.species = 50, alpha = 0.64)
+EX5.4 <- glvExample5(n.species = 50, alpha = 0.08)
+makePlot(EX5.4$GLV$matrix) + scale_y_log10(limits = c(1E-8, 1))
+EX5.5 <- glvExample5(n.species = 50, alpha = 0.16)
+makePlot(EX5.5$GLV$matrix) + scale_y_log10(limits = c(1E-8, 1))
+EX5.6 <- glvExample5(n.species = 50, alpha = 0.64)
+makePlot(EX5.6$GLV$matrix) + scale_y_log10(limits = c(1E-8, 1))
 ```
 
 <https://www.frontiersin.org/articles/10.3389/fmicb.2019.00288/full>
