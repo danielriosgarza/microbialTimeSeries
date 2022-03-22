@@ -1,8 +1,10 @@
 #' Hubbell's neutral model simulation
 #'
 #' Neutral species abundances simulation according to the Hubbell model.
-#'
-#' @param x0 Numeric: initial species composition
+#' 
+#' @param n.species Integer: number of species
+#' @param x0 Numeric: initial species composition. If NULL, 
+#' `rep(100, n.species)` is used.
 #' @param names.species Character: names of species. If NULL,
 #' `paste0("sp", seq_len(n.species))` is used.
 #' (default: \code{names.species = NULL})
@@ -38,29 +40,29 @@
 #'
 #' @examples
 #' set.seed(42)
-#' ExampleHubbellRates <- simulateHubbellRates(rep(100, 5))
+#' ExampleHubbellRates <- simulateHubbellRates(n.species = 5)
 #' makePlot(ExampleHubbellRates$matrix)
 #' 
 #' # no migration, all stochastic birth and death
 #' set.seed(42)
-#' ExampleHubbellRates <- simulateHubbellRates(rep(100, 5), migration.p = 0)
+#' ExampleHubbellRates <- simulateHubbellRates(n.species = 5, migration.p = 0)
 #' makePlot(ExampleHubbellRates$matrix)
 #' 
 #' # all migration, no stochastic birth and death
 #' set.seed(42)
-#' ExampleHubbellRates <- simulateHubbellRates(rep(100, 5), migration.p = 1, 
+#' ExampleHubbellRates <- simulateHubbellRates(n.species = 5, migration.p = 1, 
 #'      t.end = 20, t.store = 200)
 #' makePlot(ExampleHubbellRates$matrix)
 #' 
 #' # all migration, no stochastic birth and death, but with measurement errors
 #' set.seed(42)
-#' ExampleHubbellRates <- simulateHubbellRates(rep(100, 5), migration.p = 1, 
+#' ExampleHubbellRates <- simulateHubbellRates(n.species = 5, migration.p = 1, 
 #'      t.end = 20, t.store =200, error.variance = 100)
 #' makePlot(ExampleHubbellRates$matrix) 
 #' 
 #' # model with specified inputs
 #' set.seed(42)
-#' ExampleHubbellRates <- simulateHubbellRates(rep(100, 5), migration.p = 0.1,
+#' ExampleHubbellRates <- simulateHubbellRates(n.species = 5, migration.p = 0.1,
 #'     metacommunity.probability <- c(1,2,3,4,5), k.events = 5,
 #'     growth.rates <- c(1,2,3,4,5))
 #' makePlot(ExampleHubbellRates$matrix)
@@ -82,7 +84,8 @@
 #' vol. 26,7 (2011).
 #
 #' @export
-simulateHubbellRates <- function(x0, 
+simulateHubbellRates <- function(n.species = NULL,
+    x0 = NULL, 
     names.species = NULL,
     migration.p = 0.01, 
     metacommunity.probability = NULL,
@@ -93,13 +96,24 @@ simulateHubbellRates <- function(x0,
     t.end=1000,...){
     
     # set the default values
-    n.species <- length(x0)
+    if (is.null(n.species) & !is.null(x0)) {
+        n.species <- length(x0)
+    } else if (is.null(x0) & !is.null(n.species)) {
+        x0 <- rep(100, n.species)
+    } else if (is.null(x0) & is.null(n.species)){
+        stop("At least one of x0 and n.species shall be given.")
+    } else {
+        if (n.species != length(x0)) stop("n.species and length of x0 is not identical.")
+    }
+    
     if (is.null(names.species)) {
         names.species <- paste0("sp", seq_len(n.species))
     }
     
     if (is.null(metacommunity.probability)){
         metacommunity.probability <- rdirichlet(1, alpha = rep(1,n.species))
+        # according to the book of UNTB, this probability shall be equal for each individual, let along here for different species
+        # metacommunity.probability <- rep(1, n.species)
     }
     # normalize metacommunity.probability
     metacommunity.probability <- metacommunity.probability/
