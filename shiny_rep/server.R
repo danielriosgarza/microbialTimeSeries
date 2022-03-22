@@ -552,10 +552,18 @@ server <- function(input, output, session) {
         updateTextInput(inputId = "tStoreHUB", value = 200)
         updateSliderInput(inputId = "errorVarianceHUB", value = 100)
     })
+    observeEvent(input$HUBEX5, {
+        updateSliderInput(inputId = "nSpeciesHUB", value = 5)
+        updateSliderInput(inputId = "migrationPHUB", value = 0.1)
+        updateTextInput(inputId = "metacommunityProbabilityHUB", value = "1,2,3,4,5")
+        updateSliderInput(inputId = "kEventsHUB", value = 5)
+        updateTextInput(inputId = "growthRatesHUB", value = "1,2,3,4,5")
+    })
     
     ## runHUB ####
     runHUB <- eventReactive(input$buttonSimulateHUB, {
         simulateHubbellRates(
+            n.species = n.species.hub(),
             x0 = x0.hub(),
             names.species = names.species.hub(),
             migration.p = migration.p.hub(),

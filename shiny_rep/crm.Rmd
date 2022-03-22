@@ -11,7 +11,7 @@ knitr::opts_chunk$set(echo = TRUE)
 
 ## simulateConsumerResource
 
-Function to simulate MacArthur's consumer-resource model and its extensions for microbiomes. The model describe the dynamics of microbes and substrates in a community where the ecological interactions are explicitly encoded via the consumption and production of metabolites.
+Function to simulate MacArthur's consumer-resource model and its extensions for microbiomes. The model describes the dynamics of microbes and substrates in a community where the ecological interactions are explicitly encoded via the consumption and production of metabolites.
 
 ### **Model Description**
 

@@ -5,7 +5,7 @@ output: html_document
 
 ## SimulateGLV
 
-Function to simulate generalized Lotka-Volterra model and its extensions for microbiomes. The model describe the dynamics of different species in a community. In this model, all kinds of interspecies interactions are generalized to pairs of signs for both species (-/-, -/+, +/-, +/+), and the absolute values for both species indicate the strength of the interaction on the population.
+Function to simulate generalized Lotka-Volterra model and its extensions for microbiomes. The model describes the dynamics of different species in a community. In this model, all kinds of interspecies interactions are generalized to pairs of signs for both species (-/-, -/+, +/-, +/+), and the absolute values for both species indicate the strength of the interaction on the population.
 
 ### **Model Description**
 

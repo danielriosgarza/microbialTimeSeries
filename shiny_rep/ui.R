@@ -1176,25 +1176,31 @@ ui <- navbarPage(
                                         actionButton(
                                             inputId = "HUBEX1",
                                             label = "Ex.1",
-                                            style = "width:24%",
+                                            style = "width:19%",
                                             class = "btn-primary"
                                         ),
                                         actionButton(
                                             inputId = "HUBEX2",
                                             label = "Ex.2",
-                                            style = "width:24%",
+                                            style = "width:19%",
                                             class = "btn-primary"
                                         ),
                                         actionButton(
                                             inputId = "HUBEX3",
                                             label = "Ex.3",
-                                            style = "width:24%",
+                                            style = "width:19%",
                                             class = "btn-primary"
                                         ),
                                         actionButton(
                                             inputId = "HUBEX4",
                                             label = "Ex.4",
-                                            style = "width:24%",
+                                            style = "width:19%",
+                                            class = "btn-primary"
+                                        ),
+                                        actionButton(
+                                            inputId = "HUBEX5",
+                                            label = "Ex.5",
+                                            style = "width:19%",
                                             class = "btn-primary"
                                         ),
                                         
@@ -1232,7 +1238,7 @@ ui <- navbarPage(
                     fluidRow(
                         column(
                             width = 12,
-                            # withMathJax(includeMarkdown("hub.Rmd")),
+                            withMathJax(includeMarkdown("hub.Rmd")),
                         ),
                     )
             ) %>% 
@@ -1243,7 +1249,7 @@ ui <- navbarPage(
                     fluidRow(
                         column(
                             width = 12,
-                            # withMathJax(includeMarkdown("hub_parms.Rmd")),
+                            withMathJax(includeMarkdown("hub_parms.Rmd")),
                         ),
                     )
             ) %>%
