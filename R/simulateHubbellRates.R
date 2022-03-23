@@ -112,8 +112,6 @@ simulateHubbellRates <- function(n.species = NULL,
     
     if (is.null(metacommunity.probability)){
         metacommunity.probability <- rdirichlet(1, alpha = rep(1,n.species))
-        # according to the book of UNTB, this probability shall be equal for each individual, let along here for different species
-        # metacommunity.probability <- rep(1, n.species)
     }
     # normalize metacommunity.probability
     metacommunity.probability <- metacommunity.probability/
@@ -150,7 +148,7 @@ simulateHubbellRates <- function(n.species = NULL,
         
         #k deaths
         community <- community -
-            (rmultinom(n=1, size=tau_events, prob=composition.probabilities))
+            (rmultinom(n=1, size=tau_events, prob=community))
         
         n_births <- rbinom(n=1, size=tau_events, prob=event.probabilities[2])
         n_migration <- tau_events-n_births
