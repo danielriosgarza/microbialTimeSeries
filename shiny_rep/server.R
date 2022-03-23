@@ -525,7 +525,6 @@ server <- function(input, output, session) {
     error.variance.hub <- reactive(input$errorVarianceHUB)
     k.events.hub <- reactive(input$kEventsHUB)
     migration.p.hub <- reactive(input$migrationPHUB)
-    sigma.migration.hub <- reactive(input$sigmaMigrationHUB)
     metacommunity.probability.hub <- reactive(as.numeric(text2chars(input$metacommunityProbabilityHUB, len = n.species.hub(), expr = paste0("rdirichlet(1, alpha = rep(1,", n.species.hub(), "))"))))
     output$metacommunityProbabilityHUB <- renderPrint(metacommunity.probability.hub())
     
@@ -542,12 +541,14 @@ server <- function(input, output, session) {
     observeEvent(input$HUBEX3, {
         updateSliderInput(inputId = "nSpeciesHUB", value = 5)
         updateSliderInput(inputId = "migrationPHUB", value = 1)
+        updateTextInput(inputId = "metacommunityProbabilityHUB", value = "0.1, 0.15, 0.2, 0.25, 0.3")
         updateTextInput(inputId = "tEndHUB", value = 20)
         updateTextInput(inputId = "tStoreHUB", value = 200)
     })
     observeEvent(input$HUBEX4, {
         updateSliderInput(inputId = "nSpeciesHUB", value = 5)
         updateSliderInput(inputId = "migrationPHUB", value = 1)
+        updateTextInput(inputId = "metacommunityProbabilityHUB", value = "0.1, 0.15, 0.2, 0.25, 0.3")
         updateTextInput(inputId = "tEndHUB", value = 20)
         updateTextInput(inputId = "tStoreHUB", value = 200)
         updateSliderInput(inputId = "errorVarianceHUB", value = 100)
@@ -555,9 +556,11 @@ server <- function(input, output, session) {
     observeEvent(input$HUBEX5, {
         updateSliderInput(inputId = "nSpeciesHUB", value = 5)
         updateSliderInput(inputId = "migrationPHUB", value = 0.1)
-        updateTextInput(inputId = "metacommunityProbabilityHUB", value = "1,2,3,4,5")
+        updateTextInput(inputId = "metacommunityProbabilityHUB", value = "0.1, 0.15, 0.2, 0.25, 0.3")
+        updateTextInput(inputId = "tEndHUB", value = 20)
+        updateTextInput(inputId = "tStoreHUB", value = 1000)
         updateSliderInput(inputId = "kEventsHUB", value = 5)
-        updateTextInput(inputId = "growthRatesHUB", value = "1,2,3,4,5")
+        updateTextInput(inputId = "growthRatesHUB", value = "1.1, 1.05, 1, 0.95, 0.9")
     })
     
     ## runHUB ####
@@ -579,5 +582,11 @@ server <- function(input, output, session) {
         )
     })
     output$HUBSpecies <- renderPlot(makePlot(runHUB()$matrix, "abundance of species by time"), res = 96)
+    
+    # model4 simulate stochastic logistic model ####
+    ## basic ####
+    ## perturbations ####
+    ## examples LOG ####
+    ## runLOG ####
     
 }

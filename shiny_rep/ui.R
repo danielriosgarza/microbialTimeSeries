@@ -1056,7 +1056,7 @@ ui <- navbarPage(
                                         verbatimTextOutput("x0HUBOutput"),
                                         switchInput(
                                             "CustomHUB",
-                                            strong("custom names/growth rates/times in simulation"),
+                                            strong("custom names/times in simulation"),
                                             value = FALSE,
                                             labelWidth = "100%"
                                         ),
@@ -1064,9 +1064,6 @@ ui <- navbarPage(
                                             condition = "input.CustomHUB",
                                             tags$hr(),
                                             textInput("namesSpeciesHUB", "names of species"),
-                                            tags$hr(),
-                                            textInput("growthRatesHUB", "growth rates of species"),
-                                            verbatimTextOutput("growthRatesHUBOutput"),
                                             tags$hr(),
                                             numericInput("tStartHUB", "start time of the simulation", value = 0, min = 0, max = 10000, step = 100),
                                         ),
@@ -1106,9 +1103,7 @@ ui <- navbarPage(
                                         sliderInput("migrationPHUB", "probability/frequency of migration from metacommunity", value = 0.01, min = 0, max = 1),
                                         conditionalPanel(
                                             condition = "input.migrationPHUB >0",
-                                            sliderInput("sigmaMigrationHUB", "intensity of migration", value = 0.01, min = 0, max = 1, step = 0.001),
-                                        ),
-                                        textInput(
+                                            textInput(
                                             "metacommunityProbabilityHUB",
                                             "metacommunity") %>%
                                             shinyInput_label_embed(
@@ -1119,7 +1114,9 @@ ui <- navbarPage(
                                                         container = "body"
                                                     )
                                             ),
-                                        verbatimTextOutput("metacommunityProbabilityHUB"),
+                                            verbatimTextOutput("metacommunityProbabilityHUB"),
+                                        ),
+                                        
                                         tags$hr(),
                                         switchInput(
                                             "normHUB", 
@@ -1128,6 +1125,14 @@ ui <- navbarPage(
                                             labelWidth = "100%"
                                         ),
                                     ),
+                                    
+                                    ### Growth Rates ####
+                                    tabPanel(
+                                        "Growth Rates",
+                                        textInput("growthRatesHUB", "growth rates of species"),
+                                        verbatimTextOutput("growthRatesHUBOutput"),
+                                        tags$hr(),
+                                    )
                                 ),
                                 tags$hr(),
                                 tags$h4(
@@ -1256,7 +1261,11 @@ ui <- navbarPage(
             bs_append(
                 ## References ####
                 title = "References",
-                content = "Panel of refs."
+                content = 
+                    fluidRow(
+                        "Panel of refs.",
+                        "https://en.wikipedia.org/wiki/Gillespie_algorithm"
+                        )
             )
     ),
     
@@ -1265,5 +1274,56 @@ ui <- navbarPage(
         title = "Logistic Model (with stochasticity)",
         titlePanel("Logistic Model (with stochasticity)"),
         ## Logistic Model ####
+        bs_accordion(id = "LOGcontents") %>%
+            bs_append(
+                title = "Model",
+                content = 
+                    fluidRow(
+                        column(
+                            width = 5,
+                            wellPanel(
+                                tabsetPanel(
+                                    ### Basics ####
+                                    tabPanel(
+                                        "Basics",
+                                        sliderInput(
+                                            "nSpeciesLOG",
+                                            "number of species",
+                                            value = 2,
+                                            min = 2,
+                                            max = 50),
+                                    )
+                                )
+                            )
+                        )
+                    )
+            ) %>%
+            bs_append(
+                ## Description ####
+                title = "Description",
+                content = 
+                    fluidRow(
+                        column(
+                            width = 12,
+                            # withMathJax(includeMarkdown("log.Rmd")),
+                        ),
+                    )
+            ) %>% 
+            bs_append(
+                ## Inputs ####
+                title = "Inputs",
+                content = 
+                    fluidRow(
+                        column(
+                            width = 12,
+                            # withMathJax(includeMarkdown("log_parms.Rmd")),
+                        ),
+                    )
+            ) %>% 
+            bs_append(
+                ## References ####
+                title = "References",
+                content = "Panel of refs."
+            )
     )
 )

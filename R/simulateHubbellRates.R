@@ -50,21 +50,35 @@
 #' 
 #' # all migration, no stochastic birth and death
 #' set.seed(42)
-#' ExampleHubbellRates <- simulateHubbellRates(n.species = 5, migration.p = 1, 
-#'      t.end = 20, t.store = 200)
+#' ExampleHubbellRates <- simulateHubbellRates(
+#'     n.species = 5, 
+#'     migration.p = 1, 
+#'     metacommunity.probability = c(0.1, 0.15, 0.2, 0.25, 0.3), 
+#'     t.end = 20, 
+#'     t.store = 200)
 #' makePlot(ExampleHubbellRates$matrix)
 #' 
 #' # all migration, no stochastic birth and death, but with measurement errors
 #' set.seed(42)
-#' ExampleHubbellRates <- simulateHubbellRates(n.species = 5, migration.p = 1, 
-#'      t.end = 20, t.store =200, error.variance = 100)
+#' ExampleHubbellRates <- simulateHubbellRates(
+#'     n.species = 5, 
+#'     migration.p = 1, 
+#'     metacommunity.probability = c(0.1, 0.15, 0.2, 0.25, 0.3), 
+#'     t.end = 20, 
+#'     t.store = 200, 
+#'     error.variance = 100)
 #' makePlot(ExampleHubbellRates$matrix) 
 #' 
 #' # model with specified inputs
 #' set.seed(42)
-#' ExampleHubbellRates <- simulateHubbellRates(n.species = 5, migration.p = 0.1,
-#'     metacommunity.probability <- c(1,2,3,4,5), k.events = 5,
-#'     growth.rates <- c(1,2,3,4,5))
+#' ExampleHubbellRates <- simulateHubbellRates(
+#'     n.species = 5,
+#'     migration.p = 0.1,
+#'     metacommunity.probability = c(0.1, 0.15, 0.2, 0.25, 0.3), 
+#'     t.end = 200, 
+#'     t.store = 1000, 
+#'     k.events = 5,
+#'     growth.rates = c(1.1, 1.05, 1, 0.95, 0.9))
 #' makePlot(ExampleHubbellRates$matrix)
 #' 
 #' @return \code{simulateHubbellRates} returns a list of initial states, 
@@ -127,8 +141,8 @@ simulateHubbellRates <- function(n.species = NULL,
     birth.p <- 1 - migration.p
     community <- x0
     
-    propensities <- sum(community)*(c(migration.p, 1-migration.p))
-    event.probabilities <- propensities/(sum(propensities))
+    propensities <- sum(community)*(c(migration.p, birth.p))
+    event.probabilities <- c(migration.p, birth.p)
     
     out.matrix <- matrix(0, nrow=length(t.dyn$t.index), ncol = n.species)
     out.matrix[1,] = x0
@@ -150,7 +164,7 @@ simulateHubbellRates <- function(n.species = NULL,
         community <- community -
             (rmultinom(n=1, size=tau_events, prob=community))
         
-        n_births <- rbinom(n=1, size=tau_events, prob=event.probabilities[2])
+        n_births <- rbinom(n=1, size=tau_events, prob=birth.p)
         n_migration <- tau_events-n_births
         
         community <- community +
