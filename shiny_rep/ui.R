@@ -393,7 +393,7 @@ ui <- navbarPage(
                                             ),
                                         switchInput(
                                             "stochasticCRM", 
-                                            strong("use stochasitic"), 
+                                            strong("use stochasticity"), 
                                             value = TRUE,
                                             labelWidth = "100%"
                                         ),
@@ -451,16 +451,16 @@ ui <- navbarPage(
                                                     )
                                             ),
                                         verbatimTextOutput("metacommunityProbabilityCRM"),
-                                        tags$hr(),
-                                        switchInput(
-                                            "normCRM", 
-                                            strong("returns normalized abundances"), 
-                                            value = FALSE,
-                                            labelWidth = "100%"
-                                        ),
-                                        # actionButton("buttonSimulateCRM", "Run the model", class = "btn btn-primary")
                                     ),
                                 ),
+                                tags$hr(),
+                                switchInput(
+                                    "normCRM", 
+                                    strong("returns normalized abundances"), 
+                                    value = FALSE,
+                                    labelWidth = "100%"
+                                ),
+                                # actionButton("buttonSimulateCRM", "Run the consumer-resource model", class = "btn btn-primary", width = "100%")
                             )
                         ),
                         ### Display Panel ####
@@ -864,30 +864,31 @@ ui <- navbarPage(
                                                 )
                                         ),
                                         verbatimTextOutput("metacommunityProbabilityGLV"),
-                                        tags$hr(),
-                                        switchInput(
-                                            "normGLV", 
-                                            strong("returns normalized abundances"), 
-                                            value = FALSE,
-                                            labelWidth = "100%"
-                                        ),
-                                        
                                     ),
                                 ),
+                                
                                 tags$hr(),
-                                tags$h4(
-                                    "Press the following button to run the model",
-                                    tags$div(
-                                        class = "pull-right",
-                                        shiny_iconlink() %>% 
-                                            bs_embed_tooltip(
-                                                title =  "GLV model was not designed responsive to reduce the calculation", 
-                                                placement = "left", 
-                                                container = "body"
-                                            ),
-                                    ),
+                                switchInput(
+                                    "normGLV", 
+                                    strong("returns normalized abundances"), 
+                                    value = FALSE,
+                                    labelWidth = "100%"
                                 ),
-                                actionButton("buttonSimulateGLV", "Run the GLV Model", class = "btn btn-primary", width = "100%"),
+                                
+                                # tags$hr(),
+                                # tags$h4(
+                                #     "Press the following button to run the model",
+                                #     tags$div(
+                                #         class = "pull-right",
+                                #         shiny_iconlink() %>% 
+                                #             bs_embed_tooltip(
+                                #                 title =  "GLV model was not designed responsive to reduce the calculation", 
+                                #                 placement = "left", 
+                                #                 container = "body"
+                                #             ),
+                                #     ),
+                                # ),
+                                # actionButton("buttonSimulateGLV", "Run the GLV Model", class = "btn btn-primary", width = "100%"),
                             )
                         ),
                         ### Display Panel ####
@@ -903,21 +904,21 @@ ui <- navbarPage(
                                         tags$h3(
                                             class = "panel-title",
                                             "Examples",
-                                            tags$div(
-                                                class = "pull-right",
-                                                shiny_iconlink() %>% 
-                                                    bs_embed_tooltip(
-                                                        title =  'Don\'t forget to click on the "Run the GLV model" button on the left', 
-                                                        placement = "left", 
-                                                        container = "body"
-                                                    ),
-                                            ),
+                                            # tags$div(
+                                            #     class = "pull-right",
+                                            #     shiny_iconlink() %>% 
+                                            #         bs_embed_tooltip(
+                                            #             title =  'Don\'t forget to click on the "Run the GLV model" button on the left', 
+                                            #             placement = "left", 
+                                            #             container = "body"
+                                            #         ),
+                                            # ),
                                         ),
                                     ),
                                     tags$div(
                                         class = "panel-body",
-                                        strong('Please click on the "Run the GLV model" button afterwards'),
-                                        tags$br(),
+                                        # strong('Please click on the "Run the GLV model" button afterwards'),
+                                        # tags$br(),
                                         actionButton(
                                             inputId = "GLVEX1",
                                             label = "Ex.1",
@@ -1116,38 +1117,39 @@ ui <- navbarPage(
                                             ),
                                             verbatimTextOutput("metacommunityProbabilityHUB"),
                                         ),
-                                        
-                                        tags$hr(),
-                                        switchInput(
-                                            "normHUB", 
-                                            strong("returns normalized abundances"), 
-                                            value = FALSE,
-                                            labelWidth = "100%"
-                                        ),
                                     ),
-                                    
                                     ### Growth Rates ####
                                     tabPanel(
                                         "Growth Rates",
                                         textInput("growthRatesHUB", "growth rates of species"),
                                         verbatimTextOutput("growthRatesHUBOutput"),
                                         tags$hr(),
-                                    )
-                                ),
-                                tags$hr(),
-                                tags$h4(
-                                    "Press the following button to run the model",
-                                    tags$div(
-                                        class = "pull-right",
-                                        shiny_iconlink() %>% 
-                                            bs_embed_tooltip(
-                                                title =  "Hubbell neutral model was not designed responsive to reduce the calculation", 
-                                                placement = "left", 
-                                                container = "body"
-                                            ),
                                     ),
+                                    
                                 ),
-                                actionButton("buttonSimulateHUB", "Run the Hubbell Model", class = "btn btn-primary", width = "100%"),
+                                
+                                tags$hr(),
+                                switchInput(
+                                    "normHUB", 
+                                    strong("returns normalized abundances"), 
+                                    value = FALSE,
+                                    labelWidth = "100%"
+                                ),
+                                
+                                # tags$hr(),
+                                # tags$h4(
+                                #     "Press the following button to run the model",
+                                #     tags$div(
+                                #         class = "pull-right",
+                                #         shiny_iconlink() %>% 
+                                #             bs_embed_tooltip(
+                                #                 title =  "Hubbell neutral model was not designed responsive to reduce the calculation", 
+                                #                 placement = "left", 
+                                #                 container = "body"
+                                #             ),
+                                #     ),
+                                # ),
+                                # actionButton("buttonSimulateHUB", "Run the Hubbell Model", class = "btn btn-primary", width = "100%"),
                             )
                         ),
                         ### Display Panel ####
@@ -1163,21 +1165,21 @@ ui <- navbarPage(
                                         tags$h3(
                                             class = "panel-title",
                                             "Examples",
-                                            tags$div(
-                                                class = "pull-right",
-                                                shiny_iconlink() %>% 
-                                                    bs_embed_tooltip(
-                                                        title =  'Don\'t forget to click on the "Run the Hubbell model" button on the left', 
-                                                        placement = "left", 
-                                                        container = "body"
-                                                    ),
-                                            ),
+                                            # tags$div(
+                                            #     class = "pull-right",
+                                            #     shiny_iconlink() %>% 
+                                            #         bs_embed_tooltip(
+                                            #             title =  'Don\'t forget to click on the "Run the Hubbell model" button on the left', 
+                                            #             placement = "left", 
+                                            #             container = "body"
+                                            #         ),
+                                            # ),
                                         ),
                                     ),
                                     tags$div(
                                         class = "panel-body",
-                                        strong('Please click on the "Run the Hubbell model" button afterwards'),
-                                        tags$br(),
+                                        # strong('Please click on the "Run the Hubbell model" button afterwards'),
+                                        # tags$br(),
                                         actionButton(
                                             inputId = "HUBEX1",
                                             label = "Ex.1",
@@ -1292,9 +1294,231 @@ ui <- navbarPage(
                                             value = 2,
                                             min = 2,
                                             max = 50),
-                                    )
-                                )
+                                        tags$hr(),
+                                        switchInput(
+                                            "CustomLOG",
+                                            strong("custom names/times in simulation"),
+                                            value = FALSE,
+                                            labelWidth = "100%"
+                                        ),
+                                        conditionalPanel(
+                                            condition = "input.CustomLOG",
+                                            helpText("Custom names separate by ',' or ';' (and spaces) will replace default names."),
+                                            textInput("namesSpeciesLOG", "names of species"),
+                                        ),
+                                        conditionalPanel(
+                                            condition = "input.CustomLOG",
+                                            tags$hr(),
+                                            numericInput("tStartLOG", "start time of the simulation", value = 0, min = 0, max = 10000, step = 100),
+                                        ),
+                                        numericInput("tEndLOG", "final time of the simulation", value = 1000, min = 100, max = 10000, step = 100),
+                                        conditionalPanel(
+                                            condition = "input.CustomLOG",
+                                            numericInput("tStepLOG", "time step of the simulation", value = 0.1, min = 0.01, max = 10, step = 0.01),
+                                            numericInput("tStoreLOG", "stored time points of the simulation", value = 1000, min = 100, max = 10000, step = 100),
+                                        ),
+                                    ),
+                                    ### Growth rates ####
+                                    tabPanel(
+                                        "Growth and death rates",
+                                        textInput("x0LOG", "initial abundances of species"),
+                                        verbatimTextOutput("x0LOGOutput"),
+                                        textInput("growthRatesLOG", "growth rates of species"),
+                                        verbatimTextOutput("growthRatesLOGOutput"),
+                                        textInput("deathRatesLOG", "death rates of species"),
+                                        verbatimTextOutput("deathRatesLOGOutput"),
+                                        textInput("carryingCapacitiesLOG", "carrying capacity of species"),
+                                        verbatimTextOutput("carryingCapacitiesLOGOutput"),
+                                        
+                                    ),
+                                    ### Perturbations ####
+                                    tabPanel(
+                                        "Perturbations",
+                                        sliderInput(
+                                            "errorVarianceLOG", 
+                                            "variance of measurement error", 
+                                            value = 0, 
+                                            min = 0, 
+                                            max = 1000, 
+                                            step = 10) %>%
+                                            shinyInput_label_embed(
+                                                shiny_iconlink() %>% 
+                                                    bs_embed_tooltip(
+                                                        title =  "The variance of measurement error. By default it equals to 0, indicating that the result won't contain any measurement error.", 
+                                                        placement = "right", 
+                                                        container = "body"
+                                                    )
+                                            ),
+                                        
+                                        switchInput(
+                                            "stochasticLOG", 
+                                            strong("use stochasticity"), 
+                                            value = TRUE,
+                                            labelWidth = "100%"),
+                                        
+                                        conditionalPanel(
+                                            condition = "input.stochasticLOG",
+                                            sliderInput(
+                                                "sigmaDriftLOG", 
+                                                "strength of drift", 
+                                                value = 0.001,
+                                                min = 0, 
+                                                max = 1, 
+                                                step = 0.001
+                                            ) %>%
+                                            shinyInput_label_embed(
+                                                shiny_iconlink() %>% 
+                                                    bs_embed_tooltip(
+                                                        title =  "drift happens on each step of simulation", 
+                                                        placement = "right", 
+                                                        container = "body"
+                                                    )
+                                            ),
+                                            tags$hr(),
+                                            
+                                            sliderInput(
+                                                "epochPLOG", 
+                                                "probability of random periodic (epoch) changes", 
+                                                value = 0.001,
+                                                min = 0, 
+                                                max = 1, 
+                                                step = 0.001
+                                            ) %>%
+                                            shinyInput_label_embed(
+                                                shiny_iconlink() %>% 
+                                                    bs_embed_tooltip(
+                                                        title =  "microbial epoch perturbations happens by chance", 
+                                                        placement = "right", 
+                                                        container = "body"
+                                                    )
+                                            ),
+                                            conditionalPanel(
+                                                condition = "input.epochPLOG > 0",
+                                                sliderInput("sigmaEpochLOG", "strength of microbial epoch perturbation", value = 0.001, min = 0, max = 1, step = 0.001),
+                                            ),
+                                            tags$hr(),
+                                            sliderInput("sigmaExternalLOG", "strength of external perturbations", value = 0.3, min = 0, max = 1, step = 0.001),
+                                            conditionalPanel(
+                                                condition = "input.sigmaExternalLOG > 0",
+                                                textInput("tExternalEventsLOG", "timepoints of external events"),
+                                                verbatimTextOutput("tExternalEventsLOGOutput"),
+                                                textInput("tExternalDurationsLOG", "time durations of external events"),  
+                                                verbatimTextOutput("tExternalDurationsLOGOutput"),
+                                            ),
+                                            tags$hr()
+                                        ),
+                                        sliderInput("migrationPLOG", "probability/frequency of migration from metacommunity", value = 0.01, min = 0, max = 1, step = 0.01),
+                                        conditionalPanel(
+                                            condition = "input.migrationPLOG >0",
+                                            sliderInput("sigmaMigrationLOG", "intensity of migration", value = 0.01, min = 0, max = 1, step = 0.001),
+                                        ),
+                                        textInput(
+                                            "metacommunityProbabilityLOG", 
+                                            "metacommunity"
+                                        ) %>% 
+                                        shinyInput_label_embed(
+                                            shiny_iconlink() %>% 
+                                                bs_embed_tooltip(
+                                                    title =  "Normalized probability distribution of the likelihood that species from the metacommunity can enter the community during the simulation.", 
+                                                    placement = "right", 
+                                                    container = "body"
+                                                )
+                                        ),
+                                        verbatimTextOutput("metacommunityProbabilityLOG"),
+                                    ),
+                                ),
+                                
+                                tags$hr(),
+                                switchInput(
+                                    "normLOG", 
+                                    strong("returns normalized abundances"), 
+                                    value = FALSE,
+                                    labelWidth = "100%"
+                                ),
+                                
+                                # tags$hr(),
+                                # tags$h4(
+                                #     "Press the following button to run the model",
+                                #     tags$div(
+                                #         class = "pull-right",
+                                #         shiny_iconlink() %>% 
+                                #             bs_embed_tooltip(
+                                #                 title =  "Logistic model was not designed responsive to reduce the calculation", 
+                                #                 placement = "left", 
+                                #                 container = "body"
+                                #             ),
+                                #     ),
+                                # ),
+                                # actionButton("buttonSimulateLOG", "Run the Logistic Model", class = "btn btn-primary", width = "100%"),
                             )
+                        ),
+                        
+                        ### Display Panel ####
+                        column(
+                            width = 7,
+                            #### example buttons ####
+                            fluidRow(
+                                style = "padding-left: 15px; padding-right: 15px;",
+                                tags$div(
+                                    class = "panel panel-default",
+                                    tags$div(
+                                        class = "panel-heading",
+                                        tags$h3(
+                                            class = "panel-title",
+                                            "Examples",
+                                        ),
+                                    ),
+                                    tags$div(
+                                        class = "panel-body",
+                                        actionButton(
+                                            inputId = "LOGEX1",
+                                            label = "Ex.1",
+                                            style = "width:24%",
+                                            class = "btn-primary"
+                                        ),
+                                        actionButton(
+                                            inputId = "LOGEX2",
+                                            label = "Ex.2",
+                                            style = "width:24%",
+                                            class = "btn-primary"
+                                        ),
+                                        actionButton(
+                                            inputId = "LOGEX3",
+                                            label = "Ex.3",
+                                            style = "width:24%",
+                                            class = "btn-primary"
+                                        ),
+                                        actionButton(
+                                            inputId = "LOGEX4",
+                                            label = "Ex.4",
+                                            style = "width:24%",
+                                            class = "btn-primary",
+                                        ),
+                                    ),
+                                ),
+                            ),
+                            
+                            
+                            
+                            #### Species Change ####
+                            tags$br(),
+                            fluidRow(
+                                style = "padding-left: 15px; padding-right: 15px;",
+                                tags$div(
+                                    class = "panel panel-default",
+                                    tags$div(
+                                        class = "panel-heading",
+                                        tags$h3(
+                                            class = "panel-title",
+                                            "Species Change",
+                                        ),
+                                    ),
+                                    tags$div(
+                                        class = "panel-body",
+                                        plotOutput("LOGSpecies"),
+                                    ),
+                                ),
+                            ),
                         )
                     )
             ) %>%
@@ -1305,7 +1529,7 @@ ui <- navbarPage(
                     fluidRow(
                         column(
                             width = 12,
-                            # withMathJax(includeMarkdown("log.Rmd")),
+                            withMathJax(includeMarkdown("log.Rmd")),
                         ),
                     )
             ) %>% 
@@ -1316,7 +1540,7 @@ ui <- navbarPage(
                     fluidRow(
                         column(
                             width = 12,
-                            # withMathJax(includeMarkdown("log_parms.Rmd")),
+                            withMathJax(includeMarkdown("log_parms.Rmd")),
                         ),
                     )
             ) %>% 

@@ -188,7 +188,6 @@ server <- function(input, output, session) {
     })
     ## perturbation ####
     error.variance.crm <- reactive(input$errorVarianceCRM)
-    norm.crm <- reactive(input$normCRM)
     stochastic.crm <- reactive(input$stochasticCRM)
     sigma.drift.crm <- reactive(input$sigmaDriftCRM)
     sigma.epoch.crm <- reactive(input$sigmaEpochCRM)
@@ -202,6 +201,9 @@ server <- function(input, output, session) {
     migration.p.crm <- reactive(input$migrationPCRM)
     metacommunity.probability.crm <- reactive(as.numeric(text2chars(input$metacommunityProbabilityCRM, len = n.species.crm(), expr = paste0("rdirichlet(1, alpha = rep(1,", n.species.crm(), "))"))))
     output$metacommunityProbabilityCRM <- renderPrint(metacommunity.probability.crm())
+    
+    
+    norm.crm <- reactive(input$normCRM)
     
     ## examples CRM ####
     observeEvent(input$CRMEX1, {
@@ -296,7 +298,8 @@ server <- function(input, output, session) {
     })
     
     ## runCRM ####
-    runCRM <- reactive(
+    runCRM <- reactive({
+    # runCRM <- eventReactive(input$buttonSimulateCRM, {
         simulateConsumerResource(
             n.species = n.species.crm(),
             n.resources = n.resources.crm(),
@@ -327,7 +330,7 @@ server <- function(input, output, session) {
             t.end = t.end.crm(),
             t.step = t.step.crm(),
             t.store = t.store.crm()
-        )
+        )}
     )
     
     output$CRMSpecies <- renderPlot(makePlot(runCRM()$matrix, "abundance of species by time"), res = 96)
@@ -429,11 +432,12 @@ server <- function(input, output, session) {
     output$metacommunityProbabilityGLV <- renderPrint(metacommunity.probability.glv())
     
     error.variance.glv <- reactive(input$errorVarianceGLV)
-    norm.glv <- reactive(input$normGLV)
     t.start.glv <- reactive(input$tStartGLV)
     t.end.glv <- reactive(input$tEndGLV)
     t.step.glv <- reactive(input$tStepGLV)
     t.store.glv <- reactive(input$tStoreGLV)
+    
+    norm.glv <- reactive(input$normGLV)
     
     ## examples GLV ####
     observeEvent(input$GLVEX1, {
@@ -470,8 +474,8 @@ server <- function(input, output, session) {
     ## runGLV ####
     
     # use button or not?
-    runGLV <- eventReactive(input$buttonSimulateGLV, {
-    # runGLV <- reactive({
+    runGLV <- reactive({
+    # runGLV <- eventReactive(input$buttonSimulateGLV, {
         simulateGLV(
             n.species = n.species.glv(),
             names.species = names.species.glv(), 
@@ -564,7 +568,8 @@ server <- function(input, output, session) {
     })
     
     ## runHUB ####
-    runHUB <- eventReactive(input$buttonSimulateHUB, {
+    runHUB <- reactive({
+    # runHUB <- eventReactive(input$buttonSimulateHUB, {
         simulateHubbellRates(
             n.species = n.species.hub(),
             x0 = x0.hub(),
@@ -585,8 +590,113 @@ server <- function(input, output, session) {
     
     # model4 simulate stochastic logistic model ####
     ## basic ####
-    ## perturbations ####
-    ## examples LOG ####
-    ## runLOG ####
+    n.species.log <- reactive(input$nSpeciesLOG)
+    names.species.log <- reactive(text2chars(input$namesSpeciesLOG, len = n.species.log(), prefix = "sp"))
+    t.start.log <- reactive(input$tStartLOG)
+    t.end.log <- reactive(input$tEndLOG)
+    observeEvent(input$tStartLOG | input$tEndLOG, {
+        updateNumericInput(inputId = "tStartLOG", max = input$tEndLOG)
+        updateNumericInput(inputId = "tEndLOG", min = input$tStartLOG)
+    })
     
+    t.step.log <- reactive(input$tStepLOG)
+    t.store.log <- reactive(input$tStoreLOG)
+    observeEvent(input$tStartLOG | input$tEndLOG | input$tStepLOG | input$tStoreLOG, {
+        updateNumericInput(inputId = "tStepLOG", max = (input$tEndLOG-input$tStartLOG)/input$tStoreLOG)
+        updateNumericInput(inputId = "tStoreLOG", max = (input$tEndLOG-input$tStartLOG)/input$tStepLOG)
+    })
+    
+    ## growth and death rates ####
+    x0.log <- reactive(as.numeric(text2chars(input$x0LOG, len = n.species.log(), expr = paste0("rep(100, ", n.species.log() ,")"))))
+    output$x0LOGOutput <- renderPrint(x0.log())
+    growth.rates.log <- reactive(as.numeric(text2chars(input$growthRatesLOG, len = n.species.log(), expr = paste0("runif(n = ", n.species.log() ,", min = 0.1, max = 0.2)"))))
+    output$growthRatesLOGOutput <- renderPrint(growth.rates.log())
+    death.rates.log <- reactive(as.numeric(text2chars(input$deathRatesLOG, len = n.species.log(), expr = paste0("runif(n = ", n.species.log() ,", min = 0.0005, max = 0.0025)"))))
+    output$deathRatesLOGOutput <- renderPrint(death.rates.log())
+    carrying.capacities.log <- reactive(as.numeric(text2chars(input$carryingCapacitiesLOG, len = n.species.log(), expr = paste0("runif(n = ", n.species.log() ,", min = 1000, max = 2000)"))))
+    output$carryingCapacitiesLOGOutput <- renderPrint(carrying.capacities.log())
+    
+    ## perturbations ####
+    error.variance.log <- reactive(input$errorVarianceLOG)
+    stochastic.log <- reactive(input$stochasticLOG)
+    sigma.drift.log <- reactive(input$sigmaDriftLOG)
+    epoch.p.log <- reactive(input$epochPLOG)
+    sigma.epoch.log <- reactive(input$sigmaEpochLOG)
+    sigma.external.log <- reactive(input$sigmaExternalLOG)
+    t.external_events.log <- reactive(as.numeric(text2char(input$tExternalEventsLOG)))
+    output$tExternalEventsLOGOutput <- renderPrint(t.external_events.log())
+    t.external_durations.log <- reactive(as.numeric(text2char(input$tExternalDurationsLOG)))
+    output$tExternalDurationsLOGOutput <- renderPrint(t.external_durations.log())
+    migration.p.log <- reactive(input$migrationPLOG)
+    sigma.migration.log <- reactive(input$sigmaMigrationLOG)
+    metacommunity.probability.log <- reactive(as.numeric(text2chars(input$metacommunityProbabilityLOG, len = n.species.log(), expr = paste0("rdirichlet(1, alpha = rep(1,", n.species.log(), "))"))))
+    output$metacommunityProbabilityLOG <- renderPrint(metacommunity.probability.log())
+    
+    norm.log <- reactive(input$normLOG)
+    
+    
+    ## examples LOG ####
+    observeEvent(input$LOGEX1, {
+        updateSliderInput(inputId = "nSpeciesLOG", value = 5)
+        updateSwitchInput(inputId = "stochasticLOG", value = FALSE)
+    })
+    
+    observeEvent(input$LOGEX2, {
+        updateSliderInput(inputId = "nSpeciesLOG", value = 5)
+        updateSwitchInput(inputId = "stochasticLOG", value = FALSE)
+        updateTextInput(inputId = "deathRatesLOG", value = "0,0,0,0,0")
+    })
+    
+    observeEvent(input$LOGEX3, {
+        updateSliderInput(inputId = "nSpeciesLOG", value = 5)
+        updateSwitchInput(inputId = "stochasticLOG", value = FALSE)
+        updateTextInput(inputId = "deathRatesLOG", value = "0,0,0,0,0")
+        updateTextInput(inputId = "growthRatesLOG", value = "0.1, 0.2, 0.3, 0.4, 0.5")
+        updateTextInput(inputId = "deathRatesLOG", value = "0.001, 0.0008, 0.0006, 0.0004, 0.0002")
+        updateTextInput(inputId = "carryingCapacitiesLOG", value = "1000, 1200, 1400, 1600, 1800")
+        
+    })
+    
+    observeEvent(input$LOGEX4, {
+        updateSliderInput(inputId = "nSpeciesLOG", value = 5)
+        updateTextInput(inputId = "deathRatesLOG", value = "0,0,0,0,0")
+        updateTextInput(inputId = "growthRatesLOG", value = "0.1, 0.2, 0.3, 0.4, 0.5")
+        updateTextInput(inputId = "deathRatesLOG", value = "0.001, 0.0008, 0.0006, 0.0004, 0.0002")
+        updateTextInput(inputId = "carryingCapacitiesLOG", value = "1000, 1200, 1400, 1600, 1800")
+        updateSliderInput(inputId = "errorVarianceLOG", value = 500)
+        updateSwitchInput(inputId = "normLOG", value = TRUE)
+    })
+    
+    
+    
+    ## runLOG ####
+    runLOG <- reactive({
+    # runLOG <- eventReactive(input$buttonSimulateLOG, {
+        simulateStochasticLogistic(
+            n.species = n.species.log(),
+            names.species = names.species.log(),
+            growth.rates = growth.rates.log(),
+            carrying.capacities = carrying.capacities.log(),
+            death.rates = death.rates.log(),
+            x0 = x0.log(),
+            sigma.drift = sigma.drift.log(),
+            sigma.epoch = sigma.epoch.log(),
+            sigma.external = sigma.external.log(),
+            sigma.migration = sigma.migration.log(),
+            epoch.p = epoch.p.log(),
+            t.external_events = t.external_events.log(),
+            t.external_durations = t.external_durations.log(),
+            migration.p = migration.p.log(),
+            metacommunity.probability = metacommunity.probability.log(),
+            stochastic = stochastic.log(),
+            error.variance = error.variance.log(),
+            norm = norm.log(),
+            t.start = t.start.log(),
+            t.end = t.end.log(),
+            t.step = t.step.log(),
+            t.store = t.store.log()
+        )
+    })
+    
+    output$LOGSpecies <- renderPlot(makePlot(runLOG()$matrix, "abundance of species by time"), res = 96)
 }
