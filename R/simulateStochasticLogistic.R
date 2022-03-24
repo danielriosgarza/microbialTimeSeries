@@ -70,13 +70,13 @@
 #' disturbances
 #' set.seed(42)
 #' ExampleLogistic <- simulateStochasticLogistic(n.species = 5, 
-#'     stochastic = FALSE, death.rate=0)
+#'     stochastic = FALSE, death.rates=rep(0,5))
 #' makePlot(ExampleLogistic$matrix)
 #' 
 #' # Adding a death rate
 #' set.seed(42)
 #' ExampleLogistic <- simulateStochasticLogistic(n.species = 5, 
-#'     stochastic = FALSE, death.rate=0.01)
+#'     stochastic = FALSE, death.rates=rep(0.01, 5))
 #' makePlot(ExampleLogistic$matrix)
 #' 
 #' # Example of stochastic logistic model

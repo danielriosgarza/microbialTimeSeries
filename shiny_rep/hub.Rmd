@@ -80,7 +80,7 @@ ExampleHubbellRates <- simulateHubbellRates(
 makePlot(ExampleHubbellRates$matrix)
 ```
 
-#### **Example4: all migration, no stochastic birth and death, but with measurement errors** 
+#### **Example4: all migration, no stochastic birth and death, but with measurement errors**
 
 ```{r}
 set.seed(42)
