@@ -194,10 +194,15 @@ simulateConsumerResource <- function(n.species, n.resources,
     
     consumerResourceModel <- function(t, state, params){
         with(as.list(c(state, params)),{
+            volume <- state[startsWith(names(state), "volume")]
+            volume <- volume * (volume>10^(-10))
             
-            x0 <- pmax(0, state[startsWith(names(state), "consumer")])
-            resources <- pmax(0, state[startsWith(names(state), "resource")])
-            volume <- pmax(0, state[startsWith(names(state), "volume")])
+            
+            x0 <- (volume>0) * pmax(0, state[startsWith(names(state), "consumer")])
+            
+            resources <- (volume>0) * pmax(0, state[startsWith(names(state), "resource")])
+            
+            
             
             growth.rates <- params[['growth.rates']]
             E <- params[['E']]
@@ -206,7 +211,14 @@ simulateConsumerResource <- function(n.species, n.resources,
             resources.dilution <- params[['resources.dilution']]
             inflow.rate <- params[['inflow.rate']]
             outflow.rate <- params[['outflow.rate']]
-            dilution.rate <- inflow.rate/volume
+            
+            dilution.rate = inflow.rate/volume
+            
+            
+            
+            print(dilution.rate)
+
+            
             
             trophic.priority <- params[['trophic.priority']]
             
@@ -237,9 +249,11 @@ simulateConsumerResource <- function(n.species, n.resources,
             
             production <- -t(E*(E<0)) %*% growth
             
-            dResources <- consumption + production - dilution.rate*(resources - resources.dilution)
-            dConsumers <- growth.rates*growth - dilution.rate*x0
             dVolume <- max(-volume, inflow.rate - outflow.rate)
+            
+            dResources <- consumption + production - (dilution.rate*(resources - resources.dilution))
+            dConsumers <- growth.rates*growth - dilution.rate*x0
+            
             dxdt <- list(c(dConsumers, dResources, dVolume))
             return(dxdt)
         })
@@ -351,6 +365,7 @@ simulateConsumerResource <- function(n.species, n.resources,
     
     out.resource.matrix <- as.matrix(out[,resource.index])
     out.resource.matrix <- as.matrix(out.resource.matrix[t.dyn$t.index,])
+    
     
     out.volume.matrix <- as.matrix(out[,volume.index])
     out.volume.matrix <- as.matrix(out.volume.matrix[t.dyn$t.index,])

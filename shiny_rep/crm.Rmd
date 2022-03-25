@@ -17,17 +17,19 @@ Function to simulate MacArthur's consumer-resource model and its extensions for 
 
 Each microbial species from a community of $n$ different species has preferences for a specific subset of the $k$ different substrates that are available to the community. Their growth rates depend on the availability of these resources, through the following differential equation:
 
-$\frac{dX_i}{dt} = \mu_{i}X_i (\sum_{j=1}^{k} e_{i,j} f_{i,j} S_j - \delta_i)$
+$\frac{dX_i}{dt} = \mu_{i}X_i (\sum_{j=1}^{k} e_{i,j} f_{i,j} S_j + \delta_i)$
 
 where, where $\mu_{i}$ is the maximum growth rate of species $i$, while $X_i$ is its abundance at time $t$.
 
 $e_{i,j}$ is the yield of substrate $j$ for species $i$, $f_{i,j}$ is the feeding form, which constraints the quantity of the substrate that can be consumed at each time step, while $S_j$ is the concentration of the substrate $j$ at time $t$, and $\delta_i$ is a dilution term.
 
-The form of the feeding term is the Monod equation $f_{i,j}=\frac{S_j}{k_{i,j}+S_j}$, where $k_{i,j}$ is the Monod constant.
+The function uses the Monod equation the feeding form
+
+$f_{i,j}=\frac{S_j}{k_{i,j}+S_j}$, where $k_{i,j}$ is the Monod constant.
 
 Resources change according to the following differential equation:
 
-$\frac{dS_j}{dt}=\phi_j - \sum_{i=1}^{n} e_{i,j}f_{i,j}X_i + \sum_{i=1}^{n}p_{i,j} X_{i} (\sum_{j=1}^{k}e_{i,j}f_{i,j}-\delta_i)$
+$\frac{dS_j}{dt}=\phi_j - \sum_{i=1}^{n} e_{i,j}f_{i,j}X_i + \sum_{i=1}^{n}p_{i,j} X_{i} (\sum_{j=1}^{k}e_{i,j}f_{i,j}+\delta_i)$
 
 where $\phi_j$ is a dilution term and $p_{i,j}$ is the yield of production of substrate $j$ that results from the growth of species $i$.
 
@@ -39,7 +41,7 @@ There are many possibilities for structuring $E$ according to specific assumptio
 
 All examples below are compatible with the Shiny app. Feel free to click on the numbered example button on the top of the app screen to explore them.
 
-If not provided by the user, all parameters have default values except for the the number of species and the number of resources, which need to be provided. Check the list of parameters below for a complete description of the parameters and their defaults.
+If not provided by the user, all parameters have default values except for the the **number of species** and the **number of resources**, which need to be provided. Check the list of parameters below for a complete description of the parameters and their defaults.
 
 #### **Example1: Default parameters**
 
@@ -80,7 +82,8 @@ t.end = 2000 #when to stop
 t.store = 500 #how many samples of the simulation to store (evenly spaced)
 migration.p = 0 #whether to allow migration from a metacommunity
 stochastic = 0 # whether to use noise in the simulation
-dilution.rate = 0.001 #adding a dilution rate
+inflow.rate = 1 #making a chemostat-like condition
+outflow.rate = 1
 
 #simulate the model
 CRMsimul <- simulateConsumerResource(n.species = n.species, n.resources = n.resources, stochastic = stochastic, migration.p = migration.p, E=E, t.end = t.end, t.store = t.store, dilution.rate=dilution.rate)
