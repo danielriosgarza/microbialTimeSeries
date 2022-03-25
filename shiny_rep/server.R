@@ -1,5 +1,5 @@
 # source all files ####
-Rfiles = gsub(" ", "", paste("../R/", list.files("../R")))
+Rfiles = gsub(" ", "", paste("./R/", list.files("./R/")))
 sapply(Rfiles, source)
 
 # converting functions ####

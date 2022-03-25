@@ -9,5 +9,6 @@ library(gtools)
 library(DT)
 library(formattable)
 library(dplyr)
+library(markdown)
 # debug with reactlog ####
 library(reactlog)
