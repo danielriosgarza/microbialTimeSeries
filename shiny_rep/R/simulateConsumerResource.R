@@ -206,7 +206,6 @@ simulateConsumerResource <- function(n.species, n.resources,
             resources.dilution <- params[['resources.dilution']]
             inflow.rate <- params[['inflow.rate']]
             outflow.rate <- params[['outflow.rate']]
-            volume <- params[['volume']]
             dilution.rate <- inflow.rate/volume
             
             trophic.priority <- params[['trophic.priority']]
@@ -240,7 +239,7 @@ simulateConsumerResource <- function(n.species, n.resources,
             
             dResources <- consumption + production - dilution.rate*(resources - resources.dilution)
             dConsumers <- growth.rates*growth - dilution.rate*x0
-            dVolume <- inflow.rate - outflow.rate
+            dVolume <- max(-volume, inflow.rate - outflow.rate)
             dxdt <- list(c(dConsumers, dResources, dVolume))
             return(dxdt)
         })
