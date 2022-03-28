@@ -190,6 +190,10 @@ simulateConsumerResource <- function(n.species, n.resources,
         t.end = t.end,
         ... = ...)
     
+    if(!is.null(trophic.priority)){
+        if (!identical(dim(E), dim(trophic.priority))){
+            stop("The dimension of trophic priority is not correct.")}}
+    
     # define the consumer-resource model
     
     consumerResourceModel <- function(t, state, params){
@@ -215,17 +219,10 @@ simulateConsumerResource <- function(n.species, n.resources,
             dilution.rate = inflow.rate/volume
             
             
-            
-            print(dilution.rate)
-
-            
-            
             trophic.priority <- params[['trophic.priority']]
             
             if(!is.null(trophic.priority)){
-                if (!identical(dim(E), dim(trophic.priority))){
-                    stop("The dimension of trophic priority is not correct.")
-                }
+                
                 # modify E in each step
                 Emod <- trophic.priority
                 ## resources <= a relatively small number(instead of 0) ######
@@ -239,6 +236,8 @@ simulateConsumerResource <- function(n.species, n.resources,
                 Emod <- E*(Emod) + E*(E<0) + E*apply(!Emod, 1, all)
                 E <- Emod
             }
+            
+            
 
             B <- matrix(rep(resources, length(x0)),
                         ncol = length(resources), byrow = TRUE) + monod.constant
@@ -297,6 +296,7 @@ simulateConsumerResource <- function(n.species, n.resources,
     # define the perturbation event
     perturb <- function(t, y, parameters){
         with(as.list(y),{
+            
             #continuous or episodic perturbation
             epoch.rN <- 0
             external.rN <- 0

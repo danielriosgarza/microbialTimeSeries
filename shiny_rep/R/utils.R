@@ -94,9 +94,10 @@ getRowMax <- function(aRow){
     return(aRow * newRow)
 }
 
-getMoments <- function(simulaionMatrix, is.perCapita = FALSE){
+getMoments <- function(simulaionMatrix, simulationResources = NULL, is.perCapita = FALSE, is.resource = FALSE){
     
     simul <- simulaionMatrix
+    resources <- simulationResources
     
     if (is.perCapita){
         
@@ -110,24 +111,45 @@ getMoments <- function(simulaionMatrix, is.perCapita = FALSE){
         
         return(list(m1 = (1/S)*meanH, m2 = (1/S)*covH, basis = simulaionMatrix))
     }
-    
+    if (is.resource) {
+        return(list(m1Matrix = colMeans(simul), 
+                    m2Matrix = cov(simul), 
+                    basisMatrix = simulaionMatrix,
+                    m1Resources = colMeans(resources),
+                    m2Resources = cov(resources),
+                    basisResources = resources))
+    }
     return(list(m1 = colMeans(simul), m2 = cov(simul), basis = simulaionMatrix))
     
     
 }
 
 
-generateMoments <- function(modelGenerateExp, n.instances, t.store, is.perCapita=FALSE){
-    modelMatrix <- eval(modelGenerateExp)$matrix
-    simul <- modelMatrix[,colnames(modelMatrix)!="time"]
-    summaryMatrix <- matrix(0, nrow = n.instances, ncol = ncol(simul))
+generateMoments <- function(modelGenerateExp, n.instances, t.store, is.perCapita=FALSE, is.resource = FALSE){
+    modelSimul <- eval(modelGenerateExp)
+    modelMatrix <- modelSimul$matrix
+    simulMatrix <- modelMatrix[,colnames(modelMatrix)!="time"]
+    summaryMatrix <- matrix(0, nrow = n.instances, ncol = ncol(simulMatrix))
+    
+    if (is.resource){
+        modelResources <- modelSimul$resources
+        simulResources <- modelResources[,colnames(modelResources)!="time"]
+        summaryResources <- matrix(0, nrow = n.instances, ncol = ncol(simulResources))
+    }
     for (i in 1:n.instances){
         print(i)
-        modelMatrix <- eval(modelGenerateExp)$matrix
-        simul <- modelMatrix[,colnames(modelMatrix)!="time"]
-        summaryMatrix[i,] <- simul[t.store,]
+        simul = eval(modelGenerateExp)
+        modelMatrix <- simul$matrix
+        summ <- modelMatrix[,colnames(modelMatrix)!="time"]
+        summaryMatrix[i,] <- summ[t.store,]
+        if (is.resource){
+            modelResources <- simul$resources
+            summr <- modelResources[,colnames(modelResources)!="time"]
+            summaryResources[i,] <-summr[t.store,]
+        }
+        
     }
-    return(getMoments(summaryMatrix, is.perCapita = is.perCapita))
+    return(getMoments(summaryMatrix, summaryResources, is.perCapita = is.perCapita, is.resource))
 }
 
 
@@ -148,13 +170,13 @@ getPerturbT <- function(endTime, n.perturbs){
 
 
 # plotting functions ####
-makePlot <- function(out.matrix, title = "abundance of species by time"){
+makePlot <- function(out.matrix, title = "abundance of species by time", obj = "species", y.label = "x.t"){
     df <- as.data.frame(out.matrix)
     dft <-  melt(df, id="time")
-    names(dft)[2] = "species"
-    names(dft)[3] = "x.t"
+    names(dft)[2] = obj
+    names(dft)[3] = y.label
     lgd = ncol(df)<= 20
-    ggplot(dft, aes(time, x.t, col = species)) +
+    ggplot(dft, aes_string(names(dft)[1], names(dft)[3], col = names(dft)[2])) +
         geom_line(show.legend = lgd, lwd=0.5) +
         ggtitle(title) + 
         theme_linedraw() +
@@ -186,7 +208,14 @@ makePiePlot <- function(multinomdist, label = 'Meta\ncommunity', title = "Metaco
     fig
 }
 
-makeHeatmap <-function(matrix.A, title = "Consumption/production matrix", midpoint_color = NULL, lowColor = "red", midColor = "white", highColor = "blue"){
+makeHeatmap <-function(matrix.A, 
+                       title = "Consumption/production matrix",
+                       y.label = 'resources',
+                       x.label = 'species',
+                       midpoint_color = NULL, 
+                       lowColor = "red", 
+                       midColor = "white", 
+                       highColor = "blue"){
     df <- melt(t(matrix.A))
     if (is.null(midpoint_color)) {
         midpoint_color <- 0
@@ -199,16 +228,17 @@ makeHeatmap <-function(matrix.A, title = "Consumption/production matrix", midpoi
         theme_void() + ggtitle(title)
     
     if (ncol(matrix.A)<=10 & nrow(matrix.A)<=10){
-        fig <- fig + geom_text(aes(label = round(strength, 2)))
+        fig <- fig + geom_text(aes(label = round(strength, 2))) 
     } else if (ncol(matrix.A)<=15 & nrow(matrix.A)<=15){
         fig <- fig + geom_text(aes(label = round(strength, 1)))
     } else {
         fig <- fig
     }
     
-    fig <- fig + labs(x = "compounds", y = "species")+
+    fig <- fig + labs(x = x.label, y = y.label)+
         theme_linedraw() + 
-        theme(plot.title = element_text(hjust = 0.5, size = 14))
+        theme(plot.title = element_text(hjust = 0.5, size = 14), axis.text.x = element_text(
+            angle = 90))
     
     if (nrow(matrix.A) >= 20){
         # too many species 
@@ -241,7 +271,7 @@ makeRegression <- function (fit) {
 }
 
 
-makeUMAP <- function(matrix, n_neighbors=10, min_dist=0.1, gradient=NULL){
+makeUMAP <- function(matrix, n_neighbors=10, min_dist=0.1, gradient=NULL, gradient_title = 'gradient'){
     custom.config = umap.defaults
     custom.config$n_neighbors = n_neighbors
     custom.config$min_dist = min_dist
@@ -253,8 +283,8 @@ makeUMAP <- function(matrix, n_neighbors=10, min_dist=0.1, gradient=NULL){
         df$gradient <- 1
         
     }
-    colnames(df) = c('UMAP_2', 'UMAP_1', 'gradient')
-    ggplot(df, aes(UMAP_2, UMAP_1, color=gradient)) + 
+    colnames(df) = c('UMAP_2', 'UMAP_1', gradient_title)
+    ggplot(df, aes_string('UMAP_2', 'UMAP_1', color=gradient_title)) + 
         geom_point() + 
         scale_color_gradient(low="blue", high="red")
     
