@@ -391,10 +391,10 @@ grs <- c(1, 1)
 x0 <- c(2, 2)
 
 #initial media composition
-resources <- c(10, 0, 0)
+resources <- c(9, 0, 0)
 
 #simulate the model
-CRMsimul <- simulateConsumerResource(n.species = 2, n.resources = 3, stochastic = 0, migration.p = 0.0, E=E,resources = resources, names.species = c('A', 'B'), names.resources = c('glucose', 'lactate', 'acetate'), x0=x0, t.end = 750, growth.rates = grs, trophic.priority = priorities)
+CRMsimul <- simulateConsumerResource(n.species = 2, n.resources = 3, inflow.rate=0.0, outflow.rate = 0.0, stochastic = 0, migration.p = 0.0, E=E,resources = resources, names.species = c('A', 'B'), names.resources = c('glucose', 'lactate', 'acetate'), x0=x0, t.end = 750, growth.rates = grs, trophic.priority = priorities)
 
 #visualize the result
 makePlot(CRMsimul$matrix) #species plot

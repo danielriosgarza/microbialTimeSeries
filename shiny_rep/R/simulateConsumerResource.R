@@ -221,12 +221,14 @@ simulateConsumerResource <- function(n.species, n.resources,
             
             trophic.priority <- params[['trophic.priority']]
             
+            threshold = params[['threshold']]
+            
             if(!is.null(trophic.priority)){
                 
                 # modify E in each step
                 Emod <- trophic.priority
                 ## resources <= a relatively small number(instead of 0) ######
-                Emod[, resources <= 0.1] <- 0 
+                Emod[, resources <= threshold] <- 0 
                 Emod <- t(apply(Emod, 1, getRowMax))>0
                 ## 1. E*(Emod): consumption of prior resource 
                 ## 2. E*(E<0): production 
@@ -348,7 +350,7 @@ simulateConsumerResource <- function(n.species, n.resources,
                        trophic.priority = trophic.priority, 
                        inflow.rate = inflow.rate,
                        outflow.rate = outflow.rate,
-                       volume = volume
+                       volume = volume, threshold=0.01
                        )
     
     out <- as.data.frame(ode(y = state.init, times = t.dyn$t.sys,
