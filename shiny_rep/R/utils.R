@@ -271,7 +271,7 @@ makeRegression <- function (fit) {
 }
 
 
-makeUMAP <- function(matrix, n_neighbors=10, min_dist=0.1, gradient=NULL, gradient_title = 'gradient'){
+makeUMAP <- function(matrix, n_neighbors=10, min_dist=0.1, gradient=NULL, gradient_title = 'gradient', group=NULL){
     custom.config = umap.defaults
     custom.config$n_neighbors = n_neighbors
     custom.config$min_dist = min_dist
@@ -284,9 +284,15 @@ makeUMAP <- function(matrix, n_neighbors=10, min_dist=0.1, gradient=NULL, gradie
         
     }
     colnames(df) = c('UMAP_2', 'UMAP_1', gradient_title)
-    ggplot(df, aes_string('UMAP_2', 'UMAP_1', color=gradient_title)) + 
-        geom_point() + 
-        scale_color_gradient(low="blue", high="red")
+    if (is.null(group)){
+        ggplot(df, aes_string('UMAP_2', 'UMAP_1', color=gradient_title)) + 
+            geom_point() + 
+            scale_color_gradient(low="blue", high="red")
+    } else {
+        ggplot(df, aes_string('UMAP_2', 'UMAP_1', color=gradient_title)) + 
+            geom_point(aes(color = group)) + theme_bw()
+    }
+    
     
 }
 
