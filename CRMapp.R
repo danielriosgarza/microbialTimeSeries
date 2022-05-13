@@ -17,8 +17,8 @@ library(gtools)
 Rfiles = gsub(" ", "", paste("./R/", list.files("./R")))
 sapply(Rfiles, source)
 
-makePlot <- function(out.matrix){
-    df <- as.data.frame(out.matrix)
+makePlot <- function(out_matrix){
+    df <- as.data.frame(out_matrix)
     dft <-  melt(df, id="time")
     names(dft)[2] = "species"
     names(dft)[3] = "x.t"
@@ -30,8 +30,8 @@ makePlot <- function(out.matrix){
     
 }
 
-makePlotRes <- function(out.matrix){
-    df <- as.data.frame(out.matrix)
+makePlotRes <- function(out_matrix){
+    df <- as.data.frame(out_matrix)
     dft <-  melt(df, id="time")
     names(dft)[2] = "resources"
     names(dft)[3] = "S.t"
@@ -97,7 +97,7 @@ ui <- fluidPage(
                    sliderInput('monod.k', 'Monod.K multiplier', value=1, min=1, max = 10, step = 1),
                    
                    br(), 
-                   sliderInput('t.end', 'simulation time', value=1000, min=10, max = 10000, step = 10)),
+                   sliderInput('t_end', 'simulation time', value=1000, min=10, max = 10000, step = 10)),
       mainPanel(tabsetPanel(tabPanel("Growth rates",
                                      htmlOutput("betaDist"),
                                      br(),
@@ -143,7 +143,7 @@ server <- function(input, output) {
     evenness  <- reactive(input$r.even)
     concentration <- reactive(input$r.conc)
     monod <- reactive(input$monod.k)
-    t.end <- reactive(input$t.end)
+    t_end <- reactive(input$t_end)
     mean.prod <- reactive(production.w() * nResources())
     mean.con <- reactive(consumption.w() * nResources())
     
@@ -161,8 +161,8 @@ server <- function(input, output) {
     output$gr.rates2 <- renderPrint(sprintf('%.2f', g.rates())) 
     output$gr.rates3 <- renderText("The expected distribution is:\n")
     output$gr.expect <- renderPlot({ggplot(data.frame(x = c(-4, 4)), aes(x = x)) + stat_function(fun = dbeta, args = list(shape1=alpha(), shape2=beta())) + xlim(0,1)}, res=60)
-    matrix.E <- reactive(randomE(n.species = nSpecies(),
-                                 n.resources = nResources(),
+    matrix.E <- reactive(randomE(n_species = nSpecies(),
+                                 n_resources = nResources(),
                                  mean.con = mean.con(),
                                  mean.prod = mean.prod(),
                                  maintenance = maintenance()))
@@ -172,15 +172,15 @@ server <- function(input, output) {
     
     output$matrixHmap <- renderPlot(makeHeatmap(matrix.E(), 'Consumption/production\nmatrix'))
     
-    simul <- reactive(simulateConsumerResource(n.species = nSpecies(),
-                                               n.resources = nResources(), 
+    simul <- reactive(simulateConsumerResource(n_species = nSpecies(),
+                                               n_resources = nResources(), 
                                                eff = matrix.E(),
                                                x0 =rep(sp.x0, nSpecies()),
                                                resources = resources(),
-                                               growth.rates = g.rates(),
+                                               growth_rates = g.rates(),
                                                monod.k = monod.matrix(),
                                                norm = FALSE,
-                                               t.end = t.end()))
+                                               t_end = t_end()))
     
     output$communityPlot <- renderPlot(makePlot(simul()$matrix))
     

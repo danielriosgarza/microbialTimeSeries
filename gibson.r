@@ -21,11 +21,11 @@ rpower <- function(n, alpha, norm = FALSE) {
 
 params <- data.frame(
     alpha = c(7, 3, 2, 1.6, 1.01),
-    t.end = c(20, 10, 5, 2, 1),
-    t.step = c(0.02, 0.01, 0.005, 0.002, 0.001)
+    t_end = c(20, 10, 5, 2, 1),
+    t_step = c(0.02, 0.01, 0.005, 0.002, 0.001)
 )
 set.seed(42)
-n.species <- 100
+n_species <- 100
 
 H <- list()
 df <- list()
@@ -45,7 +45,7 @@ for (row in seq_len(nrow(params))) {
     # for each power-law distribution 
     print(paste("row =", row))
     
-    H[[row]] <- rpower(n = n.species, alpha = params$alpha[row], norm = TRUE)
+    H[[row]] <- rpower(n = n_species, alpha = params$alpha[row], norm = TRUE)
     df[[row]] <- data.frame(H[[row]])
     plot_hist[[row]] <- ggplot(df[[row]], aes(H[[row]])) + 
         geom_histogram(fill = 'steelblue', color = 'grey20', bins = 10) + 
@@ -53,13 +53,13 @@ for (row in seq_len(nrow(params))) {
         theme_bw()
     # plot_hist[[row]]
     
-    N[[row]] <- matrix(rnorm(n = n.species^2, mean = 0, sd = 1), nrow = n.species)
+    N[[row]] <- matrix(rnorm(n = n_species^2, mean = 0, sd = 1), nrow = n_species)
     diag(N[[row]]) <- 0
     interactions_custom[[row]] <- N[[row]] %*% diag(H[[row]])
     A[[row]] <- randomA(
-        n.species = 100,
+        n_species = 100,
         diagonal = -1,
-        scale.offDiagonal = 0.07,
+        scale_off_diagonal = 0.07,
         connectance = 1,
         interactions = interactions_custom[[row]])
     g[[row]] <- graph_from_adjacency_matrix(A[[row]], weighted = TRUE, diag = FALSE)
@@ -154,13 +154,13 @@ for (scenario in seq_along(scenarios)){
             }
             
             simulation_GLV[[scenario]][[row]][[local_community]] <- simulateGLV(
-                n.species = 80, 
-                names.species = paste0("sp", local_species_pool[[row]][[local_community]]),
+                n_species = 80, 
+                names_species = paste0("sp", local_species_pool[[row]][[local_community]]),
                 A = local_A[[row]][[local_community]], 
                 x0 = rep(1, 80),
-                growth.rates = growthRates[[scenario]], 
-                t.end = params$t.end[row], 
-                t.step = params$t.step[row], 
+                growth_rates = growthRates[[scenario]], 
+                t_end = params$t_end[row], 
+                t_step = params$t_step[row], 
                 stochastic = FALSE,
                 norm = TRUE)
             
@@ -269,16 +269,16 @@ for (scenario in seq_along(scenarios)[-1]){
 #         localE[rowSums(localE) < 0,] <- localE[rowSums(localE) < 0,] + sum(-localE[rowSums(localE) < 0,] + 1)/80
 #         
 #         simulationCRM[[row]][[local_community]] <- simulateConsumerResource(
-#             n.species = 80, 
-#             n.resources = 80, 
+#             n_species = 80, 
+#             n_resources = 80, 
 #             resources = rep(100, 80),
-#             names.species = paste0("sp", local_species_pool[[row]][[local_community]]), 
+#             names_species = paste0("sp", local_species_pool[[row]][[local_community]]), 
 #             E = localE, 
 #             x0 = rep(1, 80),
 #             stochastic = FALSE,
 #             norm = TRUE,
-#             migration.p = 0, 
-#             error.variance = 0, t.end = 500
+#             migration_p = 0, 
+#             error_variance = 0, t_end = 500
 #             )
 #         # makePlot(simulationCRM[[row]][[local_community]]$matrix)
 #         # View(simulationCRM[[row]][[local_community]]$matrix)

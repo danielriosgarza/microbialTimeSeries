@@ -38,99 +38,99 @@ text2chars <- function(text, len, prefix = NULL, expr = NULL){
 server <- function(input, output, session) {
     # model1 simulate consumer resource model ####
     ## basic ####
-    n.species.crm <- reactive(input$nSpeciesCRM)
-    n.resources.crm <- reactive(input$nResourcesCRM)
-    names.species.crm <- reactive(text2chars(input$namesSpeciesCRM, len = n.species.crm(), prefix = "sp"))
-    names.resources.crm <- reactive(text2chars(input$namesResourcesCRM, len = n.resources.crm(), prefix = "res"))
-    t.start.crm <- reactive(input$tStartCRM)
-    t.end.crm <- reactive(input$tEndCRM)
+    n_species_crm <- reactive(input$nSpeciesCRM)
+    n_resources_crm <- reactive(input$nResourcesCRM)
+    names_species_crm <- reactive(text2chars(input$namesSpeciesCRM, len = n_species_crm(), prefix = "sp"))
+    names_resources_crm <- reactive(text2chars(input$namesResourcesCRM, len = n_resources_crm(), prefix = "res"))
+    t_start_crm <- reactive(input$tStartCRM)
+    t_end_crm <- reactive(input$tEndCRM)
     observeEvent(input$tStartCRM | input$tEndCRM, {
         updateNumericInput(inputId = "tStartCRM", max = input$tEndCRM)
         updateNumericInput(inputId = "tEndCRM", min = input$tStartCRM)
     })
     
-    t.step.crm <- reactive(input$tStepCRM)
-    t.store.crm <- reactive(input$tStoreCRM)
+    t_step_crm <- reactive(input$tStepCRM)
+    t_store_crm <- reactive(input$tStoreCRM)
     observeEvent(input$tStartCRM | input$tEndCRM | input$tStepCRM | input$tStoreCRM, {
         updateNumericInput(inputId = "tStepCRM", max = (input$tEndCRM-input$tStartCRM)/input$tStoreCRM)
         updateNumericInput(inputId = "tStoreCRM", max = (input$tEndCRM-input$tStartCRM)/input$tStepCRM)
     })
     
     ## compounds ####
-    res.conc.crm <- reactive(input$resourcesConcentrationCRM)
-    res.even.crm <- reactive(input$resourcesEvennessCRM)
-    resources_dist.crm <- reactive(rdirichlet(1, rep(1, n.resources.crm())*res.even.crm())*res.conc.crm()*n.resources.crm())
-    res.custom.crm <- reactive(as.numeric(as.vector(text2char(input$resourcesCustomCRM))))
-    resources.crm <- reactive({
-        if (length(res.custom.crm()) < n.resources.crm()){
-            return(c(res.custom.crm(), as.vector(resources_dist.crm())[(length(res.custom.crm())+1):n.resources.crm()]))
+    res_conc_crm <- reactive(input$resourcesConcentrationCRM)
+    res_even_crm <- reactive(input$resourcesEvennessCRM)
+    resources_dist_crm <- reactive(rdirichlet(1, rep(1, n_resources_crm())*res_even_crm())*res_conc_crm()*n_resources_crm())
+    res_custom_crm <- reactive(as.numeric(as.vector(text2char(input$resourcesCustomCRM))))
+    resources_crm <- reactive({
+        if (length(res_custom_crm()) < n_resources_crm()){
+            return(c(res_custom_crm(), as.vector(resources_dist_crm())[(length(res_custom_crm())+1):n_resources_crm()]))
         } else {
-            return(head(res.custom.crm(), n.resources.crm()))
+            return(head(res_custom_crm(), n_resources_crm()))
         }
     })
-    output$resourcesOutputCRM <- renderPrint(resources.crm())
+    output$resourcesOutputCRM <- renderPrint(resources_crm())
     
     ### dilution/influx and outflux ####
-    inflow.rate.crm <- reactive(input$inflowRateCRM)
-    outflow.rate.crm <- reactive(input$outflowRateCRM)
-    volume.crm <- reactive(input$volumeCRM)
-    res.dilu.crm <- reactive(as.numeric(as.vector(text2char(input$resourcesDilutionCRM))))
-    resources.dilution.crm <- reactive({
-        if (length(res.dilu.crm()) < n.resources.crm()){
-            return(c(res.dilu.crm(), resources.crm()[(length(res.dilu.crm())+1):n.resources.crm()]))
+    inflow_rate_crm <- reactive(input$inflowRateCRM)
+    outflow_rate_crm <- reactive(input$outflowRateCRM)
+    volume_crm <- reactive(input$volumeCRM)
+    res_dilu_crm <- reactive(as.numeric(as.vector(text2char(input$resourcesDilutionCRM))))
+    resources_dilution_crm <- reactive({
+        if (length(res_dilu_crm()) < n_resources_crm()){
+            return(c(res_dilu_crm(), resources_crm()[(length(res_dilu_crm())+1):n_resources_crm()]))
         } else {
-            return(head(res.dilu.crm(), n.resources.crm()))
+            return(head(res_dilu_crm(), n_resources_crm()))
         }
     })
-    output$resourcesDilutionCRMOutput <- renderPrint(resources.dilution.crm())
+    output$resourcesDilutionCRMOutput <- renderPrint(resources_dilution_crm())
 
-    output$resourcesCRMPlot <- renderPlot(makePiePlot(resources.crm(), label = 'concentration', title='compounds'))
-    mean.consumption.crm <- reactive(input$meanConsumptionCRM)
-    mean.production.crm <- reactive(input$meanProductionCRM)
+    output$resourcesCRMPlot <- renderPlot(makePiePlot(resources_crm(), label = 'concentration', title='compounds'))
+    mean_consumption_crm <- reactive(input$meanConsumptionCRM)
+    mean_production_crm <- reactive(input$meanProductionCRM)
     observeEvent(input$meanConsumptionCRM | input$meanProductionCRM, {
         updateSliderInput(inputId = "meanProductionCRM", max = 1 - input$meanConsumptionCRM)
         updateSliderInput(inputId = "meanConsumptionCRM", max = 1 - input$meanProductionCRM)
     })
-    maintenance.crm <- reactive(input$maintenanceCRM)
+    maintenance_crm <- reactive(input$maintenanceCRM)
     
     ### editable matrixECRM and matrixMonodCRM ####
-    RV.crm <- reactiveValues(matrixECRM = NULL, matrixMonodCRM = NULL)
+    RV_crm <- reactiveValues(matrixECRM = NULL, matrixMonodCRM = NULL)
     observe({
         roundECRM <- round(
             randomE(
-                n.species = n.species.crm(), 
-                n.resources = n.resources.crm(), 
-                names.species = names.species.crm(), 
-                names.resources = names.resources.crm(), 
-                mean.consumption = as.integer(mean.consumption.crm() * n.resources.crm()),
-                mean.production = as.integer(mean.production.crm() * n.resources.crm()),
-                maintenance = maintenance.crm()
+                n_species = n_species_crm(), 
+                n_resources = n_resources_crm(), 
+                names_species = names_species_crm(), 
+                names_resources = names_resources_crm(), 
+                mean_consumption = as.integer(mean_consumption_crm() * n_resources_crm()),
+                mean_production = as.integer(mean_production_crm() * n_resources_crm()),
+                maintenance = maintenance_crm()
             ),
             digits = 3
         )
-        RV.crm$matrixECRM <- roundECRM
+        RV_crm$matrixECRM <- roundECRM
     })
-    output$tableECRM <- renderDataTable(RV.crm$matrixECRM, editable = 'all', selection = 'none', server = TRUE, options = list(scrollX = TRUE))
-    output$CRMPlotE <- renderPlot(makeHeatmap(RV.crm$matrixECRM, 'Consumption/production matrix'), res = 96)
+    output$tableECRM <- renderDataTable(RV_crm$matrixECRM, editable = 'all', selection = 'none', server = TRUE, options = list(scrollX = TRUE))
+    output$CRMPlotE <- renderPlot(makeHeatmap(RV_crm$matrixECRM, 'Consumption/production matrix'), res = 96)
     
     observeEvent(input$tableECRM_cell_edit, {
-        RV.crm$matrixECRM <<- editData(RV.crm$matrixECRM, input$tableECRM_cell_edit, 'tableECRM')
+        RV_crm$matrixECRM <<- editData(RV_crm$matrixECRM, input$tableECRM_cell_edit, 'tableECRM')
     })
     
     
     ## growth rates ####
-    x0.crm <- reactive(as.numeric(text2chars(input$x0CRM, len = n.species.crm(), expr = paste0("runif(n = ", n.species.crm() ,", min = 0.1, max = 10)"))))
-    output$x0CRMOutput <- renderPrint(x0.crm())
+    x0_crm <- reactive(as.numeric(text2chars(input$x0CRM, len = n_species_crm(), expr = paste0("runif(n = ", n_species_crm() ,", min = 0.1, max = 10)"))))
+    output$x0CRMOutput <- renderPrint(x0_crm())
     
     
-    alpha.crm <- reactive(input$alphaCRM)
-    beta.crm <- reactive(input$betaCRM)
+    alpha_crm <- reactive(input$alphaCRM)
+    beta_crm <- reactive(input$betaCRM)
     # listening to the changes in nSpeciesCRM, alphaCRM, and betaCRM
     observeEvent(input$nSpeciesCRM | input$alphaCRM | input$betaCRM, {
-        growth.rates.crm <- reactive(as.numeric(text2chars(input$growthRatesCRM, len = n.species.crm(), expr = paste0('round(rbeta(',n.species.crm(), ',' ,alpha.crm(), ',' , beta.crm(),'), digits = 3)'))))
+        growth_rates_crm <- reactive(as.numeric(text2chars(input$growthRatesCRM, len = n_species_crm(), expr = paste0('round(rbeta(',n_species_crm(), ',' ,alpha_crm(), ',' , beta_crm(),'), digits = 3)'))))
     })
     observeEvent(input$nSpeciesCRM, {
-        x0.crm <- reactive(as.numeric(text2chars(input$x0CRM, len = n.species.crm(), expr = paste0("runif(n = ", n.species.crm() ,", min = 0.1, max = 10)"))))
+        x0_crm <- reactive(as.numeric(text2chars(input$x0CRM, len = n_species_crm(), expr = paste0("runif(n = ", n_species_crm() ,", min = 0.1, max = 10)"))))
     })
     observeEvent(input$buttonBetaEven, {
         updateSliderInput(inputId = "alphaCRM", value = 1)
@@ -161,49 +161,49 @@ server <- function(input, output, session) {
         updateSliderInput(inputId = "betaCRM", value = 1)
     })
     
-    growth.rates.crm <- reactive(as.numeric(text2chars(input$growthRatesCRM, len = n.species.crm(), expr = paste0('round(rbeta(',n.species.crm(), ',' ,alpha.crm(), ',' , beta.crm(),'), digits = 3)'))))
-    output$growthRatesCRMOutput <- renderPrint(growth.rates.crm())
+    growth_rates_crm <- reactive(as.numeric(text2chars(input$growthRatesCRM, len = n_species_crm(), expr = paste0('round(rbeta(',n_species_crm(), ',' ,alpha_crm(), ',' , beta_crm(),'), digits = 3)'))))
+    output$growthRatesCRMOutput <- renderPrint(growth_rates_crm())
     
     output$growthRatesCRMDist <- renderPlot({
         ggplot(data.frame(x = c(-4, 4)), aes(x = x)) + 
-            stat_function(fun = dbeta, args = list(shape1=alpha.crm(), shape2=beta.crm())) + 
+            stat_function(fun = dbeta, args = list(shape1=alpha_crm(), shape2=beta_crm())) + 
             xlim(0,1) + theme_linedraw()
     }, res = 96) 
     observe({
         roundMonodCRM <- round(
             matrix(
                 rgamma(
-                    n = n.species.crm()*n.resources.crm(), 
-                    shape = 50*max(resources.crm()), 
+                    n = n_species_crm()*n_resources_crm(), 
+                    shape = 50*max(resources_crm()), 
                     rate = 1), 
-                nrow = n.species.crm(),
-                dimnames = list(names.species.crm(), names.resources.crm())
+                nrow = n_species_crm(),
+                dimnames = list(names_species_crm(), names_resources_crm())
                 ), 
             digits = 3)
-        RV.crm$matrixMonodCRM <- roundMonodCRM
+        RV_crm$matrixMonodCRM <- roundMonodCRM
     })
-    output$tableMonodCRM <- renderDataTable(RV.crm$matrixMonodCRM, editable = 'all', selection = 'none', server = TRUE, options = list(scrollX = TRUE))
+    output$tableMonodCRM <- renderDataTable(RV_crm$matrixMonodCRM, editable = 'all', selection = 'none', server = TRUE, options = list(scrollX = TRUE))
     observeEvent(input$tableMonodCRM_cell_edit, {
-        RV.crm$matrixMonodCRM <<- editData(RV.crm$matrixMonodCRM, input$tableMonodCRM_cell_edit, 'tableMonodCRM')
+        RV_crm$matrixMonodCRM <<- editData(RV_crm$matrixMonodCRM, input$tableMonodCRM_cell_edit, 'tableMonodCRM')
     })
     ## perturbation ####
-    error.variance.crm <- reactive(input$errorVarianceCRM)
-    stochastic.crm <- reactive(input$stochasticCRM)
-    sigma.drift.crm <- reactive(input$sigmaDriftCRM)
-    sigma.epoch.crm <- reactive(input$sigmaEpochCRM)
-    sigma.external.crm <- reactive(input$sigmaExternalCRM)
-    sigma.migration.crm <- reactive(input$sigmaMigrationCRM)
-    epoch.p.crm <- reactive(input$epochPCRM)
-    t.external_events.crm <- reactive(as.numeric(text2char(input$tExternalEventsCRM)))
-    output$tExternalEventsCRMOutput <- renderPrint(t.external_events.crm())
-    t.external_durations.crm <- reactive(as.numeric(text2char(input$tExternalDurationsCRM)))
-    output$tExternalDurationsCRMOutput <- renderPrint(t.external_durations.crm())
-    migration.p.crm <- reactive(input$migrationPCRM)
-    metacommunity.probability.crm <- reactive(as.numeric(text2chars(input$metacommunityProbabilityCRM, len = n.species.crm(), expr = paste0("rdirichlet(1, alpha = rep(1,", n.species.crm(), "))"))))
-    output$metacommunityProbabilityCRM <- renderPrint(metacommunity.probability.crm())
+    error_variance_crm <- reactive(input$errorVarianceCRM)
+    stochastic_crm <- reactive(input$stochasticCRM)
+    sigma_drift_crm <- reactive(input$sigmaDriftCRM)
+    sigma_epoch_crm <- reactive(input$sigmaEpochCRM)
+    sigma_external_crm <- reactive(input$sigmaExternalCRM)
+    sigma_migration_crm <- reactive(input$sigmaMigrationCRM)
+    epoch_p_crm <- reactive(input$epochPCRM)
+    t_external_events_crm <- reactive(as.numeric(text2char(input$tExternalEventsCRM)))
+    output$tExternalEventsCRMOutput <- renderPrint(t_external_events_crm())
+    t_external_durations_crm <- reactive(as.numeric(text2char(input$tExternalDurationsCRM)))
+    output$tExternalDurationsCRMOutput <- renderPrint(t_external_durations_crm())
+    migration_p_crm <- reactive(input$migrationPCRM)
+    metacommunity_probability_crm <- reactive(as.numeric(text2chars(input$metacommunityProbabilityCRM, len = n_species_crm(), expr = paste0("rdirichlet(1, alpha = rep(1,", n_species_crm(), "))"))))
+    output$metacommunityProbabilityCRM <- renderPrint(metacommunity_probability_crm())
     
     
-    norm.crm <- reactive(input$normCRM)
+    norm_crm <- reactive(input$normCRM)
     
     ## examples CRM ####
     observeEvent(input$CRMEX1, {
@@ -236,7 +236,7 @@ server <- function(input, output, session) {
     observeEvent(input$CRMEX4, {
         # auto update matrixECRM, then take changes after it.
         matrixExample4 <- matrix(c(1, -3, 0, 0, 1, 0, -2, 0, 0, 0, 4, -3), nrow = 3, byrow = TRUE)*c(4.3/4, 2/4, 1/4)
-        RV.crm$matrixECRM <- matrixExample4
+        RV_crm$matrixECRM <- matrixExample4
     })
     observeEvent(input$CRMEX5pre, {
         updateSliderInput(inputId = "nSpeciesCRM", value = 10)
@@ -245,8 +245,8 @@ server <- function(input, output, session) {
         shinyjs::enable("CRMEX5")
     })
     observeEvent(input$CRMEX5, {
-        RV.crm$matrixECRM <- randomE(n.species = 10, n.resources = 10, mean.consumption = 3, mean.production = 1,
-                              maintenance = 0.5, trophic.preferences = list(c(5,3,1,1,1,1,1,1,1,1)))
+        RV_crm$matrixECRM <- randomE(n_species = 10, n_resources = 10, mean_consumption = 3, mean_production = 1,
+                              maintenance = 0.5, trophc_preferences = list(c(5,3,1,1,1,1,1,1,1,1)))
     })
     observeEvent(input$CRMEX6pre, {
         updateSliderInput(inputId = "nSpeciesCRM", value = 20)
@@ -255,7 +255,7 @@ server <- function(input, output, session) {
         shinyjs::enable("CRMEX6")
     })
     observeEvent(input$CRMEX6, {
-        RV.crm$matrixECRM <- randomE(n.species = 20, n.resources = 20, mean.consumption = 3, mean.production = 2, maintenance = 0.0, trophic.levels = c(7, 13))
+        RV_crm$matrixECRM <- randomE(n_species = 20, n_resources = 20, mean_consumption = 3, mean_production = 2, maintenance = 0.0, trophic_levels = c(7, 13))
     })
     observeEvent(input$CRMEX7pre, {
         updateSliderInput(inputId = "nSpeciesCRM", value = 4)
@@ -274,17 +274,17 @@ server <- function(input, output, session) {
         sec.C <- rdirichlet(1, c(1,1,1))*.5
         #The metabolic preferences of A are set to the secretion products of C
         pref.A.D <- list(c(sec.C*1000, rep(1,8)))
-        em.A <- randomE(n.species = 1, n.resources = 11, names.species = 'A', trophic.preferences = pref.A.D, mean.production = 3, mean.consumption = 3)
+        em.A <- randomE(n_species = 1, n_resources = 11, names_species = 'A', trophc_preferences = pref.A.D, mean_production = 3, mean_consumption = 3)
         #secretion of A
         sec.A <- abs(em.A*(em.A<0))
         #The metabolic preferences of D are set to the secretion products of A
-        em.D <- randomE(n.species = 1, n.resources = 11, names.species = 'D', trophic.preferences = pref.A.D, mean.production = 3, mean.consumption = 3)
+        em.D <- randomE(n_species = 1, n_resources = 11, names_species = 'D', trophc_preferences = pref.A.D, mean_production = 3, mean_consumption = 3)
         #secretion of D
         sec.D <- abs(em.D*(em.D<0))
         pref.B <- 1000*((sec.A + sec.D)/(sum(sec.A)+sum(sec.D)))
         pref.B[pref.B==0] <- 1
         pref.B <- list(pref.B[4:11])
-        em.B <- randomE(n.species = 1, n.resources = 8, names.species = 'B', trophic.preferences = pref.B, mean.production = 3, mean.consumption = 3)
+        em.B <- randomE(n_species = 1, n_resources = 8, names_species = 'B', trophc_preferences = pref.B, mean_production = 3, mean_consumption = 3)
         #secretion of B
         sec.B <- abs(em.B*(em.B<0))
         #The metabolic preferences of C are set to the secretion products B
@@ -292,44 +292,44 @@ server <- function(input, output, session) {
         pref.C[pref.C==0] <- 1
         em.B <-t(as.matrix(c(rep(0,3),em.B)))
         row.names(em.B) = 'B'
-        em.C <- randomE(n.species = 1, n.resources = 8, names.species = 'C', trophic.preferences = list(pref.C), mean.production = 0, mean.consumption = 3)
+        em.C <- randomE(n_species = 1, n_resources = 8, names_species = 'C', trophc_preferences = list(pref.C), mean_production = 0, mean_consumption = 3)
         em.C <- cbind(-sec.C, em.C)
-        RV.crm$matrixECRM <- rbind(em.A, em.B, em.C, em.D)
+        RV_crm$matrixECRM <- rbind(em.A, em.B, em.C, em.D)
     })
     
     ## runCRM ####
     runCRM <- reactive({
     # runCRM <- eventReactive(input$buttonSimulateCRM, {
         simulateConsumerResource(
-            n.species = n.species.crm(),
-            n.resources = n.resources.crm(),
-            names.species = names.species.crm(), 
-            names.resources = names.resources.crm(), 
-            E = RV.crm$matrixECRM,
-            x0 = x0.crm(), 
-            resources = resources.crm(), 
-            resources.dilution = resources.dilution.crm(),
-            inflow.rate = inflow.rate.crm(),
-            outflow.rate = outflow.rate.crm(),
-            volume = volume.crm(),
-            growth.rates = growth.rates.crm(), 
-            monod.constant = RV.crm$matrixMonodCRM, 
-            sigma.drift = sigma.drift.crm(),
-            sigma.epoch = sigma.epoch.crm(),
-            sigma.external = sigma.external.crm(),
-            sigma.migration = sigma.migration.crm(), 
-            epoch.p = epoch.p.crm(), 
-            t.external_events = t.external_events.crm(),
-            t.external_durations = t.external_durations.crm(),
-            stochastic = stochastic.crm(),
-            migration.p = migration.p.crm(),
-            metacommunity.probability = metacommunity.probability.crm(),
-            error.variance = error.variance.crm(), 
-            norm = norm.crm(),
-            t.start = t.start.crm(),
-            t.end = t.end.crm(),
-            t.step = t.step.crm(),
-            t.store = t.store.crm()
+            n_species = n_species_crm(),
+            n_resources = n_resources_crm(),
+            names_species = names_species_crm(), 
+            names_resources = names_resources_crm(), 
+            E = RV_crm$matrixECRM,
+            x0 = x0_crm(), 
+            resources = resources_crm(), 
+            resources_dilution = resources_dilution_crm(),
+            inflow_rate = inflow_rate_crm(),
+            outflow_rate = outflow_rate_crm(),
+            volume = volume_crm(),
+            growth_rates = growth_rates_crm(), 
+            monod_constant = RV_crm$matrixMonodCRM, 
+            sigma_drift = sigma_drift_crm(),
+            sigma_epoch = sigma_epoch_crm(),
+            sigma_external = sigma_external_crm(),
+            sigma_migration = sigma_migration_crm(), 
+            epoch_p = epoch_p_crm(), 
+            t_external_events = t_external_events_crm(),
+            t_external_durations = t_external_durations_crm(),
+            stochastic = stochastic_crm(),
+            migration_p = migration_p_crm(),
+            metacommunity_probability = metacommunity_probability_crm(),
+            error_variance = error_variance_crm(), 
+            norm = norm_crm(),
+            t_start = t_start_crm(),
+            t_end = t_end_crm(),
+            t_step = t_step_crm(),
+            t_store = t_store_crm()
         )}
     )
     
@@ -339,105 +339,105 @@ server <- function(input, output, session) {
     
     # model2 simulate generalized Lotka-Volterra Model ####
     ## interspecies interactions ####
-    n.species.glv <- reactive(input$nSpeciesGLV)
-    names.species.glv <- reactive(text2chars(input$namesSpeciesGLV, len = n.species.glv(), prefix = "sp"))
-    diagonal.glv <- reactive(input$diagonalGLV)
-    connectance.glv <- reactive(input$connectanceGLV)
-    scale.glv <- reactive(input$scaleGLV)
+    n_species_glv <- reactive(input$nSpeciesGLV)
+    names_species_glv <- reactive(text2chars(input$namesSpeciesGLV, len = n_species_glv(), prefix = "sp"))
+    diagonal_glv <- reactive(input$diagonalGLV)
+    connectance_glv <- reactive(input$connectanceGLV)
+    scale_glv <- reactive(input$scaleGLV)
     
-    mutualism.glv <- reactive(input$mutualismGLV)
-    commensalism.glv <- reactive(input$commensalismGLV)
-    parasitism.glv <- reactive(input$parasitismGLV)
-    amensalism.glv <- reactive(input$amensalismGLV)
-    competition.glv <- reactive(input$competitionGLV)
+    mutualism_glv <- reactive(input$mutualismGLV)
+    commensalism_glv <- reactive(input$commensalismGLV)
+    parasitism_glv <- reactive(input$parasitismGLV)
+    amensalism_glv <- reactive(input$amensalismGLV)
+    competition_glv <- reactive(input$competitionGLV)
     
     observeEvent(input$buttonInteractionsU, {
-        updateTextInput(inputId = "interactionsCustomGLV", value = round(rbeta(n.species.glv()^2, 0.5, 0.5), digits = 3))
+        updateTextInput(inputId = "interactionsCustomGLV", value = round(rbeta(n_species_glv()^2, 0.5, 0.5), digits = 3))
     })
     observeEvent(input$buttonInteractionsN, {
-        updateTextInput(inputId = "interactionsCustomGLV", value = round(rbeta(n.species.glv()^2, 2, 2), digits = 3))
+        updateTextInput(inputId = "interactionsCustomGLV", value = round(rbeta(n_species_glv()^2, 2, 2), digits = 3))
     })
     observeEvent(input$buttonInteractionsEven, {
-        updateTextInput(inputId = "interactionsCustomGLV", value = round(runif(n.species.glv()^2, 0, 1), digits = 3))
+        updateTextInput(inputId = "interactionsCustomGLV", value = round(runif(n_species_glv()^2, 0, 1), digits = 3))
     })
-    interactions_dist.glv <- reactive(round(runif(n.species.glv()^2, 0, 1), digits = 3))
-    inter.custom.glv <- reactive(as.numeric(as.vector(text2char(input$interactionsCustomGLV))))
-    interactions.glv <- reactive({
-        if (length(inter.custom.glv()) < n.species.glv()^2){
+    interactions_dist_glv <- reactive(round(runif(n_species_glv()^2, 0, 1), digits = 3))
+    inter_custom_glv <- reactive(as.numeric(as.vector(text2char(input$interactionsCustomGLV))))
+    interactions_glv <- reactive({
+        if (length(inter_custom_glv()) < n_species_glv()^2){
             return(
                 c(
-                    inter.custom.glv(), 
+                    inter_custom_glv(), 
                     as.vector(
-                        interactions_dist.glv()[(length(inter.custom.glv())+1):(n.species.glv()^2)]
+                        interactions_dist_glv()[(length(inter_custom_glv())+1):(n_species_glv()^2)]
                     )
                 )
             )
         } else {
-            return(head(inter.custom.glv(), n.species.glv()^2))
+            return(head(inter_custom_glv(), n_species_glv()^2))
         }
     })
-    output$interactionsOutputGLV <- renderPrint(interactions.glv())
-    symmetric.glv <- reactive(input$symmetricGLV)
-    listA.glv <- reactive(text2char(input$listAGLV)) # TODO: convert listA
+    output$interactionsOutputGLV <- renderPrint(interactions_glv())
+    symmetric_glv <- reactive(input$symmetricGLV)
+    listA_glv <- reactive(text2char(input$listAGLV)) # TODO: convert listA
     
-    RV.glv <- reactiveValues(matrixAGLV = NULL)
-    # replace generateA() by RV.glv$matrixAGLV
+    RV_glv <- reactiveValues(matrixAGLV = NULL)
+    # replace generateA() by RV_glv$matrixAGLV
     
     #### editable matrixA ####
     observe({
         roundACRM <- round(
             randomA(
-                n.species = n.species.glv(),
-                names.species = names.species.glv(), 
-                diagonal = diagonal.glv(),
-                connectance = connectance.glv(),
-                scale = scale.glv(),
-                mutualism = mutualism.glv(),
-                commensalism = commensalism.glv(),
-                parasitism = parasitism.glv(),
-                amensalism = amensalism.glv(),
-                competition = competition.glv(),
-                interactions = interactions.glv(),
-                symmetric = symmetric.glv()
+                n_species = n_species_glv(),
+                names_species = names_species_glv(), 
+                diagonal = diagonal_glv(),
+                connectance = connectance_glv(),
+                scale = scale_glv(),
+                mutualism = mutualism_glv(),
+                commensalism = commensalism_glv(),
+                parasitism = parasitism_glv(),
+                amensalism = amensalism_glv(),
+                competition = competition_glv(),
+                interactions = interactions_glv(),
+                symmetric = symmetric_glv()
             ),
             digits = 3
         )
-        RV.glv$matrixAGLV <- roundACRM
+        RV_glv$matrixAGLV <- roundACRM
     })
-    output$TableAGLV <- renderDataTable(RV.glv$matrixAGLV, editable = 'all', selection = 'none', server = TRUE, options = list(scrollX = TRUE))
-    output$GLVPlotA <- renderPlot(makeHeatmap(RV.glv$matrixAGLV, "interspecies interaction matrix"), res = 96)
+    output$TableAGLV <- renderDataTable(RV_glv$matrixAGLV, editable = 'all', selection = 'none', server = TRUE, options = list(scrollX = TRUE))
+    output$GLVPlotA <- renderPlot(makeHeatmap(RV_glv$matrixAGLV, "interspecies interaction matrix"), res = 96)
     
     observeEvent(input$tableAGLV_cell_edit, {
-        RV.glv$matrixAGLV <<- editData(RV.glv$matrixAGLV, input$tableAGLV_cell_edit, 'tableAGLV')
+        RV_glv$matrixAGLV <<- editData(RV_glv$matrixAGLV, input$tableAGLV_cell_edit, 'tableAGLV')
     })
     
     ## growth rates ####
-    x0.glv <- reactive(as.numeric(text2chars(input$x0GLV, len = n.species.glv(), expr = paste0("runif(n =", n.species.glv(), ", min = 0, max = 1)"))))
-    output$x0GLVOutput <- renderPrint(x0.glv())
-    growth.rates.glv <- reactive(as.numeric(text2chars(input$growthRatesGLV, len = n.species.glv(), expr = paste0("runif(n =", n.species.glv(), ", min = 0, max = 1)"))))
-    output$growthRatesGLVOutput <- renderPrint(growth.rates.glv())
+    x0_glv <- reactive(as.numeric(text2chars(input$x0GLV, len = n_species_glv(), expr = paste0("runif(n =", n_species_glv(), ", min = 0, max = 1)"))))
+    output$x0GLVOutput <- renderPrint(x0_glv())
+    growth_rates_glv <- reactive(as.numeric(text2chars(input$growthRatesGLV, len = n_species_glv(), expr = paste0("runif(n =", n_species_glv(), ", min = 0, max = 1)"))))
+    output$growthRatesGLVOutput <- renderPrint(growth_rates_glv())
     ## perturbations ####
-    stochastic.glv <- reactive(input$stochasticGLV)
-    sigma.drift.glv <- reactive(input$sigmaDriftGLV)
-    sigma.epoch.glv <- reactive(input$sigmaEpochGLV)
-    sigma.external.glv <- reactive(input$sigmaExternalGLV)
-    epoch.p.glv <- reactive(input$epochPGLV)
-    sigma.migration.glv <- reactive(input$sigmaMigrationGLV)
-    t.external_events.glv <- reactive(as.numeric(text2char(input$tExternalEventsGLV)))
-    output$tExternalEventsGLVOutput <- renderPrint(t.external_events.glv())
-    t.external_durations.glv <- reactive(as.numeric(text2char(input$tExternalDurationsGLV)))
-    output$tExternalDurationsGLVOutput <- renderPrint(t.external_durations.glv())
-    migration.p.glv <- reactive(input$migrationPGLV)
-    metacommunity.probability.glv <- reactive(as.numeric(text2chars(input$metacommunityProbabilityGLV, len = n.species.crm(), expr = paste0("rdirichlet(1, alpha = rep(1,", n.species.crm(), "))"))))
-    output$metacommunityProbabilityGLV <- renderPrint(metacommunity.probability.glv())
+    stochastic_glv <- reactive(input$stochasticGLV)
+    sigma_drift_glv <- reactive(input$sigmaDriftGLV)
+    sigma_epoch_glv <- reactive(input$sigmaEpochGLV)
+    sigma_external_glv <- reactive(input$sigmaExternalGLV)
+    epoch_p_glv <- reactive(input$epochPGLV)
+    sigma_migration_glv <- reactive(input$sigmaMigrationGLV)
+    t_external_events_glv <- reactive(as.numeric(text2char(input$tExternalEventsGLV)))
+    output$tExternalEventsGLVOutput <- renderPrint(t_external_events_glv())
+    t_external_durations_glv <- reactive(as.numeric(text2char(input$tExternalDurationsGLV)))
+    output$tExternalDurationsGLVOutput <- renderPrint(t_external_durations_glv())
+    migration_p_glv <- reactive(input$migrationPGLV)
+    metacommunity_probability_glv <- reactive(as.numeric(text2chars(input$metacommunityProbabilityGLV, len = n_species_glv(), expr = paste0("rdirichlet(1, alpha = rep(1,", n_species_glv(), "))"))))
+    output$metacommunityProbabilityGLV <- renderPrint(metacommunity_probability_glv())
     
-    error.variance.glv <- reactive(input$errorVarianceGLV)
-    t.start.glv <- reactive(input$tStartGLV)
-    t.end.glv <- reactive(input$tEndGLV)
-    t.step.glv <- reactive(input$tStepGLV)
-    t.store.glv <- reactive(input$tStoreGLV)
+    error_variance_glv <- reactive(input$errorVarianceGLV)
+    t_start_glv <- reactive(input$tStartGLV)
+    t_end_glv <- reactive(input$tEndGLV)
+    t_step_glv <- reactive(input$tStepGLV)
+    t_store_glv <- reactive(input$tStoreGLV)
     
-    norm.glv <- reactive(input$normGLV)
+    norm_glv <- reactive(input$normGLV)
     
     ## examples GLV ####
     observeEvent(input$GLVEX1, {
@@ -458,7 +458,7 @@ server <- function(input, output, session) {
         updateSliderInput(inputId = "scaleGLV", value = 0.5)
         updateSwitchInput(inputId = "symmetricGLV", value = TRUE)
         updateSwitchInput(inputId = "stochasticGLV", value = FALSE)
-        updateSliderInput(inputId = "migrationPCRM", value = 0)
+        updateSliderInput(inputId = "migrationPGLV", value = 0)
     })
     observeEvent(input$GLVEX4, {
         updateSliderInput(inputId = "nSpeciesGLV", value = 4)
@@ -467,8 +467,8 @@ server <- function(input, output, session) {
         updateSliderInput(inputId = "scaleGLV", value = 0.5)
         updateSwitchInput(inputId = "symmetricGLV", value = TRUE)
         updateSwitchInput(inputId = "stochasticGLV", value = FALSE)
-        updateSliderInput(inputId = "migrationPCRM", value = 0)
-        updateSliderInput(inputId = "errorVarianceGLV", value = 0.001)
+        updateSliderInput(inputId = "migrationPGLV", value = 0)
+        updateSliderInput(inputId = "errorVarianceGLV", value = 0.1)
     })
     
     ## runGLV ####
@@ -477,62 +477,62 @@ server <- function(input, output, session) {
     runGLV <- reactive({
     # runGLV <- eventReactive(input$buttonSimulateGLV, {
         simulateGLV(
-            n.species = n.species.glv(),
-            names.species = names.species.glv(), 
-            A = RV.glv$matrixAGLV,
-            x0 = x0.glv(), 
-            growth.rates = growth.rates.glv(), 
-            sigma.drift = sigma.drift.glv(),
-            sigma.epoch = sigma.epoch.glv(),
-            sigma.external = sigma.external.glv(),
-            sigma.migration = sigma.migration.glv(),
-            epoch.p = epoch.p.glv(),
-            t.external_events = t.external_events.glv(),
-            t.external_durations = t.external_durations.glv(),
-            stochastic = stochastic.glv(),
-            migration.p = migration.p.glv(),
-            metacommunity.probability = metacommunity.probability.glv(),
-            error.variance = error.variance.glv(),
-            norm = norm.glv(), 
-            t.start = t.start.glv(),
-            t.end = t.end.glv(),
-            t.step = t.step.glv(),
-            t.store = t.store.glv()
+            n_species = n_species_glv(),
+            names_species = names_species_glv(), 
+            A = RV_glv$matrixAGLV,
+            x0 = x0_glv(), 
+            growth_rates = growth_rates_glv(), 
+            sigma_drift = sigma_drift_glv(),
+            sigma_epoch = sigma_epoch_glv(),
+            sigma_external = sigma_external_glv(),
+            sigma_migration = sigma_migration_glv(),
+            epoch_p = epoch_p_glv(),
+            t_external_events = t_external_events_glv(),
+            t_external_durations = t_external_durations_glv(),
+            stochastic = stochastic_glv(),
+            migration_p = migration_p_glv(),
+            metacommunity_probability = metacommunity_probability_glv(),
+            error_variance = error_variance_glv(),
+            norm = norm_glv(), 
+            t_start = t_start_glv(),
+            t_end = t_end_glv(),
+            t_step = t_step_glv(),
+            t_store = t_store_glv()
         )
     })
     output$GLVSpecies <- renderPlot(makePlot(runGLV()$matrix))
     
     # model3 simulate Hubbell neutral model with growth rates ####
     ## basic ####
-    n.species.hub <- reactive(input$nSpeciesHUB)
-    x0.hub <- reactive(as.numeric(text2chars(input$x0HUB, len = n.species.hub(), expr = paste0("rep(100, ", n.species.hub() ,")"))))
-    output$x0HUBOutput <- renderPrint(x0.hub())
-    names.species.hub <- reactive(text2chars(input$namesSpeciesHUB, len = n.species.hub(), prefix = "sp"))
-    growth.rates.hub <- reactive(as.numeric(text2chars(input$growthRatesHUB, len = n.species.hub(), expr = paste0('rep(1, ',n.species.hub(), ')'))))
-    output$growthRatesHUBOutput <- renderPrint(growth.rates.hub())
+    n_species_hub <- reactive(input$nSpeciesHUB)
+    x0_hub <- reactive(as.numeric(text2chars(input$x0HUB, len = n_species_hub(), expr = paste0("rep(100, ", n_species_hub() ,")"))))
+    output$x0HUBOutput <- renderPrint(x0_hub())
+    names_species_hub <- reactive(text2chars(input$namesSpeciesHUB, len = n_species_hub(), prefix = "sp"))
+    growth_rates_hub <- reactive(as.numeric(text2chars(input$growthRatesHUB, len = n_species_hub(), expr = paste0('rep(1, ',n_species_hub(), ')'))))
+    output$growthRatesHUBOutput <- renderPrint(growth_rates_hub())
     
-    t.start.hub <- reactive(input$tStartHUB)
-    t.end.hub <- reactive(input$tEndHUB)
+    t_start_hub <- reactive(input$tStartHUB)
+    t_end_hub <- reactive(input$tEndHUB)
     observeEvent(input$tStartHUB | input$tEndHUB, {
         updateNumericInput(inputId = "tStartHUB", max = input$tEndHUB)
         updateNumericInput(inputId = "tEndHUB", min = input$tStartHUB)
     })
     
-    t.step.hub <- reactive(input$tStepHUB)
-    t.store.hub <- reactive(input$tStoreHUB)
+    t_step_hub <- reactive(input$tStepHUB)
+    t_store_hub <- reactive(input$tStoreHUB)
     observeEvent(input$tStartHUB | input$tEndHUB | input$tStepHUB | input$tStoreHUB, {
         updateNumericInput(inputId = "tStepHUB", max = (input$tEndHUB-input$tStartHUB)/input$tStoreHUB)
         updateNumericInput(inputId = "tStoreHUB", max = (input$tEndHUB-input$tStartHUB)/input$tStepHUB)
     })
     
     ## perturbations ####
-    error.variance.hub <- reactive(input$errorVarianceHUB)
-    k.events.hub <- reactive(input$kEventsHUB)
-    migration.p.hub <- reactive(input$migrationPHUB)
-    metacommunity.probability.hub <- reactive(as.numeric(text2chars(input$metacommunityProbabilityHUB, len = n.species.hub(), expr = paste0("rdirichlet(1, alpha = rep(1,", n.species.hub(), "))"))))
-    output$metacommunityProbabilityHUB <- renderPrint(metacommunity.probability.hub())
+    error_variance_hub <- reactive(input$errorVarianceHUB)
+    k_events_hub <- reactive(input$kEventsHUB)
+    migration_p_hub <- reactive(input$migrationPHUB)
+    metacommunity_probability_hub <- reactive(as.numeric(text2chars(input$metacommunityProbabilityHUB, len = n_species_hub(), expr = paste0("rdirichlet(1, alpha = rep(1,", n_species_hub(), "))"))))
+    output$metacommunityProbabilityHUB <- renderPrint(metacommunity_probability_hub())
     
-    norm.hub <- reactive(input$normHUB)
+    norm_hub <- reactive(input$normHUB)
     
     ## examples HUB ####
     observeEvent(input$HUBEX1, {
@@ -562,7 +562,7 @@ server <- function(input, output, session) {
         updateSliderInput(inputId = "migrationPHUB", value = 0.1)
         updateTextInput(inputId = "metacommunityProbabilityHUB", value = "0.1, 0.15, 0.2, 0.25, 0.3")
         updateTextInput(inputId = "tEndHUB", value = 20)
-        updateTextInput(inputId = "tStoreHUB", value = 1000)
+        updateTextInput(inputId = "tStoreHUB", value = 200)
         updateSliderInput(inputId = "kEventsHUB", value = 5)
         updateTextInput(inputId = "growthRatesHUB", value = "1.1, 1.05, 1, 0.95, 0.9")
     })
@@ -571,68 +571,68 @@ server <- function(input, output, session) {
     runHUB <- reactive({
     # runHUB <- eventReactive(input$buttonSimulateHUB, {
         simulateHubbellRates(
-            n.species = n.species.hub(),
-            x0 = x0.hub(),
-            names.species = names.species.hub(),
-            migration.p = migration.p.hub(),
-            metacommunity.probability = metacommunity.probability.hub(),
-            k.events = k.events.hub(),
-            growth.rates = growth.rates.hub(),
-            error.variance = error.variance.hub(),
-            norm = norm.hub(),
-            t.start = t.start.hub(),
-            t.end = t.end.hub(),
-            t.step = t.step.hub(),
-            t.store = t.store.hub()
+            n_species = n_species_hub(),
+            x0 = x0_hub(),
+            names_species = names_species_hub(),
+            migration_p = migration_p_hub(),
+            metacommunity_probability = metacommunity_probability_hub(),
+            k_events = k_events_hub(),
+            growth_rates = growth_rates_hub(),
+            error_variance = error_variance_hub(),
+            norm = norm_hub(),
+            t_start = t_start_hub(),
+            t_end = t_end_hub(),
+            t_step = t_step_hub(),
+            t_store = t_store_hub()
         )
     })
     output$HUBSpecies <- renderPlot(makePlot(runHUB()$matrix, "abundance of species by time"), res = 96)
     
     # model4 simulate stochastic logistic model ####
     ## basic ####
-    n.species.log <- reactive(input$nSpeciesLOG)
-    names.species.log <- reactive(text2chars(input$namesSpeciesLOG, len = n.species.log(), prefix = "sp"))
-    t.start.log <- reactive(input$tStartLOG)
-    t.end.log <- reactive(input$tEndLOG)
+    n_species_log <- reactive(input$nSpeciesLOG)
+    names_species_log <- reactive(text2chars(input$namesSpeciesLOG, len = n_species_log(), prefix = "sp"))
+    t_start_log <- reactive(input$tStartLOG)
+    t_end_log <- reactive(input$tEndLOG)
     observeEvent(input$tStartLOG | input$tEndLOG, {
         updateNumericInput(inputId = "tStartLOG", max = input$tEndLOG)
         updateNumericInput(inputId = "tEndLOG", min = input$tStartLOG)
     })
     
-    t.step.log <- reactive(input$tStepLOG)
-    t.store.log <- reactive(input$tStoreLOG)
+    t_step_log <- reactive(input$tStepLOG)
+    t_store_log <- reactive(input$tStoreLOG)
     observeEvent(input$tStartLOG | input$tEndLOG | input$tStepLOG | input$tStoreLOG, {
         updateNumericInput(inputId = "tStepLOG", max = (input$tEndLOG-input$tStartLOG)/input$tStoreLOG)
         updateNumericInput(inputId = "tStoreLOG", max = (input$tEndLOG-input$tStartLOG)/input$tStepLOG)
     })
     
     ## growth and death rates ####
-    x0.log <- reactive(as.numeric(text2chars(input$x0LOG, len = n.species.log(), expr = paste0("rep(100, ", n.species.log() ,")"))))
-    output$x0LOGOutput <- renderPrint(x0.log())
-    growth.rates.log <- reactive(as.numeric(text2chars(input$growthRatesLOG, len = n.species.log(), expr = paste0("runif(n = ", n.species.log() ,", min = 0.1, max = 0.2)"))))
-    output$growthRatesLOGOutput <- renderPrint(growth.rates.log())
-    death.rates.log <- reactive(as.numeric(text2chars(input$deathRatesLOG, len = n.species.log(), expr = paste0("runif(n = ", n.species.log() ,", min = 0.0005, max = 0.0025)"))))
-    output$deathRatesLOGOutput <- renderPrint(death.rates.log())
-    carrying.capacities.log <- reactive(as.numeric(text2chars(input$carryingCapacitiesLOG, len = n.species.log(), expr = paste0("runif(n = ", n.species.log() ,", min = 1000, max = 2000)"))))
-    output$carryingCapacitiesLOGOutput <- renderPrint(carrying.capacities.log())
+    x0_log <- reactive(as.numeric(text2chars(input$x0LOG, len = n_species_log(), expr = paste0("rep(100, ", n_species_log() ,")"))))
+    output$x0LOGOutput <- renderPrint(x0_log())
+    growth_rates_log <- reactive(as.numeric(text2chars(input$growthRatesLOG, len = n_species_log(), expr = paste0("runif(n = ", n_species_log() ,", min = 0.1, max = 0.2)"))))
+    output$growthRatesLOGOutput <- renderPrint(growth_rates_log())
+    death_rates_log <- reactive(as.numeric(text2chars(input$deathRatesLOG, len = n_species_log(), expr = paste0("runif(n = ", n_species_log() ,", min = 0.0005, max = 0.0025)"))))
+    output$deathRatesLOGOutput <- renderPrint(death_rates_log())
+    carrying_capacities_log <- reactive(as.numeric(text2chars(input$carryingCapacitiesLOG, len = n_species_log(), expr = paste0("runif(n = ", n_species_log() ,", min = 1000, max = 2000)"))))
+    output$carryingCapacitiesLOGOutput <- renderPrint(carrying_capacities_log())
     
     ## perturbations ####
-    error.variance.log <- reactive(input$errorVarianceLOG)
-    stochastic.log <- reactive(input$stochasticLOG)
-    sigma.drift.log <- reactive(input$sigmaDriftLOG)
-    epoch.p.log <- reactive(input$epochPLOG)
-    sigma.epoch.log <- reactive(input$sigmaEpochLOG)
-    sigma.external.log <- reactive(input$sigmaExternalLOG)
-    t.external_events.log <- reactive(as.numeric(text2char(input$tExternalEventsLOG)))
-    output$tExternalEventsLOGOutput <- renderPrint(t.external_events.log())
-    t.external_durations.log <- reactive(as.numeric(text2char(input$tExternalDurationsLOG)))
-    output$tExternalDurationsLOGOutput <- renderPrint(t.external_durations.log())
-    migration.p.log <- reactive(input$migrationPLOG)
-    sigma.migration.log <- reactive(input$sigmaMigrationLOG)
-    metacommunity.probability.log <- reactive(as.numeric(text2chars(input$metacommunityProbabilityLOG, len = n.species.log(), expr = paste0("rdirichlet(1, alpha = rep(1,", n.species.log(), "))"))))
-    output$metacommunityProbabilityLOG <- renderPrint(metacommunity.probability.log())
+    error_variance_log <- reactive(input$errorVarianceLOG)
+    stochastic_log <- reactive(input$stochasticLOG)
+    sigma_drift_log <- reactive(input$sigmaDriftLOG)
+    epoch_p_log <- reactive(input$epochPLOG)
+    sigma_epoch_log <- reactive(input$sigmaEpochLOG)
+    sigma_external_log <- reactive(input$sigmaExternalLOG)
+    t_external_events_log <- reactive(as.numeric(text2char(input$tExternalEventsLOG)))
+    output$tExternalEventsLOGOutput <- renderPrint(t_external_events_log())
+    t_external_durations_log <- reactive(as.numeric(text2char(input$tExternalDurationsLOG)))
+    output$tExternalDurationsLOGOutput <- renderPrint(t_external_durations_log())
+    migration_p_log <- reactive(input$migrationPLOG)
+    sigma_migration_log <- reactive(input$sigmaMigrationLOG)
+    metacommunity_probability_log <- reactive(as.numeric(text2chars(input$metacommunityProbabilityLOG, len = n_species_log(), expr = paste0("rdirichlet(1, alpha = rep(1,", n_species_log(), "))"))))
+    output$metacommunityProbabilityLOG <- renderPrint(metacommunity_probability_log())
     
-    norm.log <- reactive(input$normLOG)
+    norm_log <- reactive(input$normLOG)
     
     
     ## examples LOG ####
@@ -673,28 +673,28 @@ server <- function(input, output, session) {
     runLOG <- reactive({
     # runLOG <- eventReactive(input$buttonSimulateLOG, {
         simulateStochasticLogistic(
-            n.species = n.species.log(),
-            names.species = names.species.log(),
-            growth.rates = growth.rates.log(),
-            carrying.capacities = carrying.capacities.log(),
-            death.rates = death.rates.log(),
-            x0 = x0.log(),
-            sigma.drift = sigma.drift.log(),
-            sigma.epoch = sigma.epoch.log(),
-            sigma.external = sigma.external.log(),
-            sigma.migration = sigma.migration.log(),
-            epoch.p = epoch.p.log(),
-            t.external_events = t.external_events.log(),
-            t.external_durations = t.external_durations.log(),
-            migration.p = migration.p.log(),
-            metacommunity.probability = metacommunity.probability.log(),
-            stochastic = stochastic.log(),
-            error.variance = error.variance.log(),
-            norm = norm.log(),
-            t.start = t.start.log(),
-            t.end = t.end.log(),
-            t.step = t.step.log(),
-            t.store = t.store.log()
+            n_species = n_species_log(),
+            names_species = names_species_log(),
+            growth_rates = growth_rates_log(),
+            carrying_capacities = carrying_capacities_log(),
+            death_rates = death_rates_log(),
+            x0 = x0_log(),
+            sigma_drift = sigma_drift_log(),
+            sigma_epoch = sigma_epoch_log(),
+            sigma_external = sigma_external_log(),
+            sigma_migration = sigma_migration_log(),
+            epoch_p = epoch_p_log(),
+            t_external_events = t_external_events_log(),
+            t_external_durations = t_external_durations_log(),
+            migration_p = migration_p_log(),
+            metacommunity_probability = metacommunity_probability_log(),
+            stochastic = stochastic_log(),
+            error_variance = error_variance_log(),
+            norm = norm_log(),
+            t_start = t_start_log(),
+            t_end = t_end_log(),
+            t_step = t_step_log(),
+            t_store = t_store_log()
         )
     })
     

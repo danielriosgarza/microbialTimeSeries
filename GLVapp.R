@@ -7,8 +7,8 @@ library(gtools)
 Rfiles = gsub(" ", "", paste("./R/", list.files("./R")))
 sapply(Rfiles, source)
 
-makePlot <- function(out.matrix){
-  df <- as.data.frame(out.matrix)
+makePlot <- function(out_matrix){
+  df <- as.data.frame(out_matrix)
   dft <-  melt(df, id="time")
   names(dft)[2] = "species"
   names(dft)[3] = "x.t"
@@ -50,8 +50,8 @@ makeHeatmap <-function(matrix.A, title){
 
 
 getPerturbT <- function(endTime, n.perturbs){
-  st <- SimulationTimes(t.end = endTime, t.store = n.perturbs + 1)
-  return (st$t.sys[st$t.index[2:length(st$t.index)]])
+  st <- SimulationTimes(t_end = endTime, t_store = n.perturbs + 1)
+  return (st$t_sys[st$t_index[2:length(st$t_index)]])
 }
 #constants
 sp.x0 <- 0.001
@@ -64,13 +64,13 @@ ui <- fluidPage(
                  br(),
                  textOutput("x0"),
                  br(),
-                 sliderInput('t.end', 'simulation time', value=100, min=10, max = 2000, step = 10)),
+                 sliderInput('t_end', 'simulation time', value=100, min=10, max = 2000, step = 10)),
     mainPanel(tabsetPanel(tabPanel("Metacommunity",
                                    sliderInput("multiplier", "Eveness", min = 1, max=1000, value=1.0, step = 0.1),
                                    
                                    tags$div(sliderInput("migration.r", "Migration rate", min = 0, max=1, value=0.1, step = 0.01),  style="display:inline-block"),
                                    
-                                   tags$div(sliderInput("sigma.migration", "sd of migration", min = 0, max=1, value=0.01, step = 0.001),  style="display:inline-block"),
+                                   tags$div(sliderInput("sigma_migration", "sd of migration", min = 0, max=1, value=0.01, step = 0.001),  style="display:inline-block"),
                                    
                                    
                                    plotOutput("metacommunityPlot", width = 600, height = 400)
@@ -107,9 +107,9 @@ ui <- fluidPage(
   
   tabPanel("Stochasticity",
            radioButtons("stoch", "Use stochasticity?", c('yes', 'no'), selected ='no' ),
-           sliderInput('sigma.drift', 'sd of random drift', value=0.001, min=0.0, max = 0.2, step = 0.001),
+           sliderInput('sigma_drift', 'sd of random drift', value=0.001, min=0.0, max = 0.2, step = 0.001),
            tags$div(sliderInput('p.epoch', 'frequency of strong episodic drift', value=0.01, min=0.0, max = 0.5, step = 0.01), style="display:inline-block"),
-           tags$div(sliderInput('sigma.epoch', 'sd of strong episodic drift', value=0.01, min=0.0, max = 0.5, step = 0.01), style="display:inline-block"),
+           tags$div(sliderInput('sigma_epoch', 'sd of strong episodic drift', value=0.01, min=0.0, max = 0.5, step = 0.01), style="display:inline-block"),
            br(),
            tags$div(sliderInput('perturbations.n', 'number of perturbation events', value=1, min=0, max = 100, step = 1), style="display:inline-block"),
            tags$div(sliderInput('perturbations.t', 'duration of perturbation events (t)', value=0.1, min=0, max = 10, step = .1), style="display:inline-block"),
@@ -137,7 +137,7 @@ server <- function(input, output, session) {
   
   eveness <- reactive(input$multiplier)
   migration.rate <- reactive(input$migration.r)
-  migration.s <- reactive(input$sigma.migration)
+  migration.s <- reactive(input$sigma_migration)
   metacommunity.p <- reactive(rdirichlet(1, rep(.5, nSpecies())*eveness()))
   output$metacommunityPlot <- renderPlot(makePiePlot(metacommunity.p()[,]))
   interaction.w <- reactive(c(mutualism.w(), commensalism.w(), parasitism.w(), amensalism.w(),  competition.w() ))
@@ -146,13 +146,13 @@ server <- function(input, output, session) {
   matrix.d <- reactive(runif(nSpecies(), max(g.rates())/3, max(g.rates())))
   
   g.rates <- reactive({rbeta(nSpecies(), shape1 = alpha(), shape2 = beta())})
-  s.drift <- reactive(input$sigma.drift)
+  s.drift <- reactive(input$sigma_drift)
   prob.epoch <- reactive(input$p.epoch)
-  s.epoch <- reactive(input$sigma.epoch)
+  s.epoch <- reactive(input$sigma_epoch)
   n.perturbs <- reactive(input$perturbations.n)
   t.perturbs <- reactive(input$perturbations.t)
   s.perturbs <- reactive(input$sigma.perturbation) 
-  endTime <- reactive(input$t.end)
+  endTime <- reactive(input$t_end)
   
   output$betaDist <- renderText('<b>Distribution of growth rates</b> (
 <a href="https://en.wikipedia.org/wiki/Beta_distribution">beta distribution</a>)')
@@ -171,7 +171,7 @@ server <- function(input, output, session) {
     }else{symmetricM$data = FALSE
     }})
   
-  matrix.A <- reactive(randomA(n.species = nSpecies(), 
+  matrix.A <- reactive(randomA(n_species = nSpecies(), 
                                  diagonal = -1*matrix.d(), 
                                  connectance = connectance.p(), 
                                  interaction.w = interaction.w(), 
@@ -194,20 +194,20 @@ server <- function(input, output, session) {
   timePerturb <- reactive(getPerturbT(endTime(), n.perturbs()))
   
   output$ptT <- renderText({paste("Times of perturbations are: ", paste(signif(timePerturb(),2), collapse=", "))})
-  simul <- reactive(simulateGLV(n.species = nSpecies(),
+  simul <- reactive(simulateGLV(n_species = nSpecies(),
                                  A = matrix.A(),
-                                 growth.rates = g.rates(),
+                                 growth_rates = g.rates(),
                                  x0 = rep(sp.x0, nSpecies()),
-                                 t.end = endTime(),
+                                 t_end = endTime(),
                                  stochastic = stochastic$data,
-                                 sigma.drift = s.drift(),
-                                 sigma.epoch = s.epoch(),
-                                 t.external_events= timePerturb(),
-                                 t.external_durations= rep(t.perturbs(), n.perturbs()),
-                                 sigma.external = s.perturbs(),
+                                 sigma_drift = s.drift(),
+                                 sigma_epoch = s.epoch(),
+                                 t_external_events= timePerturb(),
+                                 t_external_durations= rep(t.perturbs(), n.perturbs()),
+                                 sigma_external = s.perturbs(),
                                  p.epoch = prob.epoch(),
-                                sigma.migration = migration.s(),
-                                migration.p = migration.rate(),
+                                sigma_migration = migration.s(),
+                                migration_p = migration.rate(),
                                 metacommunity.p = metacommunity.p())) 
 
   #

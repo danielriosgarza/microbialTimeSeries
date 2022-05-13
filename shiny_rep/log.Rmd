@@ -16,11 +16,11 @@ $\frac{dN}{dt} = rN(1-\frac{N}{K})$ indicates the change rates of population of 
 
 ### **Model Description**
 
-In our program, $x0$ defines the populations of each species($N$), $growth.rates$ defines their corresponding growth rates ($r$). In addition to growth rates, we added death rates $death.rates$ to simulate the death of species.
+In our program, $x0$ defines the populations of each species($N$), $growth_rates$ defines their corresponding growth rates ($r$). In addition to growth rates, we added death rates $death_rates$ to simulate the death of species.
 
-$\frac{dN}{dt} = growth.rates \times N(1-\frac{N}{K}) - death.rates \times N$
+$\frac{dN}{dt} = growth_rates \times N(1-\frac{N}{K}) - death_rates \times N$
 
-Note that the $N$ in the equation is different. For the growing part, it presumes that all cells, whether dead or alive, can contribute to the growth, and it's the carrying capacity which limits the growth and avoids the explosion, respecting the original logistic growth model at its best; for the dying part, however, only currently living cells are multiplied. If we want to use the original logistic growth model, we can simply set death.rates to 0.
+Note that the $N$ in the equation is different. For the growing part, it presumes that all cells, whether dead or alive, can contribute to the growth, and it's the carrying capacity which limits the growth and avoids the explosion, respecting the original logistic growth model at its best; for the dying part, however, only currently living cells are multiplied. If we want to use the original logistic growth model, we can simply set death_rates to 0.
 
 
 ### **Examples**
@@ -33,7 +33,7 @@ If not provided by the user, all parameters have default values except for the t
 ```{r}
 set.seed(42)
 ExampleLogistic <- simulateStochasticLogistic(
-    n.species = 5, 
+    n_species = 5, 
     stochastic = FALSE
     )
 makePlot(ExampleLogistic$matrix)
@@ -43,9 +43,9 @@ makePlot(ExampleLogistic$matrix)
 ```{r}
 set.seed(42)
 ExampleLogistic <- simulateStochasticLogistic(
-    n.species = 5, 
+    n_species = 5, 
     stochastic = FALSE, 
-    death.rates=rep(0,5)
+    death_rates=rep(0,5)
     )
 makePlot(ExampleLogistic$matrix)
 ```
@@ -54,12 +54,12 @@ makePlot(ExampleLogistic$matrix)
 ```{r}
 set.seed(42)
 ExampleLogistic <- simulateStochasticLogistic(
-    n.species = 5, 
+    n_species = 5, 
     stochastic = FALSE, 
-    death.rates=rep(0,5),
-    growth.rates = seq(0.1, 0.5, 0.1),
-    death.rates = seq(0.001, 0.0002, -0.0002),
-    carrying.capacities = seq(1000, 1800, 200)
+    death_rates=rep(0,5),
+    growth_rates = seq(0.1, 0.5, 0.1),
+    death_rates = seq(0.001, 0.0002, -0.0002),
+    carrying_capacities = seq(1000, 1800, 200)
     )
 makePlot(ExampleLogistic$matrix)
 ```
@@ -68,13 +68,13 @@ makePlot(ExampleLogistic$matrix)
 ```{r}
 set.seed(42)
 ExampleLogistic <- simulateStochasticLogistic(
-    n.species = 5, 
+    n_species = 5, 
     stochastic = FALSE, 
-    death.rates=rep(0,5),
-    growth.rates = seq(0.1, 0.5, 0.1),
-    death.rates = seq(0.001, 0.0002, -0.0002),
-    carrying.capacities = seq(1000, 1800, 200),
-    error.variance = 500, 
+    death_rates=rep(0,5),
+    growth_rates = seq(0.1, 0.5, 0.1),
+    death_rates = seq(0.001, 0.0002, -0.0002),
+    carrying_capacities = seq(1000, 1800, 200),
+    error_variance = 500, 
     norm = TRUE
     )
 makePlot(ExampleLogistic$matrix)

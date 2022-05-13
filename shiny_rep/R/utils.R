@@ -1,20 +1,20 @@
 #' Generate simulation times and the indices of time points to return
 #' in simulation functions.
 #'
-#' @param t.start Numeric scalar indicating the initial time of the simulation.
-#' (default: \code{t.start = 0})
-#' @param t.end Numeric scalar indicating the final time of the dimulation
-#' (default: \code{t.end = 1000})
-#' @param t.step Numeric scalar indicating the interval between simulation steps
-#' (default: \code{t.step = 0.1})
-#' @param t.store Integer scalar indicating the number of evenly distributed
-#' time points to keep (default: \code{t.store = 100})
+#' @param t_start Numeric scalar indicating the initial time of the simulation.
+#' (default: \code{t_start = 0})
+#' @param t_end Numeric scalar indicating the final time of the dimulation
+#' (default: \code{t_end = 1000})
+#' @param t_step Numeric scalar indicating the interval between simulation steps
+#' (default: \code{t_step = 0.1})
+#' @param t_store Integer scalar indicating the number of evenly distributed
+#' time points to keep (default: \code{t_store = 100})
 #'
-#' @return lists containing simulation times (t.sys) and the indices to keep.
+#' @return lists containing simulation times (t_sys) and the indices to keep.
 #' @examples
-#' Time <- SimulationTimes(t.start = 0, t.end = 100, t.step = 0.5,
-#'     t.store = 100)
-#' DefaultTime <- SimulationTimes(t.end = 1000)
+#' Time <- SimulationTimes(t_start = 0, t_end = 100, t_step = 0.5,
+#'     t_store = 100)
+#' DefaultTime <- SimulationTimes(t_end = 1000)
 #'
 #' @docType methods
 #' @aliases SimulationTimes-numeric
@@ -23,26 +23,26 @@
 #' @keywords internal
 #' @export
 
-SimulationTimes <- function(t.start = 0, t.end = 1000, 
-    t.step = 0.1, t.store = 1000){
-    t.total <- t.end-t.start
-    t.sys <- seq(t.start, t.end, by = t.step)
-    t.index <- seq(1, length(t.sys)-1, by=floor(length(t.sys)/t.store))
-    return(list("t.sys" = t.sys, "t.index" = t.index[1:t.store]))
+SimulationTimes <- function(t_start = 0, t_end = 1000, 
+    t_step = 0.1, t_store = 1000){
+    t_total <- t_end-t_start
+    t_sys <- seq(t_start, t_end, by = t_step)
+    t_index <- seq(1, length(t_sys)-1, by=floor(length(t_sys)/t_store))
+    return(list("t_sys" = t_sys, "t_index" = t_index[1:t_store]))
 }
 
 isPositiveInteger <- function(x, tol = .Machine$double.eps^0.5) {
     return(abs(x - round(x)) < tol && x > 0)
 }
 
-# ExampleEventTimes <- eventTimes(t.events = c(10,20,30), t.duration = rep(3,3))
-eventTimes <- function(t.events = NULL, t.duration = NULL,
-                       t.end=1000, ...){
-    tdyn <- SimulationTimes(t.end = t.end,...)
+# ExampleEventTimes <- eventTimes(t_events = c(10,20,30), t_duration = rep(3,3))
+eventTimes <- function(t_events = NULL, t_duration = NULL,
+                       t_end=1000, ...){
+    tdyn <- SimulationTimes(t_end = t_end,...)
     t.result = c()
-    for (i in seq(length(t.events))){
-        p1 <- tdyn$t.sys[(tdyn$t.sys >= t.events[i]) &
-            (tdyn$t.sys < (t.events[i]+t.duration[i]))]
+    for (i in seq(length(t_events))){
+        p1 <- tdyn$t_sys[(tdyn$t_sys >= t_events[i]) &
+            (tdyn$t_sys < (t_events[i]+t_duration[i]))]
         t.result <- c(t.result, p1)
     }
     return(t.result)
@@ -75,12 +75,12 @@ applyInterctionType <- function(I, pair, interType){
     }
 }
 
-getInteractions <- function(n.species, weights, connectance){
-    I <- matrix(0, n.species, n.species)
+getInteractions <- function(n_species, weights, connectance){
+    I <- matrix(0, n_species, n_species)
     interactions <- c('mutualism', 'commensalism', 'parasitism', 
                       'amensalism', 'competition')
     probs <- abs(weights)/sum(abs(weights))
-    combinations <- combn(n.species, 2)
+    combinations <- combn(n_species, 2)
     for (i in sample(seq_along(combinations[1,]),as.integer(ncol(combinations)*connectance), replace=FALSE)){
         I <- applyInterctionType(I, combinations[,i], sample(interactions, 1, prob = probs))
     }
@@ -125,7 +125,7 @@ getMoments <- function(simulaionMatrix, simulationResources = NULL, is.perCapita
 }
 
 
-generateMoments <- function(modelGenerateExp, n.instances, t.store, is.perCapita=FALSE, is.resource = FALSE){
+generateMoments <- function(modelGenerateExp, n.instances, t_store, is.perCapita=FALSE, is.resource = FALSE){
     modelSimul <- eval(modelGenerateExp)
     modelMatrix <- modelSimul$matrix
     simulMatrix <- modelMatrix[,colnames(modelMatrix)!="time"]
@@ -141,11 +141,11 @@ generateMoments <- function(modelGenerateExp, n.instances, t.store, is.perCapita
         simul = eval(modelGenerateExp)
         modelMatrix <- simul$matrix
         summ <- modelMatrix[,colnames(modelMatrix)!="time"]
-        summaryMatrix[i,] <- summ[t.store,]
+        summaryMatrix[i,] <- summ[t_store,]
         if (is.resource){
             modelResources <- simul$resources
             summr <- modelResources[,colnames(modelResources)!="time"]
-            summaryResources[i,] <-summr[t.store,]
+            summaryResources[i,] <-summr[t_store,]
         }
         
     }
@@ -164,14 +164,14 @@ getKL <- function(mA, mB){
 }
 
 getPerturbT <- function(endTime, n.perturbs){
-    st <- SimulationTimes(t.end = endTime, t.store = n.perturbs + 1)
-    return (st$t.sys[st$t.index[2:length(st$t.index)]])
+    st <- SimulationTimes(t_end = endTime, t_store = n.perturbs + 1)
+    return (st$t_sys[st$t_index[2:length(st$t_index)]])
 }
 
 
 # plotting functions ####
-makePlot <- function(out.matrix, title = "abundance of species by time", obj = "species", y.label = "x.t"){
-    df <- as.data.frame(out.matrix)
+makePlot <- function(out_matrix, title = "abundance of species by time", obj = "species", y.label = "x.t"){
+    df <- as.data.frame(out_matrix)
     dft <-  melt(df, id="time")
     names(dft)[2] = obj
     names(dft)[3] = y.label
@@ -183,8 +183,8 @@ makePlot <- function(out.matrix, title = "abundance of species by time", obj = "
         theme(plot.title = element_text(hjust = 0.5, size = 14))
 }
 
-makePlotRes <- function(out.matrix, title = "quantity of compounds by time"){
-    df <- as.data.frame(out.matrix)
+makePlotRes <- function(out_matrix, title = "quantity of compounds by time"){
+    df <- as.data.frame(out_matrix)
     dft <-  melt(df, id="time")
     names(dft)[2] = "resources"
     names(dft)[3] = "S.t"

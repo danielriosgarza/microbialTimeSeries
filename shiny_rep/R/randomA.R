@@ -2,21 +2,21 @@
 #' 
 #' Generate random interaction matrix for Generalized Lotka-Volterra (GLV) model
 #' 
-#' @param n.species Integer number of species
-#' @param names.species Character: names of species. If NULL,
-#' `paste0("sp", seq_len(n.species))` is used.
-#' (default: \code{names.species = NULL})
+#' @param n_species Integer number of species
+#' @param names_species Character: names of species. If NULL,
+#' `paste0("sp", seq_len(n_species))` is used.
+#' (default: \code{names_species = NULL})
 #' @param diagonal Values defining the strength of self-interactions. Input can 
-#' be a number (will be applied to all species) or a vector of length n.species.
+#' be a number (will be applied to all species) or a vector of length n_species.
 #' Positive self-interaction values lead to exponential growth.
 #' (default: \code{diagonal = -0.5})
 #' @param connectance Numeric frequency of inter-species interactions. 
 #' i.e. proportion of non-zero off-diagonal terms.
 #' Should be in the [0,1] interval.
 #' (default: \code{connectance = 0.2})
-#' @param scale.offDiagonal Numeric: scale of the off-diagonal elements compared to the 
+#' @param scale_off_diagonal Numeric: scale of the off-diagonal elements compared to the 
 #' diagonal. 
-#' (default: \code{scale.offDiagonal = 0.1})
+#' (default: \code{scale_off_diagonal = 0.1})
 #' @param mutualism Numeric: relative proportion of interactions terms 
 #' consistent with mutualism (positive <-> positive)
 #' (default: \code{mutualism = 1})
@@ -32,10 +32,10 @@
 #' @param competition Numeric: relative proportion of interactions terms 
 #' consistent with competition (negative <-> negative)
 #' (default: \code{competition = 1})
-#' @param interactions Numeric: values of the n.species^2 pairwise interaction 
+#' @param interactions Numeric: values of the n_species^2 pairwise interaction 
 #' strengths. Diagonal terms will be replaced by the 'diagonal' parameter
 #' If NULL, interactions are drawn from 
-#' `runif(n.species^2, min=0, max=abs(diagonal))`.
+#' `runif(n_species^2, min=0, max=abs(diagonal))`.
 #' Negative values are first converted to positive then the signs are defined by
 #' the relative weights of the biological interactions (i.e. mutualism, 
 #' commensalism, parasitism, amensalism, competition) 
@@ -52,59 +52,59 @@
 #' 
 #' @examples
 #' 
-#' dense_A <- randomA(n.species = 10, 
-#'     scale.offDiagonal = 1, 
+#' dense_A <- randomA(n_species = 10, 
+#'     scale_off_diagonal = 1, 
 #'     diagonal = -1.0, 
 #'     connectance = 0.9)
 #' makeHeatmap(dense_A, lowColor = 'blue', highColor = 'red')
 #' 
-#' sparse_A <- randomA(n.species = 10, 
+#' sparse_A <- randomA(n_species = 10, 
 #'     diagonal = -1.0,
 #'     connectance = 0.09)
 #' makeHeatmap(sparse_A, lowColor = 'blue', highColor = 'red')
 #' 
 #' user_interactions <- rbeta(n = 10^2, .5,.5)
-#' user_A <- randomA(n.species = 10, interactions = user_interactions)
+#' user_A <- randomA(n_species = 10, interactions = user_interactions)
 #' makeHeatmap(user_A, lowColor = 'blue', highColor = 'red')
 #' 
-#' competitive_A <- randomA(n.species = 10, 
+#' competitive_A <- randomA(n_species = 10, 
 #'     mutualism = 0, 
 #'     commensalism = 0, 
 #'     parasitism = 0, 
 #'     amensalism = 0, 
 #'     competition = 1, 
 #'     connectance = 1, 
-#'     scale.offDiagonal=1)
+#'     scale_off_diagonal=1)
 #' makeHeatmap(competitive_A, lowColor = 'blue', highColor = 'red')
 #' 
-#' parasitism_A <- randomA(n.species = 10, 
+#' parasitism_A <- randomA(n_species = 10, 
 #'     mutualism = 0,
 #'     commensalism = 0,
 #'     parasitism = 1,
 #'     amensalism = 0,
 #'     competition = 0,
 #'     connectance = 1,
-#'     scale.offDiagonal = 1,
+#'     scale_off_diagonal = 1,
 #'     symmetric=TRUE)
 #' makeHeatmap(parasitism_A, lowColor = 'blue', highColor = 'red')
 #' 
 #' list_A <- list(dense_A, sparse_A, competitive_A, parasitism_A)
-#' groupA <- randomA(n.species = 40, listA = list_A)
+#' groupA <- randomA(n_species = 40, listA = list_A)
 #' makeHeatmap(groupA, lowColor = 'blue', highColor = 'red')
 #' 
 #' @return
-#' \code{randomA} returns a matrix A with dimensions (n.species x n.species)
+#' \code{randomA} returns a matrix A with dimensions (n_species x n_species)
 #' 
 #' @docType methods
 #' @aliases randomA-numeric
 #' @aliases randomA,numeric-method
 #' @export
 
-randomA <- function(n.species,
-    names.species = NULL,
+randomA <- function(n_species,
+    names_species = NULL,
     diagonal = -0.5, 
     connectance = 0.2, 
-    scale.offDiagonal = 0.1,
+    scale_off_diagonal = 0.1,
     mutualism = 1,
     commensalism = 1,
     parasitism = 1,
@@ -118,49 +118,49 @@ randomA <- function(n.species,
         stop("'connectance' should be in range [0,1]")
     }
     # set the default values
-    if (is.null(names.species)) {
+    if (is.null(names_species)) {
         if (!is.null(listA)) {
-            names.species <- unlist(lapply(list_A, rownames))
+            names_species <- unlist(lapply(list_A, rownames))
             # if same names found in different groups, overwrite names.
-            if (length(names.species) != length(unique(names.species))) {
+            if (length(names_species) != length(unique(names_species))) {
                 listAlengths <- unlist(lapply(list_A, nrow))
                 sn <- c()
                 for(i in 1:length(listAlengths)){
                     sn <- c(sn ,rep(i, times = listAlengths[i]))
                 }
-                names.species <- paste0("g", sn, "_", names.species)
+                names_species <- paste0("g", sn, "_", names_species)
             }
         } else {
-            names.species <- paste0("sp", seq_len(n.species))
+            names_species <- paste0("sp", seq_len(n_species))
         }
     }
     if (is.null(interactions)){
-        A <- runif(n.species^2, min=0, max=abs(diagonal))
+        A <- runif(n_species^2, min=0, max=abs(diagonal))
     } else {
         A <- interactions
     }
 
-    interaction.weights = c(mutualism, 
+    interaction_weights = c(mutualism, 
         commensalism, 
         parasitism, 
         amensalism, 
         competition)
 
-    A <- matrix(A, nrow = n.species, ncol = n.species)
-    I <- getInteractions(n.species, interaction.weights, connectance)
+    A <- matrix(A, nrow = n_species, ncol = n_species)
+    I <- getInteractions(n_species, interaction_weights, connectance)
     
     if(symmetric){
         A[lower.tri(A)] <- t(A)[lower.tri(A)]
         I[lower.tri(I)] <- t(I)[lower.tri(I)]
     }
 
-    A <- I*abs(A)*(scale.offDiagonal*min(abs(diagonal)))
+    A <- I*abs(A)*(scale_off_diagonal*min(abs(diagonal)))
     diag(A) <- diagonal
-    colnames(A) <- rownames(A) <- names.species
+    colnames(A) <- rownames(A) <- names_species
     
     if (!is.null(listA)){
-        if (n.species != sum(unlist(lapply(listA, nrow)))){
-            stop("'n.species' should equals to the number of species in the given list")
+        if (n_species != sum(unlist(lapply(listA, nrow)))){
+            stop("'n_species' should equals to the number of species in the given list")
         }
         counter <- 0
         for (repA in listA){

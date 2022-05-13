@@ -32,7 +32,7 @@ If not provided by the user, all parameters have default values except for the t
 To illustrate the basic parameters, we begin simulating five species changes in the gLV model.
 
 ```{r}
-ExampleGLV <- simulateGLV(n.species = 5)
+ExampleGLV <- simulateGLV(n_species = 5)
 makePlot(ExampleGLV$matrix)
 ```
 
@@ -42,10 +42,10 @@ In this example, we first generate a matrix of interspecies interactions using `
 
 ```{r}
 # generate a random interaction matrix
-ExampleA <- randomA(n.species = 4, diagonal = -1, connectance = 0.5, scale.offDiagonal = 0.5, symmetric = TRUE)
+ExampleA <- randomA(n_species = 4, diagonal = -1, connectance = 0.5, scale_off_diagonal = 0.5, symmetric = TRUE)
 makeHeatmap(ExampleA, title = "interspecies interactions matrix")
 # run the model with default values (only stochastic migration considered)
-ExampleGLV <- simulateGLV(n.species = 4, A = ExampleA, stochastic = FALSE)
+ExampleGLV <- simulateGLV(n_species = 4, A = ExampleA, stochastic = FALSE)
 # visualize the result
 makePlot(ExampleGLV$matrix)
 ```
@@ -56,10 +56,10 @@ In this example, we model the dynamics of community without the stochastic migra
 
 ```{r}
 # generate a random interaction matrix
-ExampleA <- randomA(n.species = 4, diagonal = -1, connectance = 0.5, scale.offDiagonal = 0.5, symmetric = TRUE)
+ExampleA <- randomA(n_species = 4, diagonal = -1, connectance = 0.5, scale_off_diagonal = 0.5, symmetric = TRUE)
 makeHeatmap(ExampleA, title = "interspecies interactions matrix")
 # run the model with default values (only stochastic migration considered)
-ExampleGLV <- simulateGLV(n.species = 4, A = ExampleA, stochastic = FALSE, migration.p = 0)
+ExampleGLV <- simulateGLV(n_species = 4, A = ExampleA, stochastic = FALSE, migration_p = 0)
 # visualize the result
 makePlot(ExampleGLV$matrix)
 
@@ -69,10 +69,10 @@ makePlot(ExampleGLV$matrix)
 
 ```{r}
 # generate a random interaction matrix
-ExampleA <- randomA(n.species = 4, diagonal = -1, connectance = 0.5, scale.offDiagonal = 0.5, symmetric = TRUE)
+ExampleA <- randomA(n_species = 4, diagonal = -1, connectance = 0.5, scale_off_diagonal = 0.5, symmetric = TRUE)
 makeHeatmap(ExampleA, title = "interspecies interactions matrix")
 # run the model with default values (only stochastic migration considered)
-ExampleGLV <- simulateGLV(n.species = 4, A = ExampleA, stochastic = FALSE, migration.p = 0, error.variance = 0.001)
+ExampleGLV <- simulateGLV(n_species = 4, A = ExampleA, stochastic = FALSE, migration_p = 0, error_variance = 0.001)
 # visualize the result
 makePlot(ExampleGLV$matrix)
 
@@ -90,35 +90,35 @@ In this example, we would like to replicate this reported trend (with a minor di
 
 ```{r}
 # define the function
-glvExample5 <- function(n.species, alpha) {
+glvExample5 <- function(n_species, alpha) {
     ExampleA <- randomA(
-        n.species = n.species,
+        n_species = n_species,
         diagonal = -1, 
         connectance = 1, 
         mutualism = 0, 
         commensalism = 0, 
         parasitism = 0, 
         amensalism = 0, 
-        interactions = runif(n.species^2, 0, 2*alpha), 
-        scale.offDiagonal = 1)
+        interactions = runif(n_species^2, 0, 2*alpha), 
+        scale_off_diagonal = 1)
     makeHeatmap(ExampleA, title = "interspecies interactions matrix")
     ExampleGLV <- simulateGLV(
-        n.species = n.species, 
+        n_species = n_species, 
         A = ExampleA, 
-        x0 = rep(0.1,n.species),
+        x0 = rep(0.1,n_species),
         stochastic = FALSE,
-        migration.p = 1,
-        sigma.migration = 0.01,
-        growth.rates = 1-2*alpha,
-        t.step = 1)
+        migration_p = 1,
+        sigma_migration = 0.01,
+        growth_rates = 1-2*alpha,
+        t_step = 1)
     makePlot(ExampleGLV$matrix) + scale_y_log10(limits = c(1E-8, 1))
-    finalValues <- ExampleGLV$matrix[1000,seq_len(n.species)]
-    survivalFraction <- sum(finalValues > 1E-3)/n.species
+    finalValues <- ExampleGLV$matrix[1000,seq_len(n_species)]
+    survivalFraction <- sum(finalValues > 1E-3)/n_species
     print(paste("Survival fraction =", survivalFraction))
-    maxValues <- apply(X = ExampleGLV$matrix[,seq_len(n.species)], MARGIN = 2, FUN = max)
-    minValues <- apply(X = ExampleGLV$matrix[,seq_len(n.species)], MARGIN = 2, FUN = min)
-    # fluctuationFraction <- sum(maxValues / minValues > 1E4) / n.species
-    fluctuationFraction <- sum(maxValues / finalValues > 1E4) / n.species
+    maxValues <- apply(X = ExampleGLV$matrix[,seq_len(n_species)], MARGIN = 2, FUN = max)
+    minValues <- apply(X = ExampleGLV$matrix[,seq_len(n_species)], MARGIN = 2, FUN = min)
+    # fluctuationFraction <- sum(maxValues / minValues > 1E4) / n_species
+    fluctuationFraction <- sum(maxValues / finalValues > 1E4) / n_species
     print(paste("Fluctuation fraction =", fluctuationFraction))
     return(list(A = ExampleA, GLV = ExampleGLV, survivalFraction, fluctuationFraction))
 }
@@ -126,22 +126,22 @@ glvExample5 <- function(n.species, alpha) {
 
 ```{r}
 # replicate the fig1a
-EX5.1 <- glvExample5(n.species = 4, alpha = 0.3)
+EX5.1 <- glvExample5(n_species = 4, alpha = 0.3)
 makePlot(EX5.1$GLV$matrix) + scale_y_log10(limits = c(1E-8, 1))
-EX5.2 <- glvExample5(n.species = 20, alpha = 0.3)
+EX5.2 <- glvExample5(n_species = 20, alpha = 0.3)
 makePlot(EX5.2$GLV$matrix) + scale_y_log10(limits = c(1E-8, 1))
-EX5.3 <- glvExample5(n.species = 50, alpha = 0.3)
+EX5.3 <- glvExample5(n_species = 50, alpha = 0.3)
 makePlot(EX5.3$GLV$matrix) + scale_y_log10(limits = c(1E-8, 1))
 
 ```
 
 ```{r}
 # replicate the fig1b
-EX5.4 <- glvExample5(n.species = 50, alpha = 0.08)
+EX5.4 <- glvExample5(n_species = 50, alpha = 0.08)
 makePlot(EX5.4$GLV$matrix) + scale_y_log10(limits = c(1E-8, 1))
-EX5.5 <- glvExample5(n.species = 50, alpha = 0.16)
+EX5.5 <- glvExample5(n_species = 50, alpha = 0.16)
 makePlot(EX5.5$GLV$matrix) + scale_y_log10(limits = c(1E-8, 1))
-EX5.6 <- glvExample5(n.species = 50, alpha = 0.64)
+EX5.6 <- glvExample5(n_species = 50, alpha = 0.64)
 makePlot(EX5.6$GLV$matrix) + scale_y_log10(limits = c(1E-8, 1))
 ```
 

@@ -10,12 +10,12 @@ library(vegan)
 set.seed(42)
 
 # shared parameters ####
-n.species <- 10
-n.resources <- 5
-E <- randomE(n.species, n.resources, mean.consumption = 1, mean.production = 3)
-growth.rates <- runif(n.species)
-monod.constant <- matrix(rbeta(10*5, 10,10),nrow=10, ncol=5)
-t.store <- 100
+n_species <- 10
+n_resources <- 5
+E <- randomE(n_species, n_resources, mean_consumption = 1, mean_production = 3)
+growth_rates <- runif(n_species)
+monod_constant <- matrix(rbeta(10*5, 10,10),nrow=10, ncol=5)
+t_store <- 100
 n.instances <- 1 # no stochastic process: no need to repeat
 
 # generating function #### 
@@ -48,7 +48,7 @@ gradient.df.generator <- function(n_row, n_col, density_row, max_gradient, error
 # generate communities #### 
 n.community <- 10
 density.community <- 0.8
-community.initial.df <- gradient.df.generator(n_row = n.community, n_col = n.species, density_row = density.community, max_gradient = 0.8, error_interval = 0.05)
+community.initial.df <- gradient.df.generator(n_row = n.community, n_col = n_species, density_row = density.community, max_gradient = 0.8, error_interval = 0.05)
 
 dist.community.initial.df <- vegdist(community.initial.df, method = "bray")
 makeHeatmap(as.matrix(dist.community.initial.df), title = "dissimilarity matrix")
@@ -56,17 +56,17 @@ makeUMAP(matrix = community.initial.df, group = factor(seq_len(n.community)))
 
 
 crm_params <- list(
-    n.species = n.species,
-    n.resources = n.resources,
+    n_species = n_species,
+    n_resources = n_resources,
     E = E,
-    resources = rep(1,n.resources),
-    monod.constant = monod.constant,
-    migration.p = 0,
+    resources = rep(1,n_resources),
+    monod_constant = monod_constant,
+    migration_p = 0,
     stochastic = FALSE,
-    t.start = 0,
-    t.end = 20,
-    t.store = t.store,
-    growth.rates = growth.rates,
+    t_start = 0,
+    t_end = 20,
+    t_store = t_store,
+    growth_rates = growth_rates,
     norm=FALSE)
 
 # generate resource gradients ####
@@ -74,17 +74,17 @@ crm_params <- list(
 resourceConcentration <- 10^seq(0,5,1) # 1 to 100000
 n.medium <- 10
 density.medium <- 0.8
-resource.initial.df <- gradient.df.generator(n_row = n.medium, n_col = n.resources, density_row = density.medium, max_gradient = 0.8, error_interval = 0.05)
+resource.initial.df <- gradient.df.generator(n_row = n.medium, n_col = n_resources, density_row = density.medium, max_gradient = 0.8, error_interval = 0.05)
 
 # test one run ####
-crmExample <- simulateConsumerResource(n.species = n.species, n.resources = n.resources, E = E, x0 = as.numeric(community.initial.df[1,]), resources = as.numeric(resourceConcentration[3]*resource.initial.df[1,]), growth.rates = growth.rates, monod.constant = monod.constant, stochastic = FALSE, t.end = 20, t.store = 100, norm = FALSE)
+crmExample <- simulateConsumerResource(n_species = n_species, n_resources = n_resources, E = E, x0 = as.numeric(community.initial.df[1,]), resources = as.numeric(resourceConcentration[3]*resource.initial.df[1,]), growth_rates = growth_rates, monod_constant = monod_constant, stochastic = FALSE, t_end = 20, t_store = 100, norm = FALSE)
 makePlot(crmExample$matrix)
 makePlotRes(crmExample$resources)
 
 # generateMoments ####
 set.seed(42)
-# basisComposition <- matrix(0, ncol=n.species, nrow = 0)
-# basisResources <- matrix(0, ncol=n.resources, nrow = 0)
+# basisComposition <- matrix(0, ncol=n_species, nrow = 0)
+# basisResources <- matrix(0, ncol=n_resources, nrow = 0)
 
 community.simulation <- list()
 resource.simulation <- list()
@@ -102,7 +102,7 @@ for (resConc in resourceConcentration) {
             crmMoments <- generateMoments(
                 modelGenerateExp = crmgradient, 
                 n.instances = n.instances,
-                t.store = t.store, 
+                t_store = t_store, 
                 is.resource = TRUE)
             community.simulation[[simulation_counter]] <- crmMoments$basisMatrix
             resource.simulation[[simulation_counter]] <- crmMoments$basisResources
