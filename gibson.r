@@ -193,11 +193,14 @@ for (scenario in seq_along(scenarios)){
         }
         
         groups[[scenario]][[row]] <- factor(PAM[[scenario]][[row]]$clustering)
-        group <- groups[[scenario]][[row]]
-        pcoa_plot[[scenario]][[row]] <- ggplot(as.data.frame(PCoA_coord[[scenario]][[row]]), aes(x = PCo1, y = PCo2)) + 
-            geom_point(aes(color = group)) + 
+        
+        dataframe_pcoa <- as.data.frame(PCoA_coord[[scenario]][[row]])
+        dataframe_pcoa$group <- groups[[scenario]][[row]]
+        pcoa_plot[[scenario]][[row]] <- ggplot(dataframe_pcoa,
+                                               aes(x = PCo1, y = PCo2, color = group)) + 
+            geom_point() +
             # coord_fixed(xlim = c(-1, 1), ylim = c(-1, 1)) + 
-            theme_bw() 
+            theme_bw()
         # pcoa_plot[[scenario]][[row]]
     }
 }
@@ -295,5 +298,3 @@ for (scenario in seq_along(scenarios)){
         ggsave(paste0("./files/figures/umap_", scenario, "_", params$alpha[row], ".pdf"),  plot = umap[[scenario]][[row]], dpi = 300, width = 6, height = 6, units = "cm", scale = 2)
     }
 }
-
-# make a gradient of environments and a gradient of communities dissimilarity
