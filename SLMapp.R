@@ -32,7 +32,7 @@ makePiePlot <- function(multinomdist, label = 'Meta\ncommunity', title = "Metaco
 
 
 getPerturbT <- function(endTime, n.perturbs){
-  st <- SimulationTimes(t_end = endTime, t_store = n.perturbs + 1)
+  st <- simulationTimes(t_end = endTime, t_store = n.perturbs + 1)
   return (st$t_sys[st$t_index[2:length(st$t_index)]])
 }
 #constants

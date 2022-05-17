@@ -143,6 +143,10 @@ ggsave(paste0("./files/figures/CRMgradient3.pdf"), plot = umap_CRM_gradient_plot
 ggsave(paste0("./files/figures/CRMgradient4.pdf"), plot = umap_CRM_gradient_plot + facet_grid(community_type ~ resource_concentration_type), dpi = 300, width = 16, height = 16, units = "cm", scale = 2)
 ggsave(paste0("./files/figures/CRMgradient5.pdf"), plot = umap_CRM_gradient_plot + facet_grid(community_type ~ medium_type), dpi = 300, width = 20, height = 16, units = "cm", scale = 2)
 
+## TODO: for figure 3: reduce medium types and add community types, to see the 'enterotypes' always form stable cluster with abundant resources
+## TODO: for figure 4: measure the average dissimilarity between communities (with community 1) to plot a 'saturation curve', to show at which concentration the communities differ totally because their intrinsic consumer-resource matrix (an implicit interspecies interactions)
+## TODO: alter growth rate distributions using rbeta
+
 # dissimilarity of initial communities vs final communities ####
 dist.community.initial.jaccard <- vegdist(community.initial.df, method = "jaccard")
 makeHeatmap(as.matrix(dist.community.initial.jaccard), title = "jaccard dissimilarity initial communities", x.label = "community", y.label = "community")

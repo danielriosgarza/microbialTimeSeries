@@ -378,7 +378,7 @@ server <- function(input, output, session) {
     })
     output$interactionsOutputGLV <- renderPrint(interactions_glv())
     symmetric_glv <- reactive(input$symmetricGLV)
-    listA_glv <- reactive(text2char(input$listAGLV)) # TODO: convert listA
+    list_A_glv <- reactive(text2char(input$list_AGLV)) # TODO: convert list_A
     
     RV_glv <- reactiveValues(matrixAGLV = NULL)
     # replace generateA() by RV_glv$matrixAGLV

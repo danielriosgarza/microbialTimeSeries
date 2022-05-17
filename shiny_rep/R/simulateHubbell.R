@@ -95,7 +95,7 @@ simulateHubbell <- function(x0,
     metacommunity_probability <- metacommunity_probability/
         sum(metacommunity_probability)
     
-    t_dyn <- SimulationTimes(t_end = t_end,...)
+    t_dyn <- simulationTimes(t_end = t_end,...)
     birth_p <- 1 - migration_p
     community <- x0
     

@@ -182,7 +182,7 @@ simulateStochasticLogistic <- function(n_species,
     }
 
     # select the time points to simulate and to store
-    t_dyn <- SimulationTimes(t_end = t_end, ...)
+    t_dyn <- simulationTimes(t_end = t_end, ...)
 
     #continuous or episodic perturbation
     perturb <- function(t, y, parms){with(as.list(y), {

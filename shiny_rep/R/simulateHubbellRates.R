@@ -135,7 +135,7 @@ simulateHubbellRates <- function(n_species = NULL,
         growth_rates <- rep(1,n_species)
     }
     
-    t_dyn <- SimulationTimes(t_end = t_end,...)
+    t_dyn <- simulationTimes(t_end = t_end,...)
     t_store <- length(t_dyn$t_index)
     
     birth_p <- 1 - migration_p

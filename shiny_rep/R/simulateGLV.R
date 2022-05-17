@@ -183,7 +183,7 @@ simulateGLV <- function(n_species,
         sum(metacommunity_probability)
     
     # select the time points to simulate and to store
-    t_dyn <- SimulationTimes(t_end = t_end, ...)
+    t_dyn <- simulationTimes(t_end = t_end, ...)
     
     # calculate the time points influenced by the disturbances
     tEvent = eventTimes(

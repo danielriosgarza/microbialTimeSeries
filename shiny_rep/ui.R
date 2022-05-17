@@ -747,7 +747,7 @@ ui <- navbarPage(
                                                 onLabel = "symmetric",
                                                 offLabel = "non-symmetric"
                                             ),
-                                            # textInput("listAGLV", "a list of previous generated matrix"),
+                                            # textInput("list_AGLV", "a list of previous generated matrix"),
                                         ),
                                         # actionButton("buttonRandomA", "generate random matrix A of interspecies interactions", class = "btn btn-primary"),
                                         conditionalPanel(

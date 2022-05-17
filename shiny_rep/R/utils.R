@@ -12,18 +12,18 @@
 #'
 #' @return lists containing simulation times (t_sys) and the indices to keep.
 #' @examples
-#' Time <- SimulationTimes(t_start = 0, t_end = 100, t_step = 0.5,
+#' Time <- simulationTimes(t_start = 0, t_end = 100, t_step = 0.5,
 #'     t_store = 100)
-#' DefaultTime <- SimulationTimes(t_end = 1000)
+#' DefaultTime <- simulationTimes(t_end = 1000)
 #'
 #' @docType methods
-#' @aliases SimulationTimes-numeric
-#' @aliases SimulationTimes,numeric-method
+#' @aliases simulationTimes-numeric
+#' @aliases simulationTimes,numeric-method
 #'
 #' @keywords internal
 #' @export
 
-SimulationTimes <- function(t_start = 0, t_end = 1000, 
+simulationTimes <- function(t_start = 0, t_end = 1000, 
     t_step = 0.1, t_store = 1000){
     t_total <- t_end-t_start
     t_sys <- seq(t_start, t_end, by = t_step)
@@ -38,7 +38,7 @@ isPositiveInteger <- function(x, tol = .Machine$double.eps^0.5) {
 # ExampleEventTimes <- eventTimes(t_events = c(10,20,30), t_duration = rep(3,3))
 eventTimes <- function(t_events = NULL, t_duration = NULL,
                        t_end=1000, ...){
-    tdyn <- SimulationTimes(t_end = t_end,...)
+    tdyn <- simulationTimes(t_end = t_end,...)
     t.result = c()
     for (i in seq(length(t_events))){
         p1 <- tdyn$t_sys[(tdyn$t_sys >= t_events[i]) &
@@ -164,7 +164,7 @@ getKL <- function(mA, mB){
 }
 
 getPerturbT <- function(endTime, n.perturbs){
-    st <- SimulationTimes(t_end = endTime, t_store = n.perturbs + 1)
+    st <- simulationTimes(t_end = endTime, t_store = n.perturbs + 1)
     return (st$t_sys[st$t_index[2:length(st$t_index)]])
 }
 

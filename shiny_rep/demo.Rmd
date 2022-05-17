@@ -113,6 +113,6 @@ parasitism_A <- randomA(n_species = 10,
 makeHeatmap(parasitism_A, title = "parasitism", lowColor = 'blue', highColor = 'red')
 
 list_A <- list(dense_A, sparse_A, competitive_A, parasitism_A)
-groupA <- randomA(n_species = 40, listA = list_A, scale = 0.5)
+groupA <- randomA(n_species = 40, list_A = list_A, scale = 0.5)
 makeHeatmap(groupA, title = "group", lowColor = 'blue', highColor = 'red')
 ```
