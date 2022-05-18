@@ -1,7 +1,11 @@
-#' Hubbell's neutral model simulation
+#' Hubbell's neutral model simulation applied to time series
 #'
-#' Neutral species abundances simulation according to the Hubbell model.
-#' 
+#' Neutral species abundances simulation according to the Hubbell model. This
+#' model shows that losses in society can be replaced either by the birth of
+#' individuals or by immigration depending on their probabilities.
+#' The specific time between the events of birth or migration is calculated and
+#' time effect is considered to determine the next event.
+#'
 #' @param n_species Integer: number of species
 #' @param x0 Numeric: initial species composition. If NULL, 
 #' `rep(100, n_species)` is used.
@@ -33,10 +37,8 @@
 #' @param ... additional parameters including 't_start', 't_step', and 't_store'
 #' see \code{\link{utils}} for more information.
 #'
-#' @docType methods
-#' @aliases simulateHubbellRates-numeric
-#' @aliases simulateHubbellRates,numeric-method
-#' @aliases simulateNeutralRates
+#' @seealso
+#' \code{\link[miaSim:convertToSE]{convertToSE}}#'
 #'
 #' @examples
 #' set.seed(42)
@@ -201,6 +203,7 @@ simulateHubbellRates <- function(n_species = NULL,
         community = community, 
         x0 = x0,
         metacommunity_probability = metacommunity_probability,
-        error_variance = error_variance)
+        error_variance = error_variance,
+        growth_rates = growth_rates)
     return(out_list)
 }

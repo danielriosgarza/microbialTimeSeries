@@ -77,6 +77,8 @@
 #' The dimension should be identical to matrix E.
 #' (default: \code{trophic_priority = NULL})
 #' @param ... additional parameters, see \code{\link{utils}} to know more.
+#' @seealso
+#' \code{\link[miaSim:convertToSE]{convertToSE}}
 #'
 #' @examples
 #' ExampleConsumerResource <- simulateConsumerResource(n_species = 2, 
@@ -147,10 +149,8 @@
 #' makePlot(ExampleConsumerResource$matrix)
 #' makePlotRes(ExampleConsumerResource$resources)
 #' 
-#' @docType methods
-#' @aliases simulateConsumerResource-numeric
-#' 
-#' @importFrom deSolve ode
+#' @return an abundance matrix with species and resources abundance as rows and
+#' time points as columns
 #'
 #' @export
 simulateConsumerResource <- function(n_species, n_resources,

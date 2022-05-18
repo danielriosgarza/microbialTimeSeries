@@ -2,6 +2,17 @@
 #' 
 #' Simulates time series with the (stochastic) logistic model
 #' 
+#' The change rate of the species was defined as
+#' `dx/dt = b*x*(1-(x/k))*rN - dr*x`, where
+#' b is the vector of growth rates,
+#' x is the vector of initial species abundances,
+#' k is the vector of maximum carrying capacities,
+#' rN is a random number ranged from 0 to 1 which changes in each time step,
+#' dr is the vector of constant death rates.
+#' Also, the vectors of initial dead species abundances can be set.
+#' The number of species will be set to 0 if the dead species abundances
+#' surpass the alive species abundances.
+#'
 #' @param n_species Integer: number of species
 #' @param names_species Character: names of species. If NULL,
 #' `paste0("sp", seq_len(n_species))` is used.
@@ -64,6 +75,9 @@
 #' (default: \code{t_end = 1000})
 #' @param ... additional parameters, see \code{\link{utils}} to know more.
 #'
+#' @seealso
+#' \code{\link[miaSim:convertToSE]{convertToSE}}
+#'
 #' @examples
 #' 
 #' # Example of logistic model without stochasticity, death rates, or external 
@@ -118,11 +132,7 @@
 #' matrix(species abundance as rows and time points as columns) and its 
 #' inputs(including metacommunity_probability and migration_p)
 #'
-#' @docType methods
-#' @aliases simulateStochasticLogistic-numeric
-#' @aliases simulateStochasticLogistic,numeric-method
-#'
-#' @importFrom deSolve ode
+
 #'
 #' @export
 simulateStochasticLogistic <- function(n_species, 

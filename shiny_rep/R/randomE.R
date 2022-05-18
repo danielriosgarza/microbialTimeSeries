@@ -1,6 +1,6 @@
 #' Generate random efficiency matrix
 #' 
-#' Generate random efficiency matrix for consumer resource model from a normal
+#' Generate random efficiency matrix for consumer resource model from Dirichlet
 #' distribution. Positive efficiencies indicate the consumption of resources,
 #' whilst negatives indicate that the species would produce the resource.
 #' 
@@ -19,6 +19,11 @@
 #' (default: \code{mean_production = n_resources/6})
 #' @param maintenance Numeric: proportion of resources that cannot be converted 
 #' into products
+#' between 0~1 the proportion of resources used
+#' to maintain the living of microorganisms. 0 means all the resources will be
+#' used for the reproduction of microorganisms, and 1 means all the resources
+#' would be used to maintain the living of organisms and no resources would be 
+#' left for their growth(reproduction).
 #' (default: \code{maintenance = 0.5})
 #' @param trophic_levels Integer: number of species in microbial trophic levels.
 #' If NULL, by default, microbial trophic levels would not be considered.
@@ -78,6 +83,10 @@ randomE <- function(n_species,
     trophic_preferences = NULL,
     exact = FALSE){
     
+        if(!all(vapply(list(n_species, n_resources), isPositiveInteger,
+            logical(1)))){
+        stop("n_species and/or n_resources must be integer.")}
+
     # set the default values
     if (is.null(names_species)) {
         names_species <- paste0("sp", seq_len(n_species))

@@ -246,7 +246,7 @@ server <- function(input, output, session) {
     })
     observeEvent(input$CRMEX5, {
         RV_crm$matrixECRM <- randomE(n_species = 10, n_resources = 10, mean_consumption = 3, mean_production = 1,
-                              maintenance = 0.5, trophc_preferences = list(c(5,3,1,1,1,1,1,1,1,1)))
+                              maintenance = 0.5, trophic_preferences = list(c(5,3,1,1,1,1,1,1,1,1)))
     })
     observeEvent(input$CRMEX6pre, {
         updateSliderInput(inputId = "nSpeciesCRM", value = 20)

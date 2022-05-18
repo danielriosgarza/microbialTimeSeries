@@ -1,6 +1,11 @@
 #' Generalized Lotka-Volterra (gLV) simulation
 #'
-#' Simulates time series with the generalized Lotka-Volterra model
+#' Simulates time series with the generalized Lotka-Volterra model.
+#'
+#' Simulates a community time series using the generalized Lotka-Volterra model,
+#' defined as dx/dt = x(b+Ax), where x is the vector of species abundances,
+#' diag(x) is a diagonal matrix with the diagonal values set to x.
+#' A is the interaction matrix and b is the vector of growth rates.
 #'
 #' @param n_species Integer: number of species
 #' @param names_species Character: names of species. If NULL,
@@ -57,7 +62,12 @@
 #' in each generation) 
 #' (default: \code{norm = FALSE})
 #' @param ... additional parameters, see \code{\link{utils}} to know more.
-#' 
+#' @seealso
+#' \code{\link[miaSim:convertToSE]{convertToSE}}
+#'
+#' @return
+#' \code{simulateGLV} returns an abundance matrix
+#'
 #' @examples
 #' 
 #' # generate a random interaction matrix
@@ -88,10 +98,6 @@
 #'     error_variance = 0.001, sigma_migration = 0)
 #' # visualize the result
 #' makePlot(ExampleGLV$matrix)
-#'
-#' @docType methods
-#' @aliases simulateGLV-numeric
-#' @aliases simulateGLV,numeric-method
 #'
 #' @importFrom deSolve ode
 #'

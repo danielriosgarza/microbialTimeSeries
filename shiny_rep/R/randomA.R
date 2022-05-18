@@ -14,8 +14,8 @@
 #' i.e. proportion of non-zero off-diagonal terms.
 #' Should be in the [0,1] interval.
 #' (default: \code{connectance = 0.2})
-#' @param scale_off_diagonal Numeric: scale of the off-diagonal elements compared to the 
-#' diagonal. 
+#' @param scale_off_diagonal Numeric: scale of the off-diagonal elements 
+#' compared to the diagonal. 
 #' (default: \code{scale_off_diagonal = 0.1})
 #' @param mutualism Numeric: relative proportion of interactions terms 
 #' consistent with mutualism (positive <-> positive)
@@ -95,11 +95,7 @@
 #' @return
 #' \code{randomA} returns a matrix A with dimensions (n_species x n_species)
 #' 
-#' @docType methods
-#' @aliases randomA-numeric
-#' @aliases randomA,numeric-method
 #' @export
-
 randomA <- function(n_species,
     names_species = NULL,
     diagonal = -0.5, 
@@ -113,6 +109,16 @@ randomA <- function(n_species,
     interactions = NULL, 
     symmetric = FALSE,
     list_A = NULL){
+            #input check
+            if(!isPositiveInteger(n_species)){
+                stop("n_species must be integer.")}
+            if(!all(vapply(list(diagonal, connectance, scale_off_diagonal, 
+                                mutualism, commensalism, parasitism, amensalism,
+                                competition),
+                    is.numeric, logical(1)))){
+                stop("diagonal, connectance, scale_off_diagonal, mutualism, 
+                     commensalism, parasitism, amensalism and competition must 
+                     be numeric.")}
 
     if(connectance > 1 || connectance < 0) {
         stop("'connectance' should be in range [0,1]")
@@ -160,7 +166,8 @@ randomA <- function(n_species,
     
     if (!is.null(list_A)){
         if (n_species != sum(unlist(lapply(list_A, nrow)))){
-            stop("'n_species' should equals to the number of species in the given list")
+            stop("'n_species' should equals to the number of species in the 
+                 given list")
         }
         counter <- 0
         for (repA in list_A){

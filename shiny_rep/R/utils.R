@@ -16,10 +16,6 @@
 #'     t_store = 100)
 #' DefaultTime <- simulationTimes(t_end = 1000)
 #'
-#' @docType methods
-#' @aliases simulationTimes-numeric
-#' @aliases simulationTimes,numeric-method
-#'
 #' @keywords internal
 #' @export
 
@@ -35,17 +31,22 @@ isPositiveInteger <- function(x, tol = .Machine$double.eps^0.5) {
     return(abs(x - round(x)) < tol && x > 0)
 }
 
-# ExampleEventTimes <- eventTimes(t_events = c(10,20,30), t_duration = rep(3,3))
+isZeroOrPositiveInteger <- function(x, tol = .Machine$double.eps^0.5) {
+    return(abs(x - round(x)) < tol && x >= 0)
+}
+
+
+
 eventTimes <- function(t_events = NULL, t_duration = NULL,
                        t_end=1000, ...){
     tdyn <- simulationTimes(t_end = t_end,...)
-    t.result = c()
+    t_result = c()
     for (i in seq(length(t_events))){
         p1 <- tdyn$t_sys[(tdyn$t_sys >= t_events[i]) &
             (tdyn$t_sys < (t_events[i]+t_duration[i]))]
-        t.result <- c(t.result, p1)
+        t_result <- c(t_result, p1)
     }
-    return(t.result)
+    return(t_result)
 }
 
 applyInterctionType <- function(I, pair, interType){
