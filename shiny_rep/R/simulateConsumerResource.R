@@ -20,6 +20,10 @@
 #' @param resources Numeric: initial concentrations of resources. If NULL,
 #' `runif(n = n_resources, min = 1, max = 100)` is used.
 #' (default: \code{resources = NULL})
+#' @param resources_dilution Numeric: concentrations of resources in the 
+#' continuous inflow (applicable when inflow_rate > 0). If NULL,
+#' `resources` is used. 
+#' (default: \code{resources_dilution = NULL}) 
 #' @param growth_rates Numeric: vector of maximum growth rates(mu) of species.
 #' If NULL, `rep(1, n_species)` is used.
 #' (default: \code{growth_rates = NULL})
@@ -76,37 +80,45 @@
 #' turned on, and species will consume all resources simultaneously to grow. 
 #' The dimension should be identical to matrix E.
 #' (default: \code{trophic_priority = NULL})
+#' @param inflow_rate,outflow_rate Numeric: the inflow and outflow rate of a 
+#' culture process. By default, inflow_rate and outflow_rate are 0, indicating a
+#' batch culture process. By setting them equally larger than 0, we can simulate
+#' a continuous culture(e.g. chemostat).
+#' @param volume Numeric: the volume of the continuous cultivation. This 
+#' parameter is important for simulations where inflow_rate or outflow_rate are
+#' not 0. 
+#' (default: \code{volume = 1000})
 #' @param ... additional parameters, see \code{\link{utils}} to know more.
 #' @seealso
 #' \code{\link[miaSim:convertToSE]{convertToSE}}
 #'
 #' @examples
-#' ExampleConsumerResource <- simulateConsumerResource(n_species = 2, 
+#' ExampleCR <- simulateConsumerResource(n_species = 2, 
 #'     n_resources = 4)
-#' makePlot(ExampleConsumerResource$matrix)
-#' makePlot(ExampleConsumerResource$resources)
+#' makePlot(ExampleCR$matrix)
+#' makePlot(ExampleCR$resources)
 #' 
 #' # example to get relative abundance and relative proportion of resources
-#' ExampleConsumerResource <- simulateConsumerResource(n_species = 2, 
+#' ExampleCR <- simulateConsumerResource(n_species = 2, 
 #'     n_resources = 4, norm = TRUE)
-#' makePlot(ExampleConsumerResource$matrix)
-#' makePlot(ExampleConsumerResource$resources)
+#' makePlot(ExampleCR$matrix)
+#' makePlot(ExampleCR$resources)
 #'
 #' # example with user-defined values (names_species, names_resources, E, x0, 
 #' # resources, growth_rates, error_variance, t_end, t_step)
-#' n_resources <- 6
-#' ExampleE <- randomE(n_species = 4, n_resources = n_resources, 
+#' ExampleE <- randomE(n_species = 4, n_resources = 6, 
 #'     mean_consumption = 3, mean_production = 1, maintenance = 0.4)
-#' ExampleResources <- rep(100, n_resources)
-#' ExampleConsumerResource <- simulateConsumerResource(n_species = 4, 
+#' ExampleResources <- rep(100, 6)
+#' ExampleCR <- simulateConsumerResource(n_species = 4, 
 #'     n_resources = 6, names_species = letters[1:4], 
 #'     names_resources = paste0("res",LETTERS[1:6]), E = ExampleE, 
 #'     x0 = rep(0.001, 4), resources = ExampleResources, 
-#'     growth_rates <- runif(4),
+#'     growth_rates = runif(4),
 #'     error_variance = 0.01,
-#'     t_end = 5000, t_step = 1)
-#' makePlot(ExampleConsumerResource$matrix)
-#' makePlot(ExampleConsumerResource$resources)
+#'     t_end = 5000,
+#'     t_step = 1)
+#' makePlot(ExampleCR$matrix)
+#' makePlot(ExampleCR$resources)
 #' 
 #' # example with trophic levels
 #' n_species <- 10
@@ -114,40 +126,50 @@
 #' 
 #' ExampleEfficiencyMatrix <- randomE(n_species = 10, n_resources = 15,
 #'                                    trophic_levels = c(6,3,1),
-#'                                    trophc_preferences = list(c(rep(1,5), rep(-1, 5), rep(0, 5)), 
+#'                                    trophic_preferences = list(
+#'                                        c(rep(1,5), rep(-1, 5), rep(0, 5)), 
 #'                                                               c(rep(0,5), rep(1, 5), rep(-1, 5)), 
 #'                                                               c(rep(0,10), rep(1, 5))))
 #' makeHeatmap(ExampleEfficiencyMatrix)
 #' 
 #' # ExampleResources <- rep(100, n_resources)
 #' ExampleResources <- c(rep(500, 5), rep(200, 5), rep(50, 5))
-#' ExampleConsumerResource <- simulateConsumerResource(n_species = n_species, 
-#'                                                     n_resources = n_resources, names_species = letters[1:n_species], 
-#'                                                     names_resources = paste0("res",LETTERS[1:n_resources]), E = ExampleEfficiencyMatrix, 
-#'                                                     x0 = rep(0.001, n_species), resources = ExampleResources, 
+#' ExampleCR <- simulateConsumerResource(n_species = n_species, 
+#'                                       n_resources = n_resources, 
+#'                                       names_species = letters[1:n_species], 
+#'                                       names_resources = paste0(
+#'                                           "res",LETTERS[1:n_resources]), 
+#'                                       E = ExampleEfficiencyMatrix, 
+#'                                       x0 = rep(0.001, n_species), 
+#'                                       resources = ExampleResources, 
 #'                                                     growth_rates = rep(1, n_species),
 #'                                                     # error_variance = 0.001,
 #'                                                     t_end = 5000, t_step = 1)
-#' makePlot(ExampleConsumerResource$matrix)
-#' makePlotRes(ExampleConsumerResource$resources)
+#' makePlot(ExampleCR$matrix)
+#' makePlotRes(ExampleCR$resources)
 #' 
 #' 
 #' # example with trophic priority
 #' n_species <- 4
 #' n_resources <- 6
-#' ExampleE <- randomE(n_species = n_species, n_resources = n_resources, mean_consumption = n_resources, mean_production = 0)
-#' ExampleTrophicPriority <- t(apply(matrix(sample(n_species * n_resources), nrow = n_species), 1, order))
+#' ExampleE <- randomE(n_species = n_species, 
+#'                     n_resources = n_resources, 
+#'                     mean_consumption = n_resources, 
+#'                     mean_production = 0)
+#' ExampleTrophicPriority <- t(apply(matrix(sample(n_species * n_resources), 
+#'                                          nrow = n_species), 
+#'                                   1, order))
 #' # make sure that for non-consumables resources for each species, 
 #' # the priority is 0 (smaller than any given priority) 
 #' ExampleTrophicPriority <- (ExampleE > 0) * ExampleTrophicPriority
-#' ExampleConsumerResource <- simulateConsumerResource(n_species = n_species, 
+#' ExampleCR <- simulateConsumerResource(n_species = n_species, 
 #'                                                     n_resources = n_resources, 
 #'                                                     E = ExampleE, 
 #'                                                     trophic_priority = ExampleTrophicPriority,
 #'                                                     t_end = 2000
 #'                                                     )
-#' makePlot(ExampleConsumerResource$matrix)
-#' makePlotRes(ExampleConsumerResource$resources)
+#' makePlot(ExampleCR$matrix)
+#' makePlotRes(ExampleCR$resources)
 #' 
 #' @return an abundance matrix with species and resources abundance as rows and
 #' time points as columns
@@ -184,7 +206,7 @@ simulateConsumerResource <- function(n_species, n_resources,
     t_dyn <- simulationTimes(t_end = t_end,...)
     
     # calculate the time points influenced by the disturbances
-    tEvent = eventTimes(
+    tEvent <- eventTimes(
         t_events = t_external_events,
         t_duration = t_external_durations,
         t_end = t_end,
@@ -194,72 +216,8 @@ simulateConsumerResource <- function(n_species, n_resources,
         if (!identical(dim(E), dim(trophic_priority))){
             stop("The dimension of trophic priority is not correct.")}}
     
-    # define the consumer-resource model
     
-    consumerResourceModel <- function(t, state, params){
-        with(as.list(c(state, params)),{
-            volume <- state[startsWith(names(state), "volume")]
-            volume <- volume * (volume>10^(-10))
             
-            
-            x0 <- (volume>0) * pmax(0, state[startsWith(names(state), "consumer")])
-            
-            resources <- (volume>0) * pmax(0, state[startsWith(names(state), "resource")])
-            
-            
-            
-            growth_rates <- params[['growth_rates']]
-            E <- params[['E']]
-            monod_constant <- params[['monod_constant']]
-            
-            resources_dilution <- params[['resources_dilution']]
-            inflow_rate <- params[['inflow_rate']]
-            outflow_rate <- params[['outflow_rate']]
-            
-            dilution_rate = inflow_rate/volume
-            
-            
-            trophic_priority <- params[['trophic_priority']]
-            
-            threshold = params[['threshold']]
-            
-            if(!is.null(trophic_priority)){
-                
-                # modify E in each step
-                Emod <- trophic_priority
-                ## resources <= a relatively small number(instead of 0) ######
-                Emod[, resources <= threshold] <- 0 
-                Emod <- t(apply(Emod, 1, getRowMax))>0
-                ## 1. E*(Emod): consumption of prior resource 
-                ## 2. E*(E<0): production 
-                ## 3. E*apply(!Emod, 1, all): if all resources are run out, then
-                ## select all of them (instead of none of them), to avoid the 
-                ## production without consumption 
-                Emod <- E*(Emod) + E*(E<0) + E*apply(!Emod, 1, all)
-                E <- Emod
-            }
-            
-            
-
-            B <- matrix(rep(resources, length(x0)),
-                        ncol = length(resources), byrow = TRUE) + monod_constant
-            growth <- ((E*(E>0)/B) %*% resources)*x0
-            
-            
-            consumption <- -resources*(t(1/B*(E>0))%*%x0)
-            
-            production <- -t(E*(E<0)) %*% growth
-            
-            dVolume <- max(-volume, inflow_rate - outflow_rate)
-            
-            dResources <- consumption + production - (dilution_rate*(resources - resources_dilution))
-            dConsumers <- growth_rates*growth - dilution_rate*x0
-            
-            dxdt <- list(c(dConsumers, dResources, dVolume))
-            return(dxdt)
-        })
-    }
-    
     # set the default values
     if (is.null(names_species)) {
         names_species <- paste0("sp", seq_len(n_species))
@@ -404,3 +362,68 @@ simulateConsumerResource <- function(n_species, n_resources,
         error_variance = error_variance)
     return(out_list)
 }
+
+# define the consumer-resource model
+consumerResourceModel <- function(t, state, params){
+  with(as.list(c(state, params)),{
+    volume <- state[startsWith(names(state), "volume")]
+    volume <- volume * (volume>10^(-10))
+    
+    
+    x0 <- (volume>0) * pmax(0, state[startsWith(names(state), "consumer")])
+    
+    resources <- (volume>0) * pmax(0, state[startsWith(names(state), "resource")])
+    
+    
+    
+    growth_rates <- params[['growth_rates']]
+    E <- params[['E']]
+    monod_constant <- params[['monod_constant']]
+    
+    resources_dilution <- params[['resources_dilution']]
+    inflow_rate <- params[['inflow_rate']]
+    outflow_rate <- params[['outflow_rate']]
+    
+    dilution_rate <- inflow_rate/volume
+    
+    
+    trophic_priority <- params[['trophic_priority']]
+    
+    threshold <- params[['threshold']]
+    
+    if(!is.null(trophic_priority)){
+      
+      # modify E in each step
+      Emod <- trophic_priority
+      ## resources <= a relatively small number(instead of 0) ######
+      Emod[, resources <= threshold] <- 0 
+      Emod <- t(apply(Emod, 1, getRowMax))>0
+      ## 1. E*(Emod): consumption of prior resource 
+      ## 2. E*(E<0): production 
+      ## 3. E*apply(!Emod, 1, all): if all resources are run out, then
+      ## select all of them (instead of none of them), to avoid the 
+      ## production without consumption 
+      Emod <- E*(Emod) + E*(E<0) + E*apply(!Emod, 1, all)
+      E <- Emod
+    }
+    
+    
+    
+    B <- matrix(rep(resources, length(x0)),
+                ncol = length(resources), byrow = TRUE) + monod_constant
+    growth <- ((E*(E>0)/B) %*% resources)*x0
+    
+    
+    consumption <- -resources*(t(1/B*(E>0))%*%x0)
+    
+    production <- -t(E*(E<0)) %*% growth
+    
+    dVolume <- max(-volume, inflow_rate - outflow_rate)
+    dResources <- consumption + production - (dilution_rate*(resources - resources_dilution))
+    dConsumers <- growth_rates*growth - dilution_rate*x0
+    
+    dxdt <- list(c(dConsumers, dResources, dVolume))
+    return(dxdt)
+  })
+}
+

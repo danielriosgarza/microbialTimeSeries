@@ -71,6 +71,7 @@
 #' \code{randomE} returns a matrix E with dimensions (n_species x n_resources),
 #' and each row represents a species.
 #'
+#' @importFrom stats rpois
 #' @export
 randomE <- function(n_species,
     n_resources,
@@ -203,7 +204,7 @@ randomE <- function(n_species,
         # the production of this level
         if (j < length(trophic_levels)){
             if (j+1 > length(list_auto_trophic_preference) || is.null(trophic_preferences[[j+1]])) {
-                eff_mat <- efficiency_matrix[1:n_species_this_level + sum(trophic_levels[0:(j-1)]),]
+                eff_mat <- efficiency_matrix[seq_len(n_species_this_level) + sum(trophic_levels[0:(j-1)]),]
                 eff_mat[eff_mat > 0] <- 0
                 eff_mat <- - eff_mat
                 list_auto_trophic_preference[[j+1]] <- colSums(eff_mat)

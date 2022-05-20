@@ -61,6 +61,8 @@
 #' @param norm Logical scalar: returns normalized abundances (proportions
 #' in each generation) 
 #' (default: \code{norm = FALSE})
+#' @param t_end Numeric scalar indicating the final time of the simulation
+#' (default: \code{t_end = 1000})
 #' @param ... additional parameters, see \code{\link{utils}} to know more.
 #' @seealso
 #' \code{\link[miaSim:convertToSE]{convertToSE}}
@@ -100,54 +102,8 @@
 #' makePlot(ExampleGLV$matrix)
 #'
 #' @importFrom deSolve ode
-#'
+#' @importFrom stats runif
 #' @export
-
-# define the GLV Model
-glvModel <- function(t, x0, parameters){
-    x0[x0 < 10^-8] <- 0 
-    growth_rates <- parameters$growth_rates
-    A <- parameters$A
-    # rate of change
-    dx <- x0*(growth_rates+A %*% x0)
-    # return rate of change
-    list(dx)
-}
-
-# define the perturbation event
-perturb <- function(t, y, parameters){
-    with(as.list(y),{
-        #continuous or episodic perturbation
-        epoch_rN <- 0
-        external_rN <- 0
-        migration_rN <- 0
-        if (rbinom(1,1, parameters$epoch_p)){
-            epoch_rN <- rnorm(parameters$n_species, sd=parameters$sigma_epoch)
-            epoch_rN <- parameters$stochastic*epoch_rN
-        }
-        
-        if (rbinom(1,1, parameters$migration_p)){
-            migration_rN <- rmultinom(n = 1, size = 1, 
-                prob = parameters$metacommunity_probability)[,]*abs(rnorm(n=1, 
-                    mean=0, sd = parameters$sigma_migration))
-            # TODO: is migration also stochastic? if so, add the following:####
-            # migration_rN <- parameters$stochastic*migration_rN
-        }
-        
-        if (t %in% parameters$tEvent){
-            external_rN <- rnorm(parameters$n_species,
-                sd=parameters$sigma_external)
-            external_rN <- parameters$stochastic*external_rN
-        }
-        drift_rN <- rnorm(parameters$n_species, sd=parameters$sigma_drift)
-        drift_rN <- parameters$stochastic*drift_rN
-
-        #perturbation is applied to the current population
-        y <- y * (1 + drift_rN)*(1 + epoch_rN)*(1 + external_rN) + migration_rN 
-        return(y*(y>0))
-    })
-}
-
 simulateGLV <- function(n_species, 
     names_species = NULL,
     A = NULL, 
@@ -192,7 +148,7 @@ simulateGLV <- function(n_species,
     t_dyn <- simulationTimes(t_end = t_end, ...)
     
     # calculate the time points influenced by the disturbances
-    tEvent = eventTimes(
+    tEvent <- eventTimes(
         t_events = t_external_events,
         t_duration = t_external_durations,
         t_end = t_end,
@@ -242,3 +198,49 @@ simulateGLV <- function(n_species,
     
     return(out_list)
 }
+
+# define the GLV Model
+glvModel <- function(t, x0, parameters){
+  x0[x0 < 10^-8] <- 0 
+  growth_rates <- parameters$growth_rates
+  A <- parameters$A
+  # rate of change
+  dx <- x0*(growth_rates+A %*% x0)
+  # return rate of change
+  list(dx)
+}
+
+# define the perturbation event
+perturb <- function(t, y, parameters){
+  with(as.list(y),{
+    # continuous or episodic perturbation
+    epoch_rN <- 0
+    external_rN <- 0
+    migration_rN <- 0
+    if (rbinom(1,1, parameters$epoch_p)){
+      epoch_rN <- rnorm(parameters$n_species, sd=parameters$sigma_epoch)
+      epoch_rN <- parameters$stochastic*epoch_rN
+    }
+    
+    if (rbinom(1,1, parameters$migration_p)){
+      migration_rN <- rmultinom(n = 1, size = 1, 
+                                prob = parameters$metacommunity_probability)[,]*abs(rnorm(n=1, 
+                                                                                          mean=0, sd = parameters$sigma_migration))
+      # TODO: is migration also stochastic? if so, add the following:####
+      # migration_rN <- parameters$stochastic*migration_rN
+    }
+    
+    if (t %in% parameters$tEvent){
+      external_rN <- rnorm(parameters$n_species,
+                           sd=parameters$sigma_external)
+      external_rN <- parameters$stochastic*external_rN
+    }
+    drift_rN <- rnorm(parameters$n_species, sd=parameters$sigma_drift)
+    drift_rN <- parameters$stochastic*drift_rN
+    
+    # perturbation is applied to the current population
+    y <- y * (1 + drift_rN)*(1 + epoch_rN)*(1 + external_rN) + migration_rN 
+    return(y*(y>0))
+  })
+}
+

@@ -38,7 +38,7 @@
 #' see \code{\link{utils}} for more information.
 #'
 #' @seealso
-#' \code{\link[miaSim:convertToSE]{convertToSE}}#'
+#' \code{\link[miaSim:convertToSE]{convertToSE}}
 #'
 #' @examples
 #' set.seed(42)
@@ -91,8 +91,10 @@
 #' @aliases simulateHubbellRates-numeric
 #' @aliases simulateHubbellRates,numeric-method
 #'
+#' @importFrom MatrixGenerics rowSums2
 #' @importFrom gtools rdirichlet
 #' @importFrom stats rbinom
+#' @importFrom stats rgamma
 #' @importFrom stats rmultinom
 #'
 #' @references Rosindell, James et al. "The unified neutral theory of
@@ -122,6 +124,12 @@ simulateHubbellRates <- function(n_species = NULL,
         if (n_species != length(x0)) stop("n_species and length of x0 is not identical.")
     }
     
+    #input check
+    if(!isPositiveInteger(n_species)){
+        stop("n_species must be positive integer.")}
+    if (!is.logical(norm)) stop('norm" should be a logical variable.')
+    if (!all(x0 >= 0)) stop("x0 should be non negative.")
+
     if (is.null(names_species)) {
         names_species <- paste0("sp", seq_len(n_species))
     }
@@ -146,9 +154,9 @@ simulateHubbellRates <- function(n_species = NULL,
     propensities <- sum(community)*(c(migration_p, birth_p))
 
     out_matrix <- matrix(0, nrow=length(t_dyn$t_index), ncol = n_species)
-    out_matrix[1,] = x0
+    out_matrix[1,] <- x0
     
-    stored_time = t_dyn$t_sys[t_dyn$t_index]
+    stored_time <- t_dyn$t_sys[t_dyn$t_index]
     current_t <- stored_time[1]
     last_stored_t <- stored_time[1]
     

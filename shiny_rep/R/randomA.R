@@ -12,7 +12,7 @@
 #' (default: \code{diagonal = -0.5})
 #' @param connectance Numeric frequency of inter-species interactions. 
 #' i.e. proportion of non-zero off-diagonal terms.
-#' Should be in the [0,1] interval.
+#' Should be in the interval 0 <= connectance <= 1.
 #' (default: \code{connectance = 0.2})
 #' @param scale_off_diagonal Numeric: scale of the off-diagonal elements 
 #' compared to the diagonal. 
@@ -49,7 +49,7 @@
 #' considered. Otherwise the given list of matrices will overwrite values around
 #' the diagonal.
 #' (default: \code{list_A = NULL})
-#' 
+#' @import ggplot2
 #' @examples
 #' 
 #' dense_A <- randomA(n_species = 10, 
@@ -121,7 +121,7 @@ randomA <- function(n_species,
                      be numeric.")}
 
     if(connectance > 1 || connectance < 0) {
-        stop("'connectance' should be in range [0,1]")
+        stop("'connectance' should be in range: 0 <= connectance <= 1")
     }
     # set the default values
     if (is.null(names_species)) {
@@ -131,7 +131,7 @@ randomA <- function(n_species,
             if (length(names_species) != length(unique(names_species))) {
                 list_Alengths <- unlist(lapply(list_A, nrow))
                 sn <- c()
-                for(i in 1:length(list_Alengths)){
+                for(i in seq_len(length(list_Alengths))){
                     sn <- c(sn ,rep(i, times = list_Alengths[i]))
                 }
                 names_species <- paste0("g", sn, "_", names_species)
@@ -146,7 +146,7 @@ randomA <- function(n_species,
         A <- interactions
     }
 
-    interaction_weights = c(mutualism, 
+    interaction_weights <- c(mutualism, 
         commensalism, 
         parasitism, 
         amensalism, 
