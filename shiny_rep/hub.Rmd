@@ -15,23 +15,23 @@ To accelerate the simulation, instead of drawing from a probability distribution
 
 ### **Model Description**
 
-Initial abundances (numbers of individuals) of different microbial species is $x0$. For each species, $growth.rates$ are their average growth rates ($\frac{n_{t+\tau}}{n_t}$, with n indicating number of individuals) and $metacommunity.probability$ is their probabilities of migration from the metacommunity. If not given, $growth.rates$ will be identical to 1, and $metacommunity.probability$ will be drawn from a Dirichlet distribution. Need to mention that this is different from the original Hubbell's UNTB.
+Initial abundances (numbers of individuals) of different microbial species is $x0$. For each species, $growth_rates$ are their average growth rates ($\frac{n_{t+\tau}}{n_t}$, with n indicating number of individuals) and $metacommunity_probability$ is their probabilities of migration from the metacommunity. If not given, $growth_rates$ will be identical to 1, and $metacommunity_probability$ will be drawn from a Dirichlet distribution. Need to mention that this is different from the original Hubbell's UNTB.
 
-As mentioned before, there's a conversion from probability at each time point to the waiting time interval, and we define the number of events (birth and migration) during this time interval as $k.event$. In this implementation of the model, the total number of individuals is fixed, so the number of new birth or immigration of individuals sum up to the number of dead individuals during the same period. To be detailed, $migration.p$ defines the probability of a new species coming from the immigration, and $1-migration.p$ defines the probability of a new species coming from the birth. Here the probability is applied to all individuals and is demographically proportional to their corresponding populations of each species.
+As mentioned before, there's a conversion from probability at each time point to the waiting time interval, and we define the number of events (birth and migration) during this time interval as $k.event$. In this implementation of the model, the total number of individuals is fixed, so the number of new birth or immigration of individuals sum up to the number of dead individuals during the same period. To be detailed, $migration_p$ defines the probability of a new species coming from the immigration, and $1-migration_p$ defines the probability of a new species coming from the birth. Here the probability is applied to all individuals and is demographically proportional to their corresponding populations of each species.
 
-From $t.start$, the time interval $\tau$ is recalculated repeatedly as indicated by the following gamma distribution: $\tau = \Gamma(k.event, \frac{1}{\sum_{n=1}^{n.species} x0})$
+From $t_start$, the time interval $\tau$ is recalculated repeatedly as indicated by the following gamma distribution: $\tau = \Gamma(k.event, \frac{1}{\sum_{n=1}^{n_species} x0})$
 
-Before the total time accumulated to the $t.end$, a series of calculation happen recursively in every different time interval:
+Before the total time accumulated to the $t_end$, a series of calculation happen recursively in every different time interval:
 
 1.  calculate random death:
 
-    $death = Multi(k.events, relative \space abundance)$
+    $death = Multi(k_events, relative \space abundance)$
 
-2.  split $k.events$ to 2 parts:
+2.  split $k_events$ to 2 parts:
 
-    $k_{birth} = B(k.events, 1-migration.p)$ , and
+    $k_{birth} = B(k_events, 1-migration_p)$ , and
 
-    $k_{migration} = k.events - k_{birth}$
+    $k_{migration} = k_events - k_{birth}$
 
 3.  calculate random birth of new individuals:
 
@@ -39,11 +39,11 @@ Before the total time accumulated to the $t.end$, a series of calculation happen
 
 4.  calculate random migration of new individuals:
 
-    $migration = Multi(k_{migration}, metacommunity.probability)$
+    $migration = Multi(k_{migration}, metacommunity_probability)$
 
 5.  combine all random calculations:
 
-    $n_{t+\tau} = n_{t} \times growth.rates - death + birth + migration$
+    $n_{t+\tau} = n_{t} \times growth_rates - death + birth + migration$
 
 ### **Examples**
 
@@ -55,7 +55,7 @@ If not provided by the user, all parameters have default values except for the t
 
 ```{r}
 set.seed(42)
-ExampleHubbellRates <- simulateHubbellRates(n.species = 5)
+ExampleHubbellRates <- simulateHubbellRates(n_species = 5)
 makePlot(ExampleHubbellRates$matrix)
 ```
 
@@ -63,7 +63,7 @@ makePlot(ExampleHubbellRates$matrix)
 
 ```{r}
 set.seed(42)
-ExampleHubbellRates <- simulateHubbellRates(n.species = 5, migration.p = 0)
+ExampleHubbellRates <- simulateHubbellRates(n_species = 5, migration_p = 0)
 makePlot(ExampleHubbellRates$matrix)
 ```
 
@@ -72,11 +72,11 @@ makePlot(ExampleHubbellRates$matrix)
 ```{r}
 set.seed(42)
 ExampleHubbellRates <- simulateHubbellRates(
-    n.species = 5, 
-    migration.p = 1,
-    metacommunity.probability = c(0.1, 0.15, 0.2, 0.25, 0.3),
-    t.end = 20, 
-    t.store = 200)
+    n_species = 5, 
+    migration_p = 1,
+    metacommunity_probability = c(0.1, 0.15, 0.2, 0.25, 0.3),
+    t_end = 20, 
+    t_store = 200)
 makePlot(ExampleHubbellRates$matrix)
 ```
 
@@ -85,12 +85,12 @@ makePlot(ExampleHubbellRates$matrix)
 ```{r}
 set.seed(42)
 ExampleHubbellRates <- simulateHubbellRates(
-    n.species = 5, 
-    migration.p = 1,
-    metacommunity.probability = c(0.1, 0.15, 0.2, 0.25, 0.3),
-    t.end = 20, 
-    t.store = 200,
-    error.variance = 100)
+    n_species = 5, 
+    migration_p = 1,
+    metacommunity_probability = c(0.1, 0.15, 0.2, 0.25, 0.3),
+    t_end = 20, 
+    t_store = 200,
+    error_variance = 100)
 makePlot(ExampleHubbellRates$matrix) 
 ```
 
@@ -99,12 +99,12 @@ makePlot(ExampleHubbellRates$matrix)
 ```{r}
 set.seed(42)
 ExampleHubbellRates <- simulateHubbellRates(
-    n.species = 5,
-    migration.p = 0.1,
-    metacommunity.probability = c(0.1, 0.15, 0.2, 0.25, 0.3), 
-    t.end = 200, 
-    t.store = 1000, 
-    k.events = 5,
-    growth.rates = c(1.1, 1.05, 1, 0.95, 0.9))
+    n_species = 5,
+    migration_p = 0.1,
+    metacommunity_probability = c(0.1, 0.15, 0.2, 0.25, 0.3), 
+    t_end = 200, 
+    t_store = 1000, 
+    k_events = 5,
+    growth_rates = c(1.1, 1.05, 1, 0.95, 0.9))
 makePlot(ExampleHubbellRates$matrix)
 ```

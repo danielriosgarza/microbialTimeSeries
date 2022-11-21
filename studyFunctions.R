@@ -41,7 +41,7 @@ getMoments <- function(simulaionMatrix, is.perCapita = FALSE){
 }
 
 
-generateMoments <- function(modelGenerateExp, n.instances, t.store, is.perCapita=FALSE){
+generateMoments <- function(modelGenerateExp, n.instances, t_store, is.perCapita=FALSE){
 
   modelMatrix <- eval(modelGenerateExp)$matrix
   
@@ -55,7 +55,7 @@ generateMoments <- function(modelGenerateExp, n.instances, t.store, is.perCapita
     
     simul <- modelMatrix[,colnames(modelMatrix)!="time"]
     
-    summaryMatrix[i,] <- simul[t.store,]
+    summaryMatrix[i,] <- simul[t_store,]
     
   }
   
@@ -78,8 +78,8 @@ getKL <- function(mA, mB){
 }
 
 getPerturbT <- function(endTime, n.perturbs){
-  st <- SimulationTimes(t.end = endTime, t.store = n.perturbs + 1)
-  return (st$t.sys[st$t.index[2:length(st$t.index)]])
+  st <- simulationTimes(t_end = endTime, t_store = n.perturbs + 1)
+  return (st$t_sys[st$t_index[2:length(st$t_index)]])
 }
 
 
@@ -96,7 +96,7 @@ makePiePlot <- function(multinomdist, label = 'Meta\ncommunity', title = "Metaco
   fig
 }
 
-makePlot <- function(out.matrix){
+makePlot <- function(out_matrix){
   df <- as.data.frame(out.matrix)
   dft <-  melt(df, id="time")
   names(dft)[2] = "species"

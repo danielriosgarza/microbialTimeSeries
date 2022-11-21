@@ -11,5 +11,5 @@ installIfNeeded<-function(...) {
 installIfNeeded("ggplot2", "deSolve", "reshape2", "Matrix", 
                 "mvtnorm", "pracma", "gtools", "maotai", "umap")
 
-Rfiles = gsub(" ", "", paste("./R/", list.files("./R")))
+Rfiles = gsub(" ", "", paste("./shiny_rep/R/", list.files("./shiny_rep/R/")))
 sapply(Rfiles, source)

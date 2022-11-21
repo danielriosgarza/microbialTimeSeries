@@ -29,8 +29,8 @@ makePiePlot <- function(multinomdist, label = 'Meta\ncommunity', title = "Metaco
 }
 
 
-makePlot <- function(out.matrix){
-    df <- as.data.frame(out.matrix)
+makePlot <- function(out_matrix){
+    df <- as.data.frame(out_matrix)
     dft <-  melt(df, id="time")
     names(dft)[2] = "species"
     names(dft)[3] = "x.t"
@@ -42,9 +42,9 @@ makePlot <- function(out.matrix){
     
 }
 
-makeHeatmap <-function(out.matrix, midpoint_color){
-    out.matrix = t(out.matrix[,colnames(out.matrix)!="time"])
-    df = melt(out.matrix)
+makeHeatmap <-function(out_matrix, midpoint_color){
+    out_matrix = t(out_matrix[,colnames(out_matrix)!="time"])
+    df = melt(out_matrix)
     names(df)<- c("x", "y", "abundance")
     df$y <- factor(df$y, levels=rev(unique(sort(df$y))))
     fig <- ggplot(df, aes(x,y,fill=abundance)) + 
@@ -54,7 +54,7 @@ makeHeatmap <-function(out.matrix, midpoint_color){
         theme_void() +
         scale_y_discrete(expand=c(0,0))
     
-    if (ncol(out.matrix)<21){
+    if (ncol(out_matrix)<21){
         fig <- fig + geom_text(aes(label = round(abundance, 1)))
     }
     fig
@@ -156,22 +156,22 @@ server <- function(input, output) {
     observeEvent(input$gr.bool, {
         if (input$gr.bool=='yes'){
             simul <- reactive(simulateHubbellRates(community.initial = initialComposition()[,],
-                                              migration.p = migration.rate(),
+                                              migration_p = migration.rate(),
                                               metacommunity.p = metacommunity.p(),
-                                              k.events = events(),
-                                              growth.rates = g.rates(),
+                                              k_events = events(),
+                                              growth_rates = g.rates(),
                                               norm = FALSE, 
-                                              t.end = steps()))
+                                              t_end = steps()))
             output$simulationPlot <- renderPlot(makePlot(simul()$matrix))
             
         }else{
             simul <- reactive(simulateHubbell(community.initial = initialComposition()[,],
-                                              migration.p = migration.rate(),
+                                              migration_p = migration.rate(),
                                               metacommunity.p = metacommunity.p(),
-                                              k.events = events(),
+                                              k_events = events(),
                                               norm = FALSE, 
-                                              t.end = steps(), 
-                                              t.store = 100))
+                                              t_end = steps(), 
+                                              t_store = 100))
             
             output$simulationPlot <- renderPlot(makeHeatmap(simul()$matrix, max(initialComposition())/8))
             

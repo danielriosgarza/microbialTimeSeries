@@ -3,29 +3,29 @@
 #' Neutral species abundances simulation according to the Hubbell model.
 #'
 #' @param x0 Numeric: initial species composition
-#' @param names.species Character: names of species. If NULL,
-#' `paste0("sp", seq_len(n.species))` is used.
-#' (default: \code{names.species = NULL})
-#' @param migration.p Numeric: the probability/frequency of migration from a 
+#' @param names_species Character: names of species. If NULL,
+#' `paste0("sp", seq_len(n_species))` is used.
+#' (default: \code{names_species = NULL})
+#' @param migration_p Numeric: the probability/frequency of migration from a 
 #' metacommunity
 #' (default: \code{m = 0.02})
-#' @param metacommunity.probability Numeric: normalized probability distribution
+#' @param metacommunity_probability Numeric: normalized probability distribution
 #' of the likelihood that species from the metacommunity can enter the community
-#' during the simulation. If NULL, `rdirichlet(1, alpha = rep(1,n.species))` is 
+#' during the simulation. If NULL, `rdirichlet(1, alpha = rep(1,n_species))` is 
 #' used.
-#' (default: \code{metacommunity.probability = NULL})
-#' @param k.events Integer: number of events to simulate before updating the 
+#' (default: \code{metacommunity_probability = NULL})
+#' @param k_events Integer: number of events to simulate before updating the 
 #' sampling distributions.
-#' (default: \code{k.events = 1})
-#' @param error.variance Numeric: the variance of measurement error.
+#' (default: \code{k_events = 1})
+#' @param error_variance Numeric: the variance of measurement error.
 #' By default it equals to 0, indicating that the result won't contain any 
 #' measurement error. This value should be non-negative.
-#' (default: \code{error.variance = 0})
+#' (default: \code{error_variance = 0})
 #' @param norm Logical: whether the time series should be returned with
 #' the abundances as proportions (\code{norm = TRUE}) or
 #' the raw counts (default: \code{norm = FALSE})
-#' @param t.end Numeric: simulation end time (default: \code{t.end = 1000})
-#' @param ... additional parameters including 't.start', 't.step', and 't.store'
+#' @param t_end Numeric: simulation end time (default: \code{t_end = 1000})
+#' @param ... additional parameters including 't_start', 't_step', and 't_store'
 #' see \code{\link{utils}} for more information.
 #'
 #' @examples
@@ -34,27 +34,27 @@
 #' makePlot(ExampleHubbell$matrix)
 #' 
 #' set.seed(42)
-#' ExampleHubbell <- simulateHubbell(rep(1000, 10), error.variance = 10)
+#' ExampleHubbell <- simulateHubbell(rep(1000, 10), error_variance = 10)
 #' makePlot(ExampleHubbell$matrix)
 #' 
 #' set.seed(42)
-#' ExampleHubbell <- simulateHubbell(rep(1000, 10), migration.p = 0.1)
+#' ExampleHubbell <- simulateHubbell(rep(1000, 10), migration_p = 0.1)
 #' makePlot(ExampleHubbell$matrix)
 #' 
 #' set.seed(42)
-#' ExampleHubbell <- simulateHubbell(rep(1000, 10), migration.p = 0.1,
-#'     error.variance = 10)
-#' makePlot(ExampleHubbell$matrix)
-#' 
-#' set.seed(42)
-#' ExampleHubbell <- simulateHubbell(rep(1000, 5), 
-#'     metacommunity.probability = c(0.01, 0.1, 0.19, 0.3, 0.4))
+#' ExampleHubbell <- simulateHubbell(rep(1000, 10), migration_p = 0.1,
+#'     error_variance = 10)
 #' makePlot(ExampleHubbell$matrix)
 #' 
 #' set.seed(42)
 #' ExampleHubbell <- simulateHubbell(rep(1000, 5), 
-#'     metacommunity.probability = c(0.01, 0.1, 0.19, 0.3, 0.4),
-#'     k.events = 5)
+#'     metacommunity_probability = c(0.01, 0.1, 0.19, 0.3, 0.4))
+#' makePlot(ExampleHubbell$matrix)
+#' 
+#' set.seed(42)
+#' ExampleHubbell <- simulateHubbell(rep(1000, 5), 
+#'     metacommunity_probability = c(0.01, 0.1, 0.19, 0.3, 0.4),
+#'     k_events = 5)
 #' makePlot(ExampleHubbell$matrix)
 #' 
 #' @return \code{simulateHubbell} returns a list of initial states, parameters
@@ -75,81 +75,81 @@
 #
 #' @export
 simulateHubbell <- function(x0, 
-    names.species = NULL,
-    migration.p = 0.01, 
-    metacommunity.probability = NULL,
-    k.events = 1,
-    error.variance = 0,
+    names_species = NULL,
+    migration_p = 0.01, 
+    metacommunity_probability = NULL,
+    k_events = 1,
+    error_variance = 0,
     norm = FALSE, 
-    t.end=1000, ...){
+    t_end=1000, ...){
     
     # set the default values
-    n.species <- length(x0)
-    if (is.null(names.species)) {
-        names.species <- paste0("sp", seq_len(n.species))
+    n_species <- length(x0)
+    if (is.null(names_species)) {
+        names_species <- paste0("sp", seq_len(n_species))
     }
-    if (is.null(metacommunity.probability)){
-        metacommunity.probability <- rdirichlet(1, alpha = rep(1,n.species))
+    if (is.null(metacommunity_probability)){
+        metacommunity_probability <- rdirichlet(1, alpha = rep(1,n_species))
     }
-    # normalize metacommunity.probability
-    metacommunity.probability <- metacommunity.probability/
-        sum(metacommunity.probability)
+    # normalize metacommunity_probability
+    metacommunity_probability <- metacommunity_probability/
+        sum(metacommunity_probability)
     
-    t.dyn <- SimulationTimes(t.end = t.end,...)
-    birth.p <- 1 - migration.p
+    t_dyn <- simulationTimes(t_end = t_end,...)
+    birth_p <- 1 - migration_p
     community <- x0
     
-    out.matrix <- matrix(0, nrow=length(t.dyn$t.index), ncol = n.species)
+    out_matrix <- matrix(0, nrow=length(t_dyn$t_index), ncol = n_species)
     
     counter = 1
     
-    out.matrix[counter,] <- community
+    out_matrix[counter,] <- community
     
-    for (i in t.dyn$t.sys[2:length(t.dyn$t.sys)]){
+    for (i in t_dyn$t_sys[2:length(t_dyn$t_sys)]){
         probabilities <- community/sum(community)
-        n.deaths <- min(min(community[community>0]),k.events)
+        n_deaths <- min(min(community[community>0]),k_events)
         
         # deaths
-        community = community - t(rmultinom(n = 1, size = n.deaths, 
+        community = community - t(rmultinom(n = 1, size = n_deaths, 
             prob = probabilities))
-        n.births = sum(rbinom(n=n.deaths, size=1, p = birth.p))
-        n.migration = n.deaths-n.births
+        n_births = sum(rbinom(n=n_deaths, size=1, p = birth_p))
+        n_migration = n_deaths-n_births
         
-        community = community + t(rmultinom(n = 1, size = n.births, 
+        community = community + t(rmultinom(n = 1, size = n_births, 
             prob = probabilities)) +
-            t(rmultinom(n = 1, size = n.migration, 
-                prob = metacommunity.probability))
+            t(rmultinom(n = 1, size = n_migration, 
+                prob = metacommunity_probability))
         
-        if (i %in% t.dyn$t.sys[t.dyn$t.index]){
+        if (i %in% t_dyn$t_sys[t_dyn$t_index]){
             counter = counter + 1
-            out.matrix[counter,] <- community
+            out_matrix[counter,] <- community
         }
     
     }
     
-    if(error.variance > 0){
-        measurement.error <- rnorm(n = length(t.dyn$t.index)*n.species, 
-                                   mean = 0, sd = sqrt(error.variance))
-        measurement.error <- matrix(measurement.error, 
-                                    nrow = length(t.dyn$t.index))
-        out.matrix <- out.matrix + measurement.error
+    if(error_variance > 0){
+        measurement_error <- rnorm(n = length(t_dyn$t_index)*n_species, 
+                                   mean = 0, sd = sqrt(error_variance))
+        measurement_error <- matrix(measurement_error, 
+                                    nrow = length(t_dyn$t_index))
+        out_matrix <- out_matrix + measurement_error
     }
     
     if(norm){
-        out.matrix <- out.matrix/rowSums(out.matrix)
+        out_matrix <- out_matrix/rowSums(out_matrix)
     }
-    colnames(out.matrix) <- names.species
+    colnames(out_matrix) <- names_species
     
-    out.matrix <- cbind(out.matrix, time = t.dyn$t.sys[t.dyn$t.index])
+    out_matrix <- cbind(out_matrix, time = t_dyn$t_sys[t_dyn$t_index])
     
-    #out.matrix$t <- t.dyn$t.sys[t.dyn$t.index]
-    #SE <- SummarizedExperiment(assays = list(counts = out.matrix))
-    out.list <- list(matrix = out.matrix, 
+    #out_matrix$t <- t_dyn$t_sys[t_dyn$t_index]
+    #SE <- SummarizedExperiment(assays = list(counts = out_matrix))
+    out_list <- list(matrix = out_matrix, 
         community = community, 
         x0 = x0,
-        metacommunity.probability = metacommunity.probability,
-        migration.p = migration.p, 
-        birth.p = birth.p,
-        error.variance = error.variance)
-    return(out.list)
+        metacommunity_probability = metacommunity_probability,
+        migration_p = migration_p, 
+        birth_p = birth_p,
+        error_variance = error_variance)
+    return(out_list)
 }

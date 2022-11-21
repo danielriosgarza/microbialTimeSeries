@@ -33,23 +33,23 @@ sapply(Rfiles, source)
 # CRM trophic-related examples
 ```{r}
 # example with trophic levels
-n.species <- 10
-n.resources <- 15
-ExampleEfficiencyMatrix <- randomE(n.species = 10, n.resources = 15,
-                                   trophic.levels = c(6,3,1),
-                                   trophic.preferences = list(c(rep(1,5), rep(-1, 5), rep(0, 5)), 
+n_species <- 10
+n_resources <- 15
+ExampleEfficiencyMatrix <- randomE(n_species = 10, n_resources = 15,
+                                   trophic_levels = c(6,3,1),
+                                   trophic_preferences = list(c(rep(1,5), rep(-1, 5), rep(0, 5)), 
                                                               c(rep(0,5), rep(1, 5), rep(-1, 5)), 
                                                               c(rep(0,10), rep(1, 5))))
 makeHeatmap(ExampleEfficiencyMatrix)
-# ExampleResources <- rep(100, n.resources)
+# ExampleResources <- rep(100, n_resources)
 ExampleResources <- c(rep(500, 5), rep(200, 5), rep(50, 5))
-ExampleConsumerResource <- simulateConsumerResource(n.species = n.species, 
-                                                    n.resources = n.resources, names.species = letters[1:n.species], 
-                                                    names.resources = paste0("res",LETTERS[1:n.resources]), E = ExampleEfficiencyMatrix, 
-                                                    x0 = rep(0.001, n.species), resources = ExampleResources, 
-                                                    growth.rates = rep(1, n.species),
-                                                    # error.variance = 0.001,
-                                                    t.end = 5000, t.step = 1)
+ExampleConsumerResource <- simulateConsumerResource(n_species = n_species, 
+                                                    n_resources = n_resources, names_species = letters[1:n_species], 
+                                                    names_resources = paste0("res",LETTERS[1:n_resources]), E = ExampleEfficiencyMatrix, 
+                                                    x0 = rep(0.001, n_species), resources = ExampleResources, 
+                                                    growth_rates = rep(1, n_species),
+                                                    # error_variance = 0.001,
+                                                    t_end = 5000, t_step = 1)
 makePlot(ExampleConsumerResource$matrix)
 makePlotRes(ExampleConsumerResource$resources)
 
@@ -57,41 +57,41 @@ makePlotRes(ExampleConsumerResource$resources)
 
 ```{r}
 # example with trophic priority
-n.species <- 4
-n.resources <- 6
-ExampleE <- randomE(n.species = n.species, n.resources = n.resources, mean.consumption = n.resources, mean.production = 0)
-ExampleTrophicPriority <- t(apply(matrix(sample(n.species * n.resources), nrow = n.species), 1, order))
+n_species <- 4
+n_resources <- 6
+ExampleE <- randomE(n_species = n_species, n_resources = n_resources, mean_consumption = n_resources, mean_production = 0)
+ExampleTrophicPriority <- t(apply(matrix(sample(n_species * n_resources), nrow = n_species), 1, order))
 ExampleTrophicPriority
 # make sure that for non-consumables resources for each species, 
 # the priority is 0 (smaller than any given priority) 
 ExampleTrophicPriority <- (ExampleE > 0) * ExampleTrophicPriority
-ExampleConsumerResource <- simulateConsumerResource(n.species = n.species, 
-                                                    n.resources = n.resources, 
+ExampleConsumerResource <- simulateConsumerResource(n_species = n_species, 
+                                                    n_resources = n_resources, 
                                                     E = ExampleE, 
-                                                    trophic.priority = ExampleTrophicPriority,
-                                                    t.end = 2000
+                                                    trophic_priority = ExampleTrophicPriority,
+                                                    t_end = 2000
                                                     )
 makePlot(ExampleConsumerResource$matrix)
 makePlotRes(ExampleConsumerResource$resources)
 ```
 # GLV matrix of interactions with groups
 ```{r}
-dense_A <- randomA(n.species = 10, 
+dense_A <- randomA(n_species = 10, 
     scale = 1, 
     diagonal = -1.0, 
     connectance = 0.9)
 makeHeatmap(dense_A, title = "dense", lowColor = 'blue', highColor = 'red')
 
-sparse_A <- randomA(n.species = 10, 
+sparse_A <- randomA(n_species = 10, 
     diagonal = -1.0,
     connectance = 0.09)
 makeHeatmap(sparse_A, title = "sparse", lowColor = 'blue', highColor = 'red')
 
 user_interactions <- rbeta(n = 10^2, .5,.5)
-user_A <- randomA(n.species = 10, interactions = user_interactions)
+user_A <- randomA(n_species = 10, interactions = user_interactions)
 makeHeatmap(user_A, title = "user", lowColor = 'blue', highColor = 'red')
 
-competitive_A <- randomA(n.species = 10, 
+competitive_A <- randomA(n_species = 10, 
     mutualism = 0, 
     commensalism = 0, 
     parasitism = 0, 
@@ -101,7 +101,7 @@ competitive_A <- randomA(n.species = 10,
     scale=1)
 makeHeatmap(competitive_A, title = "competitive", lowColor = 'blue', highColor = 'red')
 
-parasitism_A <- randomA(n.species = 10, 
+parasitism_A <- randomA(n_species = 10, 
     mutualism = 0,
     commensalism = 0,
     parasitism = 1,
@@ -113,6 +113,6 @@ parasitism_A <- randomA(n.species = 10,
 makeHeatmap(parasitism_A, title = "parasitism", lowColor = 'blue', highColor = 'red')
 
 list_A <- list(dense_A, sparse_A, competitive_A, parasitism_A)
-groupA <- randomA(n.species = 40, listA = list_A, scale = 0.5)
+groupA <- randomA(n_species = 40, list_A = list_A, scale = 0.5)
 makeHeatmap(groupA, title = "group", lowColor = 'blue', highColor = 'red')
 ```
