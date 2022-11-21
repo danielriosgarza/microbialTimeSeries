@@ -1,0 +1,13 @@
+name: shiny_rep
+title: shiny_rep
+username:
+account: jkbkco-daniel-garza
+server: shinyapps.io
+hostUrl: https://api.shinyapps.io/v1
+appId: 5989753
+bundleId: 5753055
+url: https://jkbkco-daniel-garza.shinyapps.io/shiny_rep/
+when: 1648803326.36532
+lastSyncTime: 1648803326.36532
+asMultiple: FALSE
+asStatic: FALSE
